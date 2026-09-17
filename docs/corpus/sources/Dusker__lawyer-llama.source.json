@@ -1,0 +1,22 @@
+{
+  "id": "Dusker/lawyer-llama",
+  "slug": "Dusker__lawyer-llama",
+  "status": "OK",
+  "hub": "huggingface",
+  "endpoint": "https://hf-mirror.com",
+  "url": "https://hf-mirror.com/datasets/Dusker/lawyer-llama",
+  "commit_sha": "bd021100fb4496ab853eb63c596e44f0318462cb",
+  "license": "mit",
+  "license_grade": "A",
+  "usage": [
+    "expert_train",
+    "case_corpus"
+  ],
+  "declared_bytes": 468000000,
+  "real_bytes": 446339622,
+  "dest": "/mnt/data/lidian/law-agent/data/corpus/raw/Dusker__lawyer-llama",
+  "fetched_at": "2026-09-17T16:36:41",
+  "file_count": 7,
+  "total_bytes": 446339622,
+  "failed_files": []
+}

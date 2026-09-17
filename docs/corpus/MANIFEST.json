@@ -1,0 +1,301 @@
+{
+  "dataset": "law-agent training corpus (stage-1 raw)",
+  "generated_at": "2026-09-17T16:31:47",
+  "endpoint": "https://hf-mirror.com",
+  "license_grade": "A",
+  "sources_yaml": "configs/corpus_sources.yaml",
+  "datasets": [
+    {
+      "id": "ShengbinYue/DISC-Law-SFT",
+      "slug": "ShengbinYue__DISC-Law-SFT",
+      "status": "OK",
+      "hub": "huggingface",
+      "endpoint": "https://hf-mirror.com",
+      "url": "https://hf-mirror.com/datasets/ShengbinYue/DISC-Law-SFT",
+      "commit_sha": "fb12cf02809a85724f7e36977529b1d4b5f9f920",
+      "license": "apache-2.0",
+      "license_grade": "A",
+      "usage": [
+        "expert_train",
+        "router_train",
+        "general_replay"
+      ],
+      "declared_bytes": 606524000,
+      "real_bytes": 579185425,
+      "dest": "/mnt/data/lidian/law-agent/data/corpus/raw/ShengbinYue__DISC-Law-SFT",
+      "fetched_at": "2026-09-17T16:31:50",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 2657,
+          "sha256": "ed23e8d0d3b4f857512d9e67ab3c4c04ded4827e4ba0d560a87f08d298d9038e",
+          "lfs_oid": null
+        },
+        {
+          "path": "DISC-Law-SFT-Pair-QA-released.jsonl",
+          "bytes": 94042837,
+          "sha256": "0a12835997a2e8028b0c8073aecf840c93f0c5c294953471380275f43bb95280",
+          "lfs_oid": "0a12835997a2e8028b0c8073aecf840c93f0c5c294953471380275f43bb95280"
+        },
+        {
+          "path": "DISC-Law-SFT-Pair.jsonl",
+          "bytes": 346801238,
+          "sha256": "d181a4baeca0b384a508dcba1e8c0888c57471ed1272e83c7e859c4464950aae",
+          "lfs_oid": "d181a4baeca0b384a508dcba1e8c0888c57471ed1272e83c7e859c4464950aae"
+        },
+        {
+          "path": "DISC-Law-SFT-Triplet-QA-released.jsonl",
+          "bytes": 85520456,
+          "sha256": "df3d2d7c75ae07e5be78c6214805c47b896874e58b4fffabe97fd0470aa3ef79",
+          "lfs_oid": "df3d2d7c75ae07e5be78c6214805c47b896874e58b4fffabe97fd0470aa3ef79"
+        },
+        {
+          "path": "DISC-Law-SFT-Triplet-released.jsonl",
+          "bytes": 52814582,
+          "sha256": "b368306f80a3f71e632298a8e7eda75a1bf029f8358dcb8af31fb912270890c2",
+          "lfs_oid": "b368306f80a3f71e632298a8e7eda75a1bf029f8358dcb8af31fb912270890c2"
+        },
+        {
+          "path": "README.md",
+          "bytes": 3655,
+          "sha256": "bdcff8dcada17aae4d93c486fab8a910b4398d9f5ff5170640ffc7b841025597",
+          "lfs_oid": null
+        }
+      ],
+      "file_count": 6,
+      "total_bytes": 579185425,
+      "failed_files": []
+    },
+    {
+      "id": "Skepsun/lawyer_llama_data",
+      "slug": "Skepsun__lawyer_llama_data",
+      "status": "OK",
+      "hub": "huggingface",
+      "endpoint": "https://hf-mirror.com",
+      "url": "https://hf-mirror.com/datasets/Skepsun/lawyer_llama_data",
+      "commit_sha": "10ca311982da0225c195f3f0a990db34c6b51a07",
+      "license": "apache-2.0",
+      "license_grade": "A",
+      "usage": [
+        "expert_train",
+        "router_train"
+      ],
+      "declared_bytes": 25165824,
+      "real_bytes": 23978267,
+      "dest": "/mnt/data/lidian/law-agent/data/corpus/raw/Skepsun__lawyer_llama_data",
+      "fetched_at": "2026-09-17T16:36:25",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 2352,
+          "sha256": "7594764aca30ca3559d87e6b0f4fa6accc3dcbcb2acd99680957bd7798124ac8",
+          "lfs_oid": null
+        },
+        {
+          "path": "README.md",
+          "bytes": 381,
+          "sha256": "7133d4b017fa0bf89813917ca02f21f8fdb097cd74be4cdd5be56ab6b1d05946",
+          "lfs_oid": null
+        },
+        {
+          "path": "all.json",
+          "bytes": 23975534,
+          "sha256": "e0c08ca578b92c412efc1bf2afc596ad97ba5a205621acfa04c6eb517619e1cc",
+          "lfs_oid": "e0c08ca578b92c412efc1bf2afc596ad97ba5a205621acfa04c6eb517619e1cc"
+        }
+      ],
+      "file_count": 3,
+      "total_bytes": 23978267,
+      "failed_files": []
+    },
+    {
+      "id": "Dusker/lawyer-llama",
+      "slug": "Dusker__lawyer-llama",
+      "status": "OK",
+      "hub": "huggingface",
+      "endpoint": "https://hf-mirror.com",
+      "url": "https://hf-mirror.com/datasets/Dusker/lawyer-llama",
+      "commit_sha": "bd021100fb4496ab853eb63c596e44f0318462cb",
+      "license": "mit",
+      "license_grade": "A",
+      "usage": [
+        "expert_train",
+        "case_corpus"
+      ],
+      "declared_bytes": 468000000,
+      "real_bytes": 446339622,
+      "dest": "/mnt/data/lidian/law-agent/data/corpus/raw/Dusker__lawyer-llama",
+      "fetched_at": "2026-09-17T16:36:41",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 2540,
+          "sha256": "d89daaf433245e3aec9d0bdce7ccd9f36832606b9ae87679c9de1c3779c481e1",
+          "lfs_oid": null
+        },
+        {
+          "path": "DISC-Law-SFT-Pair.json",
+          "bytes": 378301270,
+          "sha256": "26ba1a30277dcd47369577e1e8c56891852d534972d3352512dc9e5f85be073d",
+          "lfs_oid": "26ba1a30277dcd47369577e1e8c56891852d534972d3352512dc9e5f85be073d"
+        },
+        {
+          "path": "DISC-Law-SFT-Triplet.json",
+          "bytes": 55073406,
+          "sha256": "b2ea06bd83666ad4d51c88e875fa0cf32cfd09d8270705c17cc24b97a3335171",
+          "lfs_oid": "b2ea06bd83666ad4d51c88e875fa0cf32cfd09d8270705c17cc24b97a3335171"
+        },
+        {
+          "path": "README.md",
+          "bytes": 284,
+          "sha256": "c675f53320f27582676a0a20728a231be700e26163baf2593f6b948b55a9a7ed",
+          "lfs_oid": null
+        },
+        {
+          "path": "fakao_gpt4.json",
+          "bytes": 2485620,
+          "sha256": "7aa6d57223fb2cf4f69058dc55134397e5256fcf28f6cbbbf7eca7a683153df8",
+          "lfs_oid": null
+        },
+        {
+          "path": "kg_crime_llama.json",
+          "bytes": 7137127,
+          "sha256": "3807a5a2a311c48e3fed79e2d2071d8a6ac82201e8025c505601f3721aadccec",
+          "lfs_oid": null
+        },
+        {
+          "path": "zixun_gpt4.json",
+          "bytes": 3339375,
+          "sha256": "96fe0b8dd55262b245dcb57e172693a5b5bf25c5333ccc5070a0d2589e6b30ae",
+          "lfs_oid": null
+        }
+      ],
+      "file_count": 7,
+      "total_bytes": 446339622,
+      "failed_files": []
+    },
+    {
+      "id": "twang2218/chinese-law-and-regulations",
+      "slug": "twang2218__chinese-law-and-regulations",
+      "status": "OK",
+      "hub": "huggingface",
+      "endpoint": "https://hf-mirror.com",
+      "url": "https://hf-mirror.com/datasets/twang2218/chinese-law-and-regulations",
+      "commit_sha": "58db8b54863b7ed60cc0a23be362a5a57f48c6e9",
+      "license": "apache-2.0",
+      "license_grade": "A",
+      "usage": [
+        "statute_kb"
+      ],
+      "declared_bytes": 168000000,
+      "real_bytes": 160260826,
+      "dest": "/mnt/data/lidian/law-agent/data/corpus/raw/twang2218__chinese-law-and-regulations",
+      "fetched_at": "2026-09-17T16:38:02",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 2307,
+          "sha256": "f4e703ea6e44bbebe53aceed2a89c11e40b88b7ae130c480c89860ab805ffc8f",
+          "lfs_oid": null
+        },
+        {
+          "path": "README.md",
+          "bytes": 1296,
+          "sha256": "fceb64a4f0dfb4a195875ea85b0abc3da3fa0334a7df9e6ee6340603996345a1",
+          "lfs_oid": null
+        },
+        {
+          "path": "data/train-00000-of-00001-8329bce6db03c820.parquet",
+          "bytes": 159516785,
+          "sha256": "7274d3e256a8725711dda17f58f84b69edb3913bb2805bc2beb30b2a3909ff1c",
+          "lfs_oid": "7274d3e256a8725711dda17f58f84b69edb3913bb2805bc2beb30b2a3909ff1c"
+        },
+        {
+          "path": "metadata/train-00000-of-00001-1166782d21c08308.parquet",
+          "bytes": 740438,
+          "sha256": "03b4402d352be8b09a79f79f09560c10d248995355e5304a601c88e25e9908fe",
+          "lfs_oid": "03b4402d352be8b09a79f79f09560c10d248995355e5304a601c88e25e9908fe"
+        }
+      ],
+      "file_count": 4,
+      "total_bytes": 160260826,
+      "failed_files": []
+    },
+    {
+      "id": "pandalla/chinese_law_examples",
+      "slug": "pandalla__chinese_law_examples",
+      "status": "OK",
+      "hub": "huggingface",
+      "endpoint": "https://hf-mirror.com",
+      "url": "https://hf-mirror.com/datasets/pandalla/chinese_law_examples",
+      "commit_sha": "cdd5f044768ffaf43a2ba06f5e3015aa16cbd845",
+      "license": "apache-2.0",
+      "license_grade": "A",
+      "usage": [
+        "reference_only"
+      ],
+      "declared_bytes": 524288,
+      "real_bytes": 532236,
+      "dest": "/mnt/data/lidian/law-agent/data/corpus/raw/pandalla__chinese_law_examples",
+      "fetched_at": "2026-09-17T16:38:39",
+      "files": [
+        {
+          "path": ".gitattributes",
+          "bytes": 2307,
+          "sha256": "f4e703ea6e44bbebe53aceed2a89c11e40b88b7ae130c480c89860ab805ffc8f",
+          "lfs_oid": null
+        },
+        {
+          "path": "README.md",
+          "bytes": 3153,
+          "sha256": "08903893fc4d56cc3ce57a9b4fe95265b56ebf461c62048e35761adbdcc74971",
+          "lfs_oid": null
+        },
+        {
+          "path": "law_item.jsonl",
+          "bytes": 526776,
+          "sha256": "79f6cf30ee420e943a294c627ff1938316d2c116c5157288897ee5d5b915c7ca",
+          "lfs_oid": null
+        }
+      ],
+      "file_count": 3,
+      "total_bytes": 532236,
+      "failed_files": []
+    },
+    {
+      "id": "Aiiluo/Chinese-Law-SFT-Dataset",
+      "status": "SKIPPED_GATED_NO_TOKEN",
+      "commit_sha": "f895db4f1831b63366c125b54217f1b2d3117c75",
+      "gated": "auto"
+    }
+  ],
+  "rejected": [
+    {
+      "id": "china-ai-law-challenge/cail2018",
+      "reason": "license_grade=B 非 A"
+    },
+    {
+      "id": "Kuugo/Chinese_Law",
+      "reason": "license_grade=B 非 A"
+    },
+    {
+      "id": "Dusker/chinese-laws-pretrain",
+      "reason": "license_grade=B 非 A"
+    },
+    {
+      "id": "Brench/chinese_law_data_rag_ft",
+      "reason": "license_grade=B 非 A"
+    },
+    {
+      "id": "wormtooth/MNBVC-judgment",
+      "reason": "声明体积 121.5GB 超过 --max-gb 3.0 上限（超大语料只允许按需抽样）"
+    }
+  ],
+  "summary": {
+    "datasets_ok": 5,
+    "datasets_total": 6,
+    "files": 23,
+    "total_bytes": 1210296376,
+    "total_human": "1.1GB"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "id": "Skepsun/lawyer_llama_data",
+  "slug": "Skepsun__lawyer_llama_data",
+  "status": "OK",
+  "hub": "huggingface",
+  "endpoint": "https://hf-mirror.com",
+  "url": "https://hf-mirror.com/datasets/Skepsun/lawyer_llama_data",
+  "commit_sha": "10ca311982da0225c195f3f0a990db34c6b51a07",
+  "license": "apache-2.0",
+  "license_grade": "A",
+  "usage": [
+    "expert_train",
+    "router_train"
+  ],
+  "declared_bytes": 25165824,
+  "real_bytes": 23978267,
+  "dest": "/mnt/data/lidian/law-agent/data/corpus/raw/Skepsun__lawyer_llama_data",
+  "fetched_at": "2026-09-17T16:36:25",
+  "file_count": 3,
+  "total_bytes": 23978267,
+  "failed_files": []
+}

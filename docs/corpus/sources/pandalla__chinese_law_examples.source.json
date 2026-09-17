@@ -1,0 +1,21 @@
+{
+  "id": "pandalla/chinese_law_examples",
+  "slug": "pandalla__chinese_law_examples",
+  "status": "OK",
+  "hub": "huggingface",
+  "endpoint": "https://hf-mirror.com",
+  "url": "https://hf-mirror.com/datasets/pandalla/chinese_law_examples",
+  "commit_sha": "cdd5f044768ffaf43a2ba06f5e3015aa16cbd845",
+  "license": "apache-2.0",
+  "license_grade": "A",
+  "usage": [
+    "reference_only"
+  ],
+  "declared_bytes": 524288,
+  "real_bytes": 532236,
+  "dest": "/mnt/data/lidian/law-agent/data/corpus/raw/pandalla__chinese_law_examples",
+  "fetched_at": "2026-09-17T16:38:39",
+  "file_count": 3,
+  "total_bytes": 532236,
+  "failed_files": []
+}

@@ -1,0 +1,21 @@
+{
+  "id": "twang2218/chinese-law-and-regulations",
+  "slug": "twang2218__chinese-law-and-regulations",
+  "status": "OK",
+  "hub": "huggingface",
+  "endpoint": "https://hf-mirror.com",
+  "url": "https://hf-mirror.com/datasets/twang2218/chinese-law-and-regulations",
+  "commit_sha": "58db8b54863b7ed60cc0a23be362a5a57f48c6e9",
+  "license": "apache-2.0",
+  "license_grade": "A",
+  "usage": [
+    "statute_kb"
+  ],
+  "declared_bytes": 168000000,
+  "real_bytes": 160260826,
+  "dest": "/mnt/data/lidian/law-agent/data/corpus/raw/twang2218__chinese-law-and-regulations",
+  "fetched_at": "2026-09-17T16:38:02",
+  "file_count": 4,
+  "total_bytes": 160260826,
+  "failed_files": []
+}

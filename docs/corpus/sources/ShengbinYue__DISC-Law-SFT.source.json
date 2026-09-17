@@ -1,0 +1,23 @@
+{
+  "id": "ShengbinYue/DISC-Law-SFT",
+  "slug": "ShengbinYue__DISC-Law-SFT",
+  "status": "OK",
+  "hub": "huggingface",
+  "endpoint": "https://hf-mirror.com",
+  "url": "https://hf-mirror.com/datasets/ShengbinYue/DISC-Law-SFT",
+  "commit_sha": "fb12cf02809a85724f7e36977529b1d4b5f9f920",
+  "license": "apache-2.0",
+  "license_grade": "A",
+  "usage": [
+    "expert_train",
+    "router_train",
+    "general_replay"
+  ],
+  "declared_bytes": 606524000,
+  "real_bytes": 579185425,
+  "dest": "/mnt/data/lidian/law-agent/data/corpus/raw/ShengbinYue__DISC-Law-SFT",
+  "fetched_at": "2026-09-17T16:31:50",
+  "file_count": 6,
+  "total_bytes": 579185425,
+  "failed_files": []
+}

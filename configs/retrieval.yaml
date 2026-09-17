@@ -3,16 +3,44 @@
 # 链路：问题 → 抽取(法律名/时间/条款号/案由) → 时间版本过滤
 #       → 向量Top50 + BM25Top50 + 图谱扩展 → RRF → 重排 → Top5/8
 # ============================================================
+# ------------------------------------------------------------
+# 向量模型四路消融（详见 docs/model_selection.md）
+# 换向量模型 = 必须全量重建索引，不同模型向量不在同一空间
+# ------------------------------------------------------------
 embedding:
   primary:
+    model: "Qwen/Qwen3-Embedding-0.6B"
+    dim: 1024                    # 与 BGE-M3 同维度，可平滑替换
+    max_length: 32768
+    normalize: true
+    instruction_aware: true      # 查询侧必须加 "Instruct: {task}\nQuery: {q}"，约 +15% 召回
+    vram_gb: 1.2
+    mteb_multilingual: 64.33
+  upgrade:
+    model: "Qwen/Qwen3-Embedding-4B"
+    dim: 2560
+    max_length: 32768
+    normalize: true
+    instruction_aware: true
+    vram_gb: 8.0                 # fp16 推理，12GB 单卡可跑（仅推理，不训练）
+    mteb_multilingual: 69.45
+    note: "精度最高的一档；2560 维需重建索引"
+  hybrid_baseline:
     model: "BAAI/bge-m3"
     dim: 1024
     max_length: 8192
     normalize: true
-  baseline:                      # 论文原方案，做消融对比
+    vram_gb: 1.2
+    mteb_multilingual: 62.34
+    note: "唯一原生三合一（dense + sparse + ColBERT），混合检索的强基线"
+  legacy_baseline:
     model: "hfl/chinese-bert-wwm-ext"
     dim: 768
     normalize: true
+    note: "论文原方案。本质是预训练语言模型，不是检索嵌入模型，仅作退化对照"
+  excluded:
+    model: "Qwen/Qwen3-Embedding-8B"
+    reason: "fp16 需 16GB+ 显存，12GB 单卡不可用（如换卡再启用）"
 
 reranker:
   enabled: true                  # 消融实验：E5-no_rerank 时置 false

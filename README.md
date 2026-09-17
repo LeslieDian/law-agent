@@ -12,10 +12,10 @@
 
 | 层 | 组件 | 说明 |
 |---|---|---|
-| 底座模型 | `Qwen/Qwen2.5-7B-Instruct` | 固定版本/commit hash |
+| 底座模型 | `Qwen/Qwen3-8B-Instruct` | 固定 commit hash；12GB 显存下 ≤9B 稠密 + QLoRA 4bit。选型分析见 [`docs/model_selection.md`](docs/model_selection.md) |
 | 领域适配 | QLoRA（4bit NF4 + 双重量化 + BF16） | 民法 / 刑法 / 程序法 三个适配器 + 请求级路由 |
 | 知识层 | Neo4j（Community / Enterprise） | Law / LawVersion / Provision / Case / Cause / Court… |
-| 检索 | BGE-M3 向量 + BM25/全文 + 图谱扩展 | 排名融合 RRF(k=60) |
+| 检索 | Qwen3-Embedding-0.6B 向量 + BM25/全文 + 图谱扩展 | 排名融合 RRF(k=60)；向量模型四路消融（BERT-wwm / BGE-M3 / Qwen3-Emb-0.6B / -4B） |
 | 重排 | `BAAI/bge-reranker-v2-m3` | 精排 Top-5 / Top-8 |
 | 编排 | LangGraph | 事实整理 → 证据检索 → 专家路由 → 适配器调用 → 结果聚合 |
 | 评测 | CLaw 基准 | 306 部法律 / 64,849 条法条 / 254 个最高法案例 |

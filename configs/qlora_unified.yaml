@@ -4,12 +4,35 @@
 # ============================================================
 run_name: qlora_unified_v1
 
+# ------------------------------------------------------------
+# 底座模型选型（详见 docs/model_selection.md）
+# 12GB 显存下的可行区间：≤9B 稠密，且必须 QLoRA 4bit
+#
+# 主力（推荐）：Qwen/Qwen3-8B-Instruct
+#   同尺寸级别、工具链最成熟、仅非思考模式（输出格式最可控）
+# 备选：Qwen/Qwen3-8B
+#   支持思考/非思考双模式，调用时加 /no_think 关闭思考
+# 进阶：Qwen/Qwen3.5-9B（2026-03，262K ctx，Apache 2.0）
+#   ⚠️ 新架构 Gated DeltaNet 混合注意力 + 原生多模态，
+#      peft/bitsandbytes 兼容性验证不如 Qwen3 稠密充分，先跑 500 条冒烟再定
+# 对照基线：Qwen/Qwen2.5-7B-Instruct（论文原方案）
+# 法律专用对照：LegalOne-R1-8B（清华，2026-01 开源，LexEval/LawBench 有成绩）
+#
+# ✗ 不可用：Qwen3-14B / Qwen3.5-27B / Qwen3-30B-A3B 及以上
+#   4bit 量化后仍需 9~16GB+，12GB 单卡必然 OOM
+# ------------------------------------------------------------
 model:
-  base_model: "Qwen/Qwen2.5-7B-Instruct"
+  base_model: "Qwen/Qwen3-8B-Instruct"
   base_revision: "PIN_COMMIT_HASH"        # ★ 必须固定到具体 commit，不要用 main
   trust_remote_code: true
   torch_dtype: bfloat16
   attn_implementation: "flash_attention_2" # 装不上则改 "sdpa"
+  # 底座对比实验（论文表 5，见 docs/model_selection.md）
+  base_model_candidates:
+    - "Qwen/Qwen2.5-7B-Instruct"   # 原始方案，作对照
+    - "Qwen/Qwen3-8B-Instruct"     # 主力
+    - "Qwen/Qwen3.5-9B"            # 进阶（需先验证兼容性）
+    - "LegalOne-R1-8B"             # 法律专用对照
 
 quantization:
   load_in_4bit: true

@@ -1,0 +1,29 @@
+# 统一换行符，避免 Windows/Linux 协作时整文件 diff
+* text=auto eol=lf
+
+# 二进制文件不做转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.pdf binary
+*.docx binary
+*.xlsx binary
+*.pptx binary
+*.parquet binary
+*.arrow binary
+*.faiss binary
+*.npy binary
+*.bin binary
+*.safetensors binary
+*.pt binary
+*.ckpt binary
+
+# 训练/评测输出不参与语言统计
+outputs/** linguist-generated=true
+*.jsonl linguist-generated=true
+
+# 明确 YAML / Cypher 用于高亮
+*.yaml text
+*.yml text
+*.cypher text

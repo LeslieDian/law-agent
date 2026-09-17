@@ -1,0 +1,44 @@
+# ============================================================
+# 混合检索 + 重排序配置
+# 链路：问题 → 抽取(法律名/时间/条款号/案由) → 时间版本过滤
+#       → 向量Top50 + BM25Top50 + 图谱扩展 → RRF → 重排 → Top5/8
+# ============================================================
+embedding:
+  primary:
+    model: "BAAI/bge-m3"
+    dim: 1024
+    max_length: 8192
+    normalize: true
+  baseline:                      # 论文原方案，做消融对比
+    model: "hfl/chinese-bert-wwm-ext"
+    dim: 768
+    normalize: true
+
+reranker:
+  enabled: true                  # 消融实验：E5-no_rerank 时置 false
+  model: "BAAI/bge-reranker-v2-m3"
+  top_n: 8
+
+retrieval:
+  vector_top_k: 50
+  keyword_top_k: 50
+  graph_expand_hops: 1           # 沿 (Case)-[:CITES]->(Provision) 等关系扩展
+  rrf_k: 60                      # RRF(d) = Σ 1/(k + rank(d))
+  final_top_n: 5
+  # 时间版本过滤（不可省略，否则会用新法解释旧案）
+  time_filter:
+    enabled: true                # 消融实验：E5-no_timefilter 时置 false
+    rule: "effective_from <= case_date AND (effective_to IS NULL OR effective_to > case_date)"
+
+neo4j:
+  uri: "bolt://localhost:7687"
+  user: "neo4j"
+  password: "${NEO4J_PASSWORD}"  # 从 .env 读取，绝不写死
+  vector_index: "provision_embedding"
+  fulltext_index: "provision_fulltext"
+  # 索引配置见 docs/neo4j_setup.cypher
+
+evaluation_targets:
+  recall_at_5: 0.85
+  recall_at_10: 0.90
+  historical_version_accuracy: 0.95

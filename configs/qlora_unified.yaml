@@ -1,0 +1,73 @@
+# ============================================================
+# QLoRA 训练配置（统一法律适配器 unified）
+# 阶段一：先训统一适配器打通全流程；流程稳定后再拆三适配器
+# ============================================================
+run_name: qlora_unified_v1
+
+model:
+  base_model: "Qwen/Qwen2.5-7B-Instruct"
+  base_revision: "PIN_COMMIT_HASH"        # ★ 必须固定到具体 commit，不要用 main
+  trust_remote_code: true
+  torch_dtype: bfloat16
+  attn_implementation: "flash_attention_2" # 装不上则改 "sdpa"
+
+quantization:
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_compute_dtype: bfloat16
+
+lora:
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  bias: none
+  task_type: CAUSAL_LM
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+training:
+  max_seq_length: 2048
+  micro_batch_size: 1
+  gradient_accumulation_steps: 16      # 等效 batch = 16
+  gradient_checkpointing: true
+  learning_rate: 0.0001
+  num_train_epochs: 2
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  lr_scheduler_type: cosine
+  max_grad_norm: 1.0
+  optim: paged_adamw_8bit               # 12GB 显存关键
+  bf16: true
+  fp16: false
+  logging_steps: 10
+  save_strategy: epoch
+  save_total_limit: 3
+  seed: 42
+
+data:
+  train_file: data/train/train.jsonl
+  dev_file: data/dev/dev.jsonl
+  format: chat                         # messages 列表格式
+  assistant_only_loss: true            # ★ 只对 assistant 段计算 loss
+  chat_template: qwen2                  # 需与底座模型自带模板一致
+
+output:
+  output_dir: models/adapters/unified
+  logging_dir: outputs/train_logs/unified
+
+# ---- 冒烟测试（先跑通再上全量）----
+smoke_test:
+  enabled: true
+  max_samples: 500
+  checks:
+    - chat_template 渲染正确
+    - 仅 assistant 段计入 loss
+    - loss 正常下降（无 NaN）
+    - 记录显存峰值

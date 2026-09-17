@@ -1,0 +1,28 @@
+# ============================================================
+# 三领域适配器 + 请求级路由配置
+# 前提：统一适配器流程（E0/E1/E2/E3/E5）已跑通，再加入本配置做路由消融
+# ============================================================
+adapters:
+  civil:
+    path: models/adapters/civil
+    train_file: data/train/civil.jsonl
+    domain_label: "民商事"
+  criminal:
+    path: models/adapters/criminal
+    train_file: data/train/criminal.jsonl
+    domain_label: "刑事"
+  procedure:
+    path: models/adapters/procedure
+    train_file: data/train/procedure.jsonl
+    domain_label: "诉讼程序 / 证据 / 管辖"
+  unified:
+    path: models/adapters/unified
+    # 兜底：混合问题、无法判断领域、路由置信度低于阈值
+
+router:
+  enabled: true
+  strategy: "rule_then_llm"     # 先规则匹配关键词，失败再走 LLM 分类
+  llm_model: "Qwen/Qwen2.5-7B-Instruct"
+  confidence_threshold: 0.6     # 低于此值 → 回退 unified
+  log_decision: true            # 必须记录路由决策，供消融分析
+  cross_domain_policy: "multi_adapter"   # 跨法域问题按子任务调用多个适配器后聚合

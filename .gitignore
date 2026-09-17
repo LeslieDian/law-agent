@@ -1,0 +1,95 @@
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ---------- 虚拟环境 ----------
+.venv/
+venv/
+env/
+ENV/
+conda-env/
+
+# ---------- Notebook / 缓存 ----------
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+
+# ---------- 模型权重（体积大，不入库） ----------
+models/base/*
+!models/base/.gitkeep
+models/adapters/*
+!models/adapters/.gitkeep
+
+# ---------- 索引与嵌入（体积大，不入库） ----------
+indexes/*
+!indexes/.gitkeep
+*.faiss
+*.index
+*.npy
+*.mmap
+
+# ---------- 数据（千万级条文，不入库） ----------
+data/raw/*
+!data/raw/.gitkeep
+data/normalized/*
+!data/normalized/.gitkeep
+data/train/*
+!data/train/.gitkeep
+data/dev/*
+!data/dev/.gitkeep
+data/benchmark/*
+!data/benchmark/.gitkeep
+corpus/statutes/*
+!corpus/statutes/.gitkeep
+corpus/cases/*
+!corpus/cases/.gitkeep
+corpus/metadata/*
+!corpus/metadata/.gitkeep
+*.parquet
+*.arrow
+*.jsonl.gz
+
+# ---------- 运行输出 ----------
+outputs/**/*.jsonl
+outputs/**/*.parquet
+outputs/**/*.log
+
+# ---------- 密钥与凭据（绝不入库） ----------
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+credentials.json
+service-account*.json
+
+# ---------- 系统 / 编辑器 ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+*~

@@ -1,0 +1,47 @@
+# ============================================================
+# Judge 评分配置（CLaw 官方协议）
+# ============================================================
+judges:
+  - name: "gemini-2.5-pro"
+    provider: google
+    api_key_env: "GEMINI_API_KEY"
+  - name: "deepseek-r1"
+    provider: openai_compatible
+    base_url_env: "DEEPSEEK_BASE_URL"
+    api_key_env: "DEEPSEEK_API_KEY"
+
+evaluation:
+  dimensions:                     # 五个分项，每项 Good=20 / Normal=10 / Bad=0
+    - reasoning        # 推理严谨性
+    - knowledge        # 知识准确性
+    - structure        # 逻辑结构性
+    - clarity          # 观点清晰性
+    - conciseness      # 表达简洁性
+  overall_scale: [0, 100]         # ★ 总体分不是五项简单相加
+  aggregation: "mean_over_cases"  # 官方：254 个案例取平均
+
+blindness:                        # ★ 双盲，防止 Judge 偏见
+  anonymize_system_name: true     # 系统名替换为随机编号
+  hide_labels: ["本系统", "基础模型", "E0", "E5"]
+  shuffle_answer_order: true
+  seed: 42
+
+protocol:
+  provide: ["question", "reference_answer", "candidate_answer"]
+  use_official_prompt: true       # 必须使用论文附录原始 Judge 提示词
+  output_format: json
+  retry_on_parse_error: true      # 无法解析可重试，但不得修改被测答案
+  max_retries: 3
+
+statistics:
+  inter_judge: ["pearson", "spearman"]
+  ci_method: "bootstrap"
+  ci_level: 0.95
+  bootstrap_iters: 10000
+  paired_test:
+    pairs: [["E0", "E5"]]
+    report: ["mean_gain", "ci95", "p_value", "win_tie_loss"]
+
+note: >
+  若原版 Gemini-2.5-Pro 或 DeepSeek-R1 接口已不可用，须在论文中注明：
+  "本实验使用现行模型版本重新评分，因此评分与 CLaw 论文历史结果仅作参考性比较。"

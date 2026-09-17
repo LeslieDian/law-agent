@@ -1,0 +1,35 @@
+# ============================================================
+# 推理参数（所有实验统一，锁定后不得逐实验微调）
+# ============================================================
+generation:
+  do_sample: false          # ★ 统一贪心解码，保证可复现
+  temperature: 0.0
+  top_p: 1.0
+  max_new_tokens: 1536
+  repetition_penalty: 1.0
+
+prompts:
+  # 提示词文件化 + 计算 sha256，写入每次运行记录
+  closed_book: configs/prompts/closed_book.txt
+  rag: configs/prompts/rag.txt
+  statute_content_retrieval: configs/prompts/statute_content.txt   # 给位置→输出原文
+  statute_id_retrieval: configs/prompts/statute_id.txt             # 给原文→输出条/款/项
+  case_reasoning: configs/prompts/case_reasoning.txt
+
+run_record:
+  # 每个问题必须落盘下列字段，缺一不可
+  required_fields:
+    - run_id
+    - case_id
+    - base_model
+    - adapter_hash
+    - prompt_hash
+    - retrieved_provisions      # ★ 检索结果必须保存，不能只存最终答案
+    - router_decision           # 适配器路由决策
+    - time_filter_applied
+    - response
+    - input_tokens
+    - output_tokens
+    - latency_ms
+    - error
+  output_dir: outputs

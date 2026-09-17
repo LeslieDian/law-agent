@@ -1,0 +1,46 @@
+# ===== 法律领域智能体 实验依赖 =====
+# 安装：pip install -r requirements.txt
+# 冻结：pip freeze > requirements-lock.txt
+
+# ---- 基础 ----
+numpy
+pandas
+pyarrow
+scikit-learn
+tqdm
+pyyaml
+python-dotenv
+
+# ---- 深度学习 ----
+# 注意：torch 需按本机 CUDA 驱动版本单独安装，见 https://pytorch.org/get-started/locally/
+# pip install torch --index-url https://download.pytorch.org/whl/cu121
+transformers
+datasets
+accelerate
+peft
+trl
+bitsandbytes
+
+# ---- 向量与嵌入 ----
+sentence-transformers
+FlagEmbedding          # BGE-M3 / bge-reranker-v2-m3
+
+# ---- 知识图谱 ----
+neo4j
+
+# ---- 检索与文本处理 ----
+rank_bm25
+jieba
+rapidfuzz
+datasketch             # MinHash 近似查重
+
+# ---- 评测指标 ----
+rouge-score
+sacrebleu
+bert-score
+evaluate
+
+# ---- 生成评测 Judge ----
+# 使用官方 Judge：Gemini-2.5-Pro / DeepSeek-R1，通过 API 调用，密钥写入 .env
+openai                 # 兼容大多数第三方 OpenAI 协议网关
+google-genai

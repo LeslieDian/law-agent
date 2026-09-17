@@ -1,0 +1,90 @@
+{
+  "_comment": "数据固化清单。data/raw 下载后立即登记，此后只读。所有 sha256 由 scripts/register_data.py 自动填充。",
+  "created_at": "2026-09-17",
+  "last_updated": null,
+  "protocol": {
+    "raw_dir_readonly": true,
+    "hash_algorithm": "sha256",
+    "reproducible_notes": "必须记录下载日期、来源地址、数据版本；禁止覆盖原始文件，修订版另存为 *_v2"
+  },
+  "dataset": {
+    "name": "CLaw",
+    "scope": "民法 / 刑法 / 程序法 三法域法律知识 + 案例推理",
+    "contact": "ypxxz2019@pku.edu.cn",
+    "official_repo": null,
+    "reproduction_statement": "依据 CLaw 公开论文所描述协议构建的兼容性复现实验",
+    "warning": "不得表述为『完全复现 CLaw 官方实验』"
+  },
+  "expected_counts": {
+    "laws": 306,
+    "provisions": 64849,
+    "cases": 254
+  },
+  "verified_counts": {
+    "laws": null,
+    "provisions": null,
+    "cases": null
+  },
+  "verification_status": "PENDING",
+  "files": [
+    {
+      "file": "data/raw/claw_statutes.jsonl",
+      "kind": "statutes",
+      "expected_records": 64849,
+      "actual_records": null,
+      "source_url": null,
+      "download_date": null,
+      "data_version": null,
+      "sha256": null
+    },
+    {
+      "file": "data/raw/claw_cases.jsonl",
+      "kind": "cases",
+      "expected_records": 254,
+      "actual_records": null,
+      "source_url": null,
+      "download_date": null,
+      "data_version": null,
+      "sha256": null
+    },
+    {
+      "file": "data/raw/claw_prompts.json",
+      "kind": "prompts",
+      "expected_records": null,
+      "actual_records": null,
+      "source_url": null,
+      "download_date": null,
+      "data_version": null,
+      "sha256": null
+    },
+    {
+      "file": "data/raw/claw_judge_prompt.txt",
+      "kind": "judge_prompt",
+      "expected_records": null,
+      "actual_records": null,
+      "source_url": null,
+      "download_date": null,
+      "data_version": null,
+      "sha256": null
+    }
+  ],
+  "statute_fields_required": [
+    "law_id", "law_name", "version_id", "promulgation_date",
+    "effective_from", "effective_to", "article_no", "paragraph_no",
+    "subparagraph_no", "text", "source_url", "sha256"
+  ],
+  "case_fields_required": [
+    "case_id", "facts", "judgment", "question", "reference_answer",
+    "source", "publication_date", "case_type"
+  ],
+  "corpus_sources_priority": [
+    "国家法律法规数据库",
+    "全国人大官方网站",
+    "中国政府网",
+    "最高人民法院公开材料",
+    "其他具有明确来源与发布日期的司法文件"
+  ],
+  "corpus_fields_required": [
+    "原始来源", "发布日期", "生效日期", "失效日期", "法律版本", "抓取日期"
+  ]
+}

@@ -92,6 +92,10 @@ nvidia-smi
 python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0), torch.cuda.get_device_capability())"
 ```
 
+> **Windows 原生环境下运行脚本**：控制台默认代码页会导致中文输出乱码。
+> 请先设置 `set PYTHONUTF8=1`（cmd）/ `$env:PYTHONUTF8="1"`（PowerShell），或在 WSL2 内运行。
+> 建议整体在 WSL2 Ubuntu 中执行，避免路径与编码问题。
+
 ## 5. 数据与合规（强制）
 
 - `data/raw/` **只读**：下载后计算 SHA-256，记录来源、日期、版本，写入 `docs/data_manifest.json`。

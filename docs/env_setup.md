@@ -109,19 +109,23 @@ uv pip install --python "$PY" \
 | 训练 | `torch==2.6.0+cu124`、`transformers` 5.17、`datasets`、`accelerate`、`peft` 0.21、`trl` 1.13、`bitsandbytes` 0.50 |
 | 向量 / 检索 | `sentence-transformers` 6.0、`faiss-cpu`、`rank-bm25`、`jieba`、`datasketch`、`rapidfuzz` |
 | 图谱 | `neo4j` 6.3（Python 驱动）+ Neo4j 5.26 社区版（Docker） |
+| 编排 | `langgraph` 1.2（自带 `langchain-core` 1.6 / `langgraph-checkpoint` / `langgraph-sdk`） |
 | 评测 | `rouge-score`、`sacrebleu`、`bert-score`、`nltk`、`evaluate` |
-| Judge | `openai`、`google-genai`、`tenacity`（重试） |
-| 通用 | `numpy` `scipy` `scikit-learn` `pandas` `pyarrow` `pyyaml` `python-dotenv` `tqdm` `rich` `loguru` `tabulate` `tensorboard` |
 
 **未安装及原因**：
 
 - `FlagEmbedding` —— 其旧版本对 `transformers` 有上界约束，会与 Qwen3 所需的新版冲突。
   BGE-M3 与 bge-reranker-v2-m3 改由 `sentence-transformers`（`SentenceTransformer` /
   `CrossEncoder`）加载，功能等价且无版本冲突。
+- `langchain`（元包）—— **不需要**。`langgraph` 独立可用，装元包只会引入大量无关依赖。
 - `flash-attn` —— 服务器**无 nvcc**，编译需要本地 CUDA Toolkit。
   默认使用 PyTorch 原生 `sdpa` 注意力（A800 上性能已足够）。
   若确需 flash-attn，可先用 `pip install nvidia-cuda-nvcc-cu12` 提供 nvcc 再源码编译。
 - 未装 vLLM —— 其对 torch 版本有硬钉死要求，会与主环境冲突；如需高速批量推理单开环境。
+
+> ⚠️ **venv 里没有 `pip` 是正常的**（uv 建的环境默认不带）。需要时用
+> `uv pip install --python <venv>/bin/python <pkg>`，或先补 `pip`。
+> `uv` 二进制在 `~/.local/bin/uv`，**不在默认 PATH 里**，脚本中需用全路径。
 
 ---
 
@@ -163,8 +167,13 @@ source scripts/activate.sh          # 激活环境 + 设置全部变量
 
 ```bash
 source /mnt/data/lidian/law-agent/scripts/activate.sh
-python scripts/selfcheck.py
+bash scripts/verify_env.sh        # 一键全量自检（推荐，实测版）
+python scripts/selfcheck.py       # 细项自检
 ```
+
+`scripts/verify_env.sh` 是**实测版**自检：会真跑 CUDA 计算、真分配显存、真连 Neo4j，
+因此能识别「装了 CPU-only torch」「torch 编译的 CUDA 版本高于驱动上限」这类
+**光靠 `import torch` 完全测不出来**的问题。退出码 0 = 全通过。
 
 `scripts/selfcheck.py` 逐项检查：GPU 数量与显存、torch/CUDA 版本一致性、
 bf16 矩阵乘、bitsandbytes NF4 前向、各关键包导入、模型权重完整性、Neo4j 连通性。
@@ -201,6 +210,55 @@ bf16 矩阵乘、bitsandbytes NF4 前向、各关键包导入、模型权重完�
 2 个全文索引  provision_fulltext / case_fulltext
 全部状态 ONLINE；Python 驱动 bolt://127.0.0.1:7687 连通正常
 ```
+
+> 实测复核（`SHOW INDEXES` 聚合）：索引总数 **17**，其中向量索引 **4**，ONLINE **17**。
+
+### 7.3 环境真伪核验（2026-09-17 全量实测）
+
+`bash scripts/verify_env.sh` 全部 PASS。以下为**实测证据**，不是配置读取：
+
+| 检查项 | 实测值 | 说明 |
+|---|---|---|
+| `torch.__version__` | `2.6.0+cu124` | 编译 CUDA 12.4 |
+| `torch.backends.cuda.is_built()` | `True` | **不是 CPU-only 构建** |
+| `torch.cuda.is_available()` | `True` | |
+| `device_count` | `2` | A800 80GB PCIe × 2，cc 8.0，各 108 SM |
+| 进程内已加载的 CUDA 运行库 | `libcudart.so.12` `libcublas.so.12` `libcublasLt.so.12` `libnccl.so.2` `libnvrtc.so.12` | `/proc/<pid>/maps` 实读 |
+| **8192³ bf16 矩阵乘（GPU）** | **249.7 TFLOPS** | 0.0044 s/次 |
+| 8192³ bf16 矩阵乘（CPU 128 核） | 0.8 TFLOPS | 1.3260 s/次 |
+| **GPU / CPU 加速比** | **301x** | CPU 硬件上限约 1–2 TFLOPS，不可能达到 249.7 |
+| 显存分配实测 | 申请 5 GiB → 实占 **5.07 GiB** | `torch.cuda.mem_get_info` 差值 |
+| `nvidia-smi` 交叉验证 | 进程占 10730 MiB，`--query-compute-apps` 能列出 PID | 与 torch 自述一致，无监控盲区 |
+| 依赖完整性 | 22 个关键包全部 OK，`pip check` 无冲突 | `langgraph 1.2.11` 就位 |
+| 模型资产 | `Qwen3-8B` 16G / 5 分片；`Qwen3-Embedding-0.6B` 1.2G | |
+| Neo4j | Kernel 5.26.30，索引 17 个全 ONLINE | |
+
+**结论：GPU 链路完全打通，不是 CPU 回退。**
+
+关于 `nvidia-smi` 的一处历史困惑（早期探测曾看到 `1 MiB, 0%`）：
+原因是当时的测试脚本用了后台 + heredoc 的写法导致采样时机错位，
+**不是监控盲区**。用「后台进程占住 10 GiB → 独立连接采样」的方式复核，
+`nvidia-smi` 与 `torch.cuda.mem_get_info` 数值一致（10739 MiB vs 10.00 GiB）。
+训练时可以直接用 `nvidia-smi` 或 `watch -n1 nvidia-smi` 观察显存。
+
+### 7.4 环境资产落点（诚实清点）
+
+题目是「是否都装在项目目录下」。结论：**主体在项目目录，有一处例外**。
+
+| 资产 | 路径 | 体积 | 是否在项目目录 |
+|---|---|---|---|
+| Python 包（site-packages） | `$ROOT/envs/main` | 6.4 G | ✅ |
+| 模型权重 | `$ROOT/models` | 17 G | ✅ |
+| Neo4j 数据/日志/插件 | `$ROOT/neo4j` | 517 M | ✅ |
+| **Python 解释器本体** | `~/.local/share/uv/python/cpython-3.11.16-…` | 98 M | ❌ 在 `$HOME` |
+| uv 包缓存（安装期用，可删） | `/mnt/data/lidian/.cache/uv` | 18 G | ❌ 在 `$HOME` 同级 |
+| pip 缓存 | `~/.cache` | 1.2 G | ❌ 在 `$HOME` |
+
+- 解释器本体 98M 在 `$HOME` 是 `uv` 的设计（多 venv 共享同一解释器），`$HOME/.local` 合计 230M。
+- `uv` 缓存 18G 是**安装过程的中间缓存，可以随时删除**：`rm -rf /mnt/data/lidian/.cache/uv`。
+  删掉不影响已装好的环境，只是下次装包会重新下载。
+- 三者都在 `/mnt/data` 卷（8.7T，剩余 5.1T）或 `/` 卷（1.8T，剩余 972G）上，**没有撑爆任何分区**。
+- **系统 Python 3.8 完全未被污染**：`/usr/lib/python3/dist-packages` 下无 torch、无 transformers。
 
 ---
 

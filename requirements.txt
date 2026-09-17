@@ -4,8 +4,11 @@
 #      bash scripts/server_env.sh
 # 或参考 docs/env_setup.md。
 #
-# ⚠️ 冻结后的精确清单在 requirements-lock.txt（由服务器实装环境导出，206 行）。
+# ⚠️ 冻结后的精确清单在 requirements-lock.txt（由服务器实装环境导出，218 项）。
 #   复现实验时以 lock 文件为准，本文件只用于说明依赖构成。
+#
+# ⚠️ 环境自检：bash scripts/verify_env.sh
+#   会实测 GPU、CUDA 运行库、显存分配、模型加载、依赖完备性，非读取配置。
 #
 # ⚠️ torch 的版本必须与服务器驱动支持的 CUDA 主版本一致（本机为 12.4），
 #   且**不要**用 `--index-strategy unsafe-best-match` 安装（会挑到 CUDA 13 版导致 GPU 不可用）。
@@ -47,6 +50,11 @@ faiss-cpu                    # 向量索引（HNSW/IVF）
 
 # ---- 知识图谱 ----
 neo4j                        # Python 驱动；服务端 Neo4j 5.26 走 Docker，见 docs/env_setup.md
+
+# ---- 编排（LangGraph）----
+# 事实整理 → 证据检索 → 专家路由 → 适配器调用 → 结果聚合
+langgraph                    # 实测 1.2.11；自带 langchain-core / langgraph-checkpoint / langgraph-sdk
+# 注意：不需要装 langchain 元包，langgraph 独立可用
 
 # ---- 检索与文本处理 ----
 rank_bm25

@@ -1,0 +1,219 @@
+# 法律语料候选源登记表（机器可读）
+#
+# 采集脚本（scripts/corpus/fetch_corpus.py）应直接读本文件，不要在脚本里硬编码数据集名。
+# 所有 size_bytes / license 字段均为 2026-09-17 在服务器 192.168.195.61 上实测所得，
+# 探测脚本：scripts/benchmarks/probe_hf_datasets{1,2,3,4}.py
+#
+# license_grade 语义（决定能否进论文实验集）：
+#   A = 协议明确（Apache-2.0 / MIT），可用于论文实验
+#   B = 协议不明 / unknown / gated，仅限内部探索，进论文实验集前必须先确认授权
+#
+# usage 语义：
+#   expert_train   → 喂给专家 LoRA
+#   router_train   → 派生路由训练数据（注意：必须与 expert_train 切分，见 docs/finetune_data_plan.md 第 5.1 节）
+#   statute_kb     → 法条原文，进知识库 / 生成法条任务
+#   case_corpus    → 案例语料，按需抽样，禁止整下
+#   general_replay → 通用回放，防灾难性遗忘
+#   reference_only → 仅参考格式，不实际训练
+
+meta:
+  probed_at: "2026-09-17"
+  probed_on: "192.168.195.61"
+  endpoint: "https://hf-mirror.com"
+  # 重要陷阱：hf-mirror 对「不存在的仓库」返回 HTTP 401 而非 404，
+  # 因此不允许用「凭记忆猜 ID + 探测」的方式判断可用性，必须先用搜索接口反查真实 ID。
+  known_trap: "hf-mirror returns HTTP 401 for non-existent repos (not 404)"
+  # HF 搜索接口对中文关键词无效（'法律'/'刑法'/'判决'/'法条' 均返回 0 条），只能靠英文或已知 ID 定位。
+
+sources:
+
+  # ============================================================
+  # A 级：协议明确，可用于论文实验
+  # ============================================================
+
+  - id: ShengbinYue/DISC-Law-SFT
+    hub: huggingface
+    size_bytes: 606524000        # ~579.2 MB
+    file_count: 6
+    license: apache-2.0
+    license_grade: A
+    usage: [expert_train, router_train, general_replay]
+    note: >
+      主力语料，403K 样本。含 DISC-Law-SFT-Pair.jsonl(346.8MB) /
+      -Pair-QA-released.jsonl(94.0MB) / -Triplet-QA-released.jsonl(85.5MB) /
+      -Triplet-released.jsonl(52.8MB)。
+      字段为 {id, input, output}；id 前缀编码任务类型（如 jud_doc_sum-1）。
+      判决类样本的 input 自带案由与文书类型 → 民法/刑法域可正则抽取。
+      内置 48K Alpaca-GPT4 + 60K Firefly 通用数据，可直接做 general_replay。
+    correction: "此前误记为 FudanDISC/DISC-Law-SFT，真实 ID 为 ShengbinYue/DISC-Law-SFT"
+
+  - id: Skepsun/lawyer_llama_data
+    hub: huggingface
+    size_bytes: 25165824         # ~24.0 MB
+    file_count: 3                # all.json / .gitattributes / README.md
+    license: apache-2.0
+    license_grade: A
+    usage: [expert_train, router_train]
+    note: >
+      司法考试题。字段 {input, instruction, output, history, source, prefix}，
+      source 直接标来源（如 judical_examination.json）。
+      实测样本即为《民事诉讼法》《刑事诉讼法》程序法题（"简易程序""补充侦查"）
+      → 程序法域的关键现成来源。
+    risk: "LexRubric 的 sifakaoshi split 同为司法考试题，存在同源风险，阶段 3 去污必须核查"
+
+  - id: Dusker/lawyer-llama
+    hub: huggingface
+    size_bytes: 468000000        # ~446.3 MB
+    file_count: 7
+    license: mit
+    license_grade: A
+    usage: [expert_train, case_corpus]
+    note: >
+      含 kg_crime_llama.json (7.14 MB) —— 犯罪知识图谱数据，刑法域可转问答。
+      另含 DISC-Law-SFT-Pair.json / -Triplet.json，与主源重复，注意去重。
+
+  - id: twang2218/chinese-law-and-regulations
+    hub: huggingface
+    size_bytes: 168000000        # ~160.3 MB
+    file_count: 4                # data/train-*.parquet + metadata/train-*.parquet
+    license: apache-2.0
+    license_grade: A
+    usage: [statute_kb]
+    note: "大体量带元数据法条库。协议干净，是「可用于论文」的法条原文首选。"
+
+  - id: pandalla/chinese_law_examples
+    hub: huggingface
+    size_bytes: 524288           # ~0.5 MB
+    file_count: 3                # law_item.jsonl
+    license: apache-2.0
+    license_grade: A
+    usage: [reference_only]
+    note: "体量极小，仅作格式参考。"
+
+  - id: Aiiluo/Chinese-Law-SFT-Dataset
+    hub: huggingface
+    size_bytes: 2726297          # ~2.6 MB
+    file_count: 6
+    license: apache-2.0
+    license_grade: A
+    gated: auto                  # 需登录 HF 账号，服务器上需配置 token
+    usage: [expert_train]
+    note: >
+      文件名已按域分好：Chinese_Civil_and_Commercial Law_*_Basic / _Case、
+      Chinese_Criminal_Law_*_Basic。体量小但协议干净、域标签现成。
+
+  # ============================================================
+  # B 级：协议不明 / unknown —— 仅内部探索，进论文实验集前必须确认授权
+  # ============================================================
+
+  - id: china-ai-law-challenge/cail2018
+    hub: huggingface
+    size_bytes: 1224600000       # ~1167.8 MB
+    file_count: 11               # data/first_stage_train-0000{0..3}-of-00004.parquet
+    license: unknown
+    license_grade: B
+    usage: [expert_train]
+    note: >
+      刑事一审判决：罪名 + 法条 + 刑期，刑法域的黄金标注。
+      HF 上的 license 字段为 unknown；GitHub 仓库 china-ai-law-challenge/CAIL2018
+      为 0 MB 纯外链，数据只能走这份 parquet。
+    action_required: "联系主办方确认学术使用授权，或论文中明确披露来源与获取方式"
+
+  - id: Kuugo/Chinese_Law
+    hub: huggingface
+    size_bytes: 7969178          # ~7.6 MB
+    file_count: 238              # 238 个 .txt
+    license: null
+    license_grade: B
+    usage: [statute_kb]
+    note: >
+      文件名即《中华人民共和国民法典.txt》《中华人民共和国刑法.txt》
+      《中华人民共和国刑事诉讼法.txt》→ 最省事的 306 部法律原文来源。
+      但 license 未声明。
+
+  - id: Dusker/chinese-laws-pretrain
+    hub: huggingface
+    size_bytes: 5767168          # ~5.5 MB
+    file_count: 119              # 按编拆分的 json
+    license: null
+    license_grade: B
+    usage: [statute_kb]
+    note: "刑法.json / 合同编.json / 物权编.json —— 结构化最好，最便于切条，但 license 未声明。"
+
+  - id: Brench/chinese_law_data_rag_ft
+    hub: huggingface
+    size_bytes: 531500000        # ~506.9 MB
+    file_count: 5                # laws_data_281k.jsonl(302MB) / data/train-*.parquet(167MB) / laws_data_50k_test.jsonl(37MB)
+    license: null
+    license_grade: B
+    usage: [statute_kb, expert_train]
+    note: "laws_data_281k.jsonl = 28.1 万条法条/条文数据，RAG 侧可用。license 未声明。"
+
+  - id: wormtooth/MNBVC-judgment
+    hub: huggingface
+    size_bytes: 130490000000     # ~124.5 GB —— 极大量级
+    file_count: 996              # data/*.jsonl.gz
+    license: mit
+    license_grade: A
+    usage: [case_corpus]
+    note: "判决书大规模语料。MIT 协议干净，但 124 GB —— 只允许按需抽样单文件，禁止整下。"
+    guard: "MUST sample, never full download"
+
+# ============================================================
+# 已证伪 / 不可用（别再试）
+# ============================================================
+invalid:
+  - id: OpenBMB/LawBench
+    reason: "HF 上不存在官方仓库（只有 doolayer/LawBench 等非官方镜像）"
+  - id: THUIR/LEEC
+    reason: "不在 HF 镜像上"
+  - id: CSHaitao/LegalAgentBench
+    reason: "不在 HF 镜像上（GitHub 有，6.0 MB）"
+  - id: china-ai-law-challenge/cail2019
+    reason: "HF 镜像无；GitHub 有（178.6 MB）。CAIL2019 覆盖民事+刑事，是民法域候选，需另行拉取。"
+  - id: hf_search_cjk
+    reason: "HF 搜索接口对中文关键词返回 0 条（'法律'/'刑法'/'判决'/'司法考试'/'法条' 全部为空）"
+
+# ============================================================
+# GitHub 侧 CAIL 系列（数据多走外链或 HF，仓库体积仅供参考）
+# ============================================================
+github_refs:
+  - repo: china-ai-law-challenge/CAIL2018
+    repo_size_bytes: 0
+    note: "0 MB 纯外链，数据走 HF parquet"
+  - repo: china-ai-law-challenge/CAIL2019
+    repo_size_bytes: 187000000   # 178.6 MB
+    note: "覆盖民事+刑事，含法条推荐/相似案例。民法域与程序法域的补充候选。"
+  - repo: china-ai-law-challenge/CAIL2022
+    repo_size_bytes: 24800000    # 23.7 MB
+  - repo: china-ai-law-challenge/CAIL2021
+    repo_size_bytes: 5700000
+  - repo: china-ai-law-challenge/CAIL2020
+    repo_size_bytes: 4300000
+
+# ============================================================
+# 目标配比（docs/finetune_data_plan.md 第 3 节的机器可读副本）
+# ============================================================
+target_mix:
+  criminal:   { target: 30000, share: 0.30 }
+  civil:      { target: 40000, share: 0.40 }
+  procedural: { target: 20000, share: 0.20, synthetic_quota: 8000 }
+  general:    { target: 10000, share: 0.10 }
+  total:      100000
+
+# ============================================================
+# 去污黑名单（绝对不许进训练/验证集）
+# ============================================================
+contamination_blacklist:
+  method: "精确哈希 + simhash(64bit, 汉明距离<=3)"
+  gate: "DECONTAMINATION_REPORT.json verdict 必须为 PASS 才允许训练"
+  items:
+    - name: CLaw
+      location: "data/raw/claw/ 中 254 个最高法案例"
+      rule: "题目/参考答案/改写版本/判分解释 一律禁用"
+    - name: LexRubric
+      location: "data/benchmark/lexrubric/"
+      rule: "649 题 + 12,335 rubric 一律禁用"
+    - name: LexEval
+      location: "data/benchmark/lexeval/"
+      rule: "23 任务 / 14,150 题 一律禁用"

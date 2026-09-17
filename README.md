@@ -128,6 +128,35 @@
    - **合成数据一律不进验证集与测试集**
    - 合成占比在论文里如实披露（程序法域 8000/20000 = 40%）
 
+### 3.1.1 配比可得性核算（★ 阶段 2 实测结果：**每域都超额，总缺口 = 0**）
+
+**在定配比之后、动手清洗之前，必须先做一次「可得量核算」**，否则到切分阶段才发现凑不齐。
+以下是阶段 2 归一化 + 域打标后的**实测**数字（raw 349,665 条 → qa 流 **285,257 条**）：
+
+| 域 | 目标 | **实得** | 实得占比 | 达成率 |
+|---|---|---|---|---|
+| 刑法 criminal | 30,000 | **97,414** | 34.1% | **325%** |
+| 民法 civil | 40,000 | **104,691** | 36.7% | **262%** |
+| 程序法 procedural | 20,000 | **25,445** | 8.9% | **127%** |
+| 通用/其他 general | 10,000 | 57,707 | 20.2% | 577% |
+| **合计** | 100,000 | **285,257** | | **缺口 0** |
+
+**三条结论（都推翻了原先的假设）**：
+
+1. **程序法不是"凑不齐"，而是"够用"** —— 实得 25,445 > 目标 20,000。
+   → 8,000 条合成**不再是必需**：可选「25,445 真实中取 20,000」或「12,000 真实 + 8,000 合成」。
+   **建议保留合成配额但降比例**，因为合成数据在论文里要如实披露，
+   能不用就不用（程序法域合成占比 0% 比 40% 更好写）。
+2. **不需要再单独找通用数据集** —— `general` 桶（宪法 / 行政法 / 法治理论 / 职业道德等
+   **域不明确但仍属法律**的样本）已有 57,707 条，超过「通用回放 1 万」的需求。
+   ⚠️ **但要注意它和"通用回放"不是一回事**：`general` 仍是**法律领域**内容（只是域不明确），
+   而「通用回放」本意是**非法律的通用指令数据**（防止底座通用能力崩塌）。
+   → 阶段 4 需二选一：(a) 用 `general` 桶充数（便宜，但对"防遗忘"效果存疑）；
+   (b) 另采一份通用中文指令数据（更符合设计意图）。**建议 (b)**，或两者都加并做消融。
+3. **真正的工作量是"下采样"而不是"补数据"** —— 285,257 → 100,000，需砍掉约 65%。
+   下采样必须**按 `task` × `source` 分层**，否则某个任务型（如 `legal_question_answering` 92,381 条）
+   可能垄断某个专家，让该专家只学会一种题型。
+
 ### 3.2 数据集来源
 
 **分级语义**：`A` = 协议明确（Apache-2.0 / MIT），可用于论文实验；
@@ -145,7 +174,7 @@
 | 数据集 | 体积 | 文件 | 协议 | 状态 | 用途 |
 |---|---|---|---|---|---|
 | `ShengbinYue/DISC-Law-SFT` | 552.4 MiB | 6 | Apache-2.0 | ✅ OK | **主力**：判决预测/信息抽取/摘要/问答/司考，403K 样本；内置 48K Alpaca-GPT4 + 60K Firefly 通用回放 |
-| `Dusker/lawyer-llama` | 425.7 MiB | 7 | MIT | ✅ OK | 含 `kg_crime_llama.json`（**犯罪知识图谱**，可转问答）。⚠️ 内含 DISC-Law-SFT 副本，阶段 2 必须去重 |
+| `Dusker/lawyer-llama` | 425.7 MiB | 7 | MIT | ✅ OK | 含 `kg_crime_llama.json`（**犯罪知识图谱**，可转问答）。⚠️ 内含 DISC-Law-SFT 副本 → 阶段 2 三指纹核验：`DISC-Law-SFT-Pair.json` **100% 重复已丢弃**，`-Triplet.json` 仅 20.5% 重复故**保留** |
 | `twang2218/chinese-law-and-regulations` | 152.8 MiB | 4 | Apache-2.0 | ✅ OK | **法条原文**（带元数据，协议干净可发表） |
 | `Skepsun/lawyer_llama_data` | 22.9 MiB | 3 | Apache-2.0 | ✅ OK | 司法考试题，**含《民诉》《刑诉》程序法题**，带 `source` 字段 |
 | `pandalla/chinese_law_examples` | 519.8 KiB | 3 | Apache-2.0 | ✅ OK | 仅作格式参考 |
@@ -187,11 +216,11 @@
 `──────────────── 以下才动 GPU ────────────────` 是硬边界：
 
 ```
-阶段 0  源合规审查        → docs/corpus/candidates.json（A/B 级分级，A 级才可进论文实验集）
+阶段 0  源合规审查        → configs/corpus_sources.yaml（A/B 级分级，A 级才可进论文实验集）
 阶段 1  分批采集          → data/corpus/raw/<dataset>/ + data/corpus/MANIFEST.json（逐文件 SHA-256）
-阶段 2  归一化 + 域打标   → data/corpus/normalized/*.jsonl + DOMAIN_LABEL_REPORT.json
+阶段 2  归一化 + 域打标   → data/corpus/normalized/{qa,statutes}/*.jsonl + STATS.json + DEDUP_REPORT.json ✅已完成
 阶段 3  去污              → DECONTAMINATION_REPORT.json（verdict 必须 PASS）★硬门禁
-阶段 4  切分              → train / val / test + 路由集（与专家训练集 disjoint）
+阶段 4  切分 + 分层下采样  → train / val / test + 路由集（与专家训练集 disjoint）
 ───────────────────────────────  以下才动 GPU ───────────────────────────────
 阶段 5  基线：单 LoRA 全域训练                 → A0
 阶段 6  专家 LoRA ×3（刑法 / 民法 / 程序法）    → A1/A2/A3/A4 的组件
@@ -206,28 +235,36 @@
 |---|---|
 | 0 | 每个源都有 `license` + `license_grade`；B 级源明确标注「仅内部探索」 |
 | 1 | 每批落盘后立即算 SHA-256；`data/corpus/MANIFEST.json` 与磁盘实测一致 |
-| 2 | 三域占比落在目标 **±15%**；`domain_source` 分布可解释；人工抽检 50 条准确率 **≥ 95%** |
+| 2 | ✅ **每域实得量 ≥ 目标量**（本次总缺口 0）；`domain_source` = `fallback` 占比 **< 15%**；人工抽检 50 条准确率 ≥ 95% |
 | 3 | **去污 verdict = PASS**，且报告里能看到近重复命中明细 |
 | 4 | 路由集与专家训练集 uid 交集 = **0**（脚本断言） |
 | 5–8 | 每档消融都有独立 config + 独立输出目录，**不许共用目录覆盖** |
 | 9 | ★ checkpoint 只能由内部验证集选定；CLaw 只跑一次终评 |
 
-**域标签怎么打 —— 用「引用法条名」反推，而不是用判决书类型**：
+**域标签怎么打 —— 用「加权打分」，不能用优先级链短路**：
 
-```
-1. 答案/解析中出现的法条全名            ← 最可靠，可解释、可审计
-   《中华人民共和国刑法》 / 《民法典》 → 实体法域
-   《民事诉讼法》/《刑事诉讼法》/《行政诉讼法》 → 程序法域
-2. 文书类型 + 案由                       ← 判决类兜底
-   (民事|刑事|行政)(判决书|裁定书) + 「X纠纷」
-3. 任务 id 前缀                          ← 最后兜底（如 jud_doc_sum-*）
-4. 分类器兜底 + 人工抽检                 ← 仅用于前面全落空的样本
-```
+实测两种短路顺序都会系统性错标（程序法优先 → 判决预测被附带引用带偏；实体法优先 → 刑诉考题判成刑法）。
+六路证据加权求和取最高分，权重写在 `configs/corpus_adapters.yaml`：
 
-> **关键设计**：程序法**不能**靠判决书类型区分 —— 一份民事判决书既涉民事实体法也涉民诉程序法。
+| 信号 | 权重 | 说明 |
+|---|---|---|
+| 问句里引用的法条 | ×2.0 | 最可靠，可解释可审计 |
+| 答案/解析里引用的法条 | ×1.0 | 同上 |
+| 文书类型（刑事/民事判决书） | ×2.5 | 判决类主力 |
+| 任务型强指示（刑期预测→刑法） | ×1.5 | 少数任务 |
+| 罪名释义类 | ×3.0 | — |
+| **议题关键词**（只在问句里找） | 程序0.8/个，刑民0.5/个 | **必须有，否则 fallback 高达 35%** |
+
+> **关键设计 1：程序法不能靠判决书类型区分** —— 一份民事判决书既涉民事实体法也涉民诉程序法。
 > 必须走「内容议题」判断（管辖 / 送达 / 举证责任 / 时效 / 上诉 / 再审 / 执行）。
-> 打标必须**双路交叉验证**（规则 + 分类器），不一致的进人工抽检队列，
-> 并在清单里记录每条的 `domain_source`，方便论文里做域标签质量分析。
+>
+> **关键设计 2：议题关键词兜底必须有** —— 大量司考/问答样本根本不引用具体法条
+> （「下列哪个选项不属于法官应当遵守的司法礼仪？」），只靠引用法条打标会让 **fallback 占 35%**；
+> 补上关键词信号后降到 **11.7%**。
+>
+> **关键设计 3：判决类任务给程序法引用降权 ×0.35** —— 判决预测问的是实体结论，附带引用民诉法/刑诉法不应主导标签。
+>
+> 每条约记 `domain_source` + 完整 `scores` / `evidence` / `contrib_primary`，可事后审计。
 
 ### 3.4 统一数据 Schema
 
@@ -235,34 +272,54 @@
 
 ```jsonc
 {
-  "uid": "disc_lawsft_pair:jud_doc_sum-1",   // 全局唯一，来源前缀 + 原始 id
-  "domain": "civil",                          // criminal | civil | procedural | general
-  "domain_source": "doc_type",                // statute_ref|doc_type|id_prefix|clf|manual
-  "subdomain": "侵权责任",                     // 案由 / 罪名 / 编章（可空）
-  "task_type": "judgment_summary",            // 见下
+  "uid": "ShengbinYue__DISC-Law-SFT:jud_doc_sum-1",  // 全局唯一：来源前缀 + 原始 id
+  "domain": "civil",                          // criminal | civil | procedural | general（主域）
+  "domains": ["civil", "procedural"],         // 跨域多标签（路由器需要；专家 LoRA 仍按主域分配）
+  "domain_source": "statute_ref_in_answer",   // 见下（★ 对"胜出域"贡献最大的那一路信号）
+  "domain_evidence": {                        // 留痕：凭什么这么打标，可事后审计
+    "scores": {"civil": 4.5, "procedural": 0.35},
+    "evidence": {"statute_ref_in_answer": ["《合同法》→civil", "《民事诉讼法》→procedural"],
+                 "doc_type": ["民事判决书→civil"]},
+    "contrib_primary": {"statute_ref_in_answer": 2.0, "doc_type": 2.5}
+  },
+  "task": "jud_doc_sum",                      // 原始任务型（与 domain 正交）
+  "task_kind": "case_analysis",               // case_analysis | qa | exam | concept
+  "system": "",
   "instruction": "请大致描述这篇文书的内容。",
   "input": "...",
   "output": "...",
-  "law_refs": ["《中华人民共和国民法典》第1165条"],  // 引用法条，用于域校验与检索监督
-  "source": {
-    "dataset": "ShengbinYue/DISC-Law-SFT",
-    "file": "DISC-Law-SFT-Pair.jsonl",
-    "license": "apache-2.0",
-    "license_grade": "A",
-    "url": "https://hf-mirror.com/datasets/ShengbinYue/DISC-Law-SFT"
-  },
+  "refs_question": ["《民法典》"],             // 问句里引用的法条（最高权重信号）
+  "refs_answer": ["《民法典》第1165条"],       // 答案/解析里引用的法条
+  "messages": [                                // 规范 chat 渲染，消除下游拼接歧义
+    {"role": "user", "content": "..."},
+    {"role": "assistant", "content": "..."}
+  ],
+  "source_dataset": "ShengbinYue/DISC-Law-SFT",
+  "source_file": "DISC-Law-SFT-Pair.jsonl",
+  "source_license": "apache-2.0",
+  "source_grade": "A",
   "synthetic": false,
-  "split": "train",                            // train | val | test
-  "content_sha256": "..."                      // 归一化后内容哈希，用于去重
+  "replay": false,
+  "content_sha1": "...",                       // 全局精确去重键
+  "case_sha1": "..."                           // 案件正文指纹（尾部 400 字），跨源判重用
 }
 ```
 
-`task_type` 枚举：`judgment_summary` / `judgment_prediction` / `info_extraction` /
-`case_classification` / `legal_qa` / `statute_recall` / `statute_application` /
-`exam_qa` / `general_replay`
+`domain_source` 枚举：`statute_ref_in_question` / `statute_ref_in_answer` / `doc_type` /
+`task_hint` / `crime_concept` / `topic_keyword` / `fallback`
 
-> **注意**：`task_type` 必须**正交于** `domain`。不能出现「刑法任务集」这种把两个维度揉一起的命名，
+`task` 枚举（实测出现）：`jud_doc_sum` / `jud_read_compre` / `leg_ele_extra` / `leg_eve_detec` /
+`leg_case_cls` / `sim_case_match` / `op_sum` / `sent_pred` / `judgement_predit` /
+`legal_question_answering` / `exam` / `judical_examination(_v2)` / `legal_advice` /
+`legal_counsel(_multi_turn)` / `crime_concept` / `statute_doc` / `statute_item`
+
+> **注意 1**：`task` 必须**正交于** `domain`。不能出现「刑法任务集」这种把两个维度揉一起的命名，
 > 否则消融实验无法拆解是域的作用还是任务的作用。
+>
+> **注意 2**：法条库（`statutes/`）单独一条流，**保留 `effective_from` / `effective_period` /
+> `status`**（来自 `twang2218/chinese-law-and-regulations`，实测含「有效 15,317 / 已修改 4,723 /
+> 已废止 1,682」），直接支撑「法条必须保留历史版本」这条硬约定。
+> ⚠️ 该源的 `status` 字段混有脏值 `"7"`（829 条），阶段 4 需清洗。
 
 ### 3.5 MoE 路由对数据的额外要求
 
@@ -358,7 +415,8 @@ law-agent/
 │  │  └─ MANIFEST.json     # 逐文件 SHA-256 清单
 │  ├─ benchmark/           # 评测基准（LexRubric / LexEval），严禁进入训练
 │  └─ _obsolete_*/         # 早期残留，保留可回溯
-├─ configs/                # qlora_unified / adapters_router / retrieval / inference / judge / corpus_sources
+├─ configs/                # qlora_unified / adapters_router / retrieval / inference / judge
+│                          # corpus_sources.yaml（合规层）+ corpus_adapters.yaml（解析层）
 ├─ models/                 # 底座权重 + 训练输出的 LoRA 适配器
 ├─ neo4j/                  # Neo4j 数据卷
 ├─ indexes/                # 向量索引 / 图谱导出
@@ -374,7 +432,7 @@ law-agent/
 │  ├─ selfcheck.py         # 环境自检
 │  ├─ smoke_test.py        # 端到端冒烟（加载模型 + LoRA 反向传播）
 │  ├─ verify_env.sh        # 实测版全量自检（真跑 CUDA + 真分配显存 + 连 Neo4j）
-│  ├─ corpus/              # 训练语料采集（阶段 1）
+│  ├─ corpus/              # 训练语料：采集（阶段 1）→ 归一化+域打标（阶段 2）
 │  └─ benchmarks/          # 评测基准「拉取 → 验完整性 → 登记 SHA-256」
 ├─ outputs/                # 闭卷 / RAG / judge 输出
 └─ docs/
@@ -384,7 +442,7 @@ law-agent/
    ├─ model_selection.md    # 模型选型分析
    ├─ env_setup.md          # 环境搭建与事故记录
    ├─ finetune_data_plan.md # 10 万条语料方案（人读的完整版）
-   ├─ corpus/               # 训练语料登记（MANIFEST + 逐数据集溯源）
+   ├─ corpus/               # 训练语料登记（MANIFEST + 溯源 + 判重报告 + 阶段 2 统计）
    ├─ benchmarks/           # 评测基准登记（LexRubric / LexEval，各自独立）
    └─ data_manifest.json    # CLaw 语料固化清单（**不混入上面两者**）
 ```
@@ -474,16 +532,23 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   逐文件 SHA-256 已登记，验收 **PASS**（[`docs/corpus/`](docs/corpus/)）；
   采集链路幂等：`bash scripts/corpus/prepare_corpus.sh`
 - ✅ 检索指标目标：Recall@5 ≥ 0.85 / Recall@10 ≥ 0.90 / 历史版本准确率 ≥ 0.95
+- ✅ **阶段 2：归一化 + 域打标** —— raw 349,665 条 → **qa 流 285,257 条** + 法条库 23,510 条，
+  统一 schema（含 `messages` 规范 chat 渲染与 `domain_evidence` 审计链）；
+  **配比核算结果：刑法 97,414 / 民法 104,691 / 程序法 25,445 / 通用 57,707 —— 每域都超额，总缺口 0**；
+  跨源判重完成（`Dusker/.../DISC-Law-SFT-Pair.json` 100% 重复已丢弃，`-Triplet.json` 仅 20.5% 重复故保留）；
+  幂等链路 `bash scripts/corpus/prepare_normalize.sh`（[`docs/corpus/`](docs/corpus/)）
 
 ### 待办
 
-- ⬜ **阶段 2：归一化 + 域打标**（域打标优先级链见 3.3 节；须先按内容哈希去掉
-  `Dusker/lawyer-llama` 里与主源重复的样本）
-- ⬜ 阶段 3：去污（硬门禁，`verdict` 必须 PASS）
-- ⬜ 阶段 4：切分 train/val/test + 路由集
+- ⬜ 阶段 3：去污（硬门禁，`verdict` 必须 PASS）—— 重点核查
+  `Skepsun` 司考题与 LexRubric `sifakaoshi` 的同源风险
+- ⬜ 阶段 4：切分 train/val/test + 路由集，并**分层下采样 285,257 → 100,000**
+  （按 `task` × `source` 分层，避免单一任务型垄断某个专家）
+- ⬜ 阶段 4 附带决定：`general` 桶（57,707 条）能否充当「通用回放」，还是另采非法律通用指令数据
 - ⬜ 阶段 5–9：LoRA 训练 → 路由 → MoE 消融 → 内部验证集选 checkpoint → CLaw 终评
 - ⬜ `indexes/` 为空，尚无任何向量索引
 - ⬜ （可选）配置 `HF_TOKEN` 后补采 `Aiiluo/Chinese-Law-SFT-Dataset`（2.6 MB，gated）
+- ⬜ 法条库清洗：`twang2218` 的 `status` 字段混有脏值 `"7"`（829 条）
 
 ---
 
@@ -506,12 +571,16 @@ token 数、延迟），否则无法区分错误来源（未检索到 / 检索�
 | 新增 / 更换**模型**（底座、向量、重排、判分器） | 第 1 节模型清单表 |
 | 新增 / 调整**数据集来源**（含协议、体积、分级） | 3.2 节；同步 `configs/corpus_sources.yaml` |
 | 调整**配比**或合成配额 | 3.1 节；同步 `configs/corpus_sources.yaml` 的 `target_mix` |
+| **实测可得量 / 配比核算结果变化** | 3.1.1 节 |
 | 修改**处理流程 / 阶段卡口** | 3.3 节 |
+| 修改**归一化 schema** 或域打标权重 | 3.4 节；同步 `configs/corpus_adapters.yaml` |
 | 新增**评测基准** | 第 4 节；同步 `docs/benchmarks/` |
 | 环境 / 依赖版本变化 | 第 6 节 |
 | 阶段推进（完成 / 开始） | 第 8 节进度 |
 
-**同时保持两份记录同步**：
+**同时保持三份记录同步**：
 - 人读的完整方案 → `docs/`（如 [`docs/finetune_data_plan.md`](docs/finetune_data_plan.md)）
-- 机器读的登记表 → `configs/`（如 [`configs/corpus_sources.yaml`](configs/corpus_sources.yaml)）
+- 机器读的登记表 → `configs/`
+  （[`corpus_sources.yaml`](configs/corpus_sources.yaml) 管**合规**、
+  [`corpus_adapters.yaml`](configs/corpus_adapters.yaml) 管**解析**）
 - README 是**索引与摘要**，不是唯一真相源 —— 细节永远以 `docs/` 与 `configs/` 为准。

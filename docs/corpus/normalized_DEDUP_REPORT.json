@@ -1,0 +1,126 @@
+{
+  "global_content_dup": 14997,
+  "internal": {},
+  "examples": [
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "jud_doc_sum-718",
+      "same_as": "ShengbinYue/DISC-Law-SFT:jud_doc_sum-587"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_case_cls-6900",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_case_cls-6106"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_case_cls-8692",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_case_cls-8175"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-151",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-147"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-191",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-189"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-253",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-4"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-256",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-7"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-269",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-12"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-270",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-13"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-271",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-14"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-272",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-15"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-277",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-22"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-279",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-24"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-280",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-25"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-281",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-26"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-283",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-28"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-284",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-29"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-285",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-30"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-286",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-31"
+    },
+    {
+      "source": "ShengbinYue/DISC-Law-SFT",
+      "file": "DISC-Law-SFT-Pair.jsonl",
+      "id": "leg_ele_extra-287",
+      "same_as": "ShengbinYue/DISC-Law-SFT:leg_ele_extra-32"
+    }
+  ]
+}

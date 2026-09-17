@@ -1,0 +1,129 @@
+# =============================================================================
+# 语料归一化「适配器」登记表（阶段 2）
+# =============================================================================
+# 分工（与 configs/corpus_sources.yaml 严格区分，不重复）：
+#   corpus_sources.yaml   ← 来源是否可采、license、体积、等级（**合规层**）
+#   corpus_adapters.yaml  ← 已落盘的 raw 文件**怎么读、进哪条流**（**解析层**）
+#   docs/finetune_data_plan.md ← 人读的完整方案
+#
+# 脚本：scripts/corpus/normalize_corpus.py
+# 原则：raw 只读，本文件不修改任何 raw 文件。
+# =============================================================================
+
+version: 1
+updated_at: "2026-09-17"
+
+# -----------------------------------------------------------------------------
+# 全局排除：内容经**实测指纹**证明与其他来源 100% 重复的文件。
+# 证据：docs/corpus/DEDUP_REPORT.json（案件正文尾部 400 字指纹比对）
+# raw 文件本身按「数据只读」原则保留在磁盘，但在本条管线内不参与归一化。
+# -----------------------------------------------------------------------------
+drop_files:
+  - dataset: Dusker/lawyer-llama
+    file: DISC-Law-SFT-Pair.json
+    reason: >-
+      与 ShengbinYue/DISC-Law-SFT/DISC-Law-SFT-Pair.jsonl 完全重复：
+      案件正文指纹交集 153,231 = 153,231，两侧独有均为 0（100% 覆盖）。
+      字段布局略有差异（Dusker 多一个通用 system/instruction），内容同一。
+    verdict: DUPLICATE_CONFIRMED
+
+# -----------------------------------------------------------------------------
+# 声明**保留**的同类文件（明确写下来，避免以后误以为漏掉了）
+# -----------------------------------------------------------------------------
+keep_files:
+  - dataset: Dusker/lawyer-llama
+    file: DISC-Law-SFT-Triplet.json
+    reason: >-
+      与 ShengbinYue/DISC-Law-SFT/DISC-Law-SFT-Triplet-released.jsonl **仅 20.5% 重合**
+      （交集 3,270 / 15,954），另有约 12,684 条案件正文为本来源独有 → 必须保留。
+      两者虽然都是 16,000 条判决预测任务，但抽样不同。
+
+# -----------------------------------------------------------------------------
+# 来源适配器
+#   role: qa       → 统一 schema 后进 data/corpus/normalized/qa/
+#         statutes → 法条库，**保留历史版本与生效/失效区间**，进 normalized/statutes/
+# -----------------------------------------------------------------------------
+sources:
+
+  - id: ShengbinYue/DISC-Law-SFT
+    adapter: disc_law_sft
+    role: qa
+    note: "主力源。Pair 为 9 类任务混合；*-QA-released 为法律问答。"
+    include:
+      - DISC-Law-SFT-Pair.jsonl
+      - DISC-Law-SFT-Pair-QA-released.jsonl
+      - DISC-Law-SFT-Triplet-released.jsonl
+      - DISC-Law-SFT-Triplet-QA-released.jsonl
+
+  - id: Dusker/lawyer-llama
+    adapter: disc_law_sft_dusker
+    role: qa
+    note: "Triplet 与主源不同；fakao/zixun 为咨询与司考；kg_crime 为罪名知识（唯一来源）。"
+    include:
+      - DISC-Law-SFT-Triplet.json
+      - fakao_gpt4.json
+      - zixun_gpt4.json
+      - kg_crime_llama.json
+
+  - id: Skepsun/lawyer_llama_data
+    adapter: skepsun
+    role: qa
+    note: "司考题 7,000（v1 2,000 + v2 5,000）+ 法律咨询。程序法题目的现成来源。"
+    include:
+      - all.json
+
+  - id: twang2218/chinese-law-and-regulations
+    adapter: twang2218
+    role: statutes
+    note: >-
+      法规**文档级**（22,552 部），带 publish_date / effective_date / effective_period / status，
+      是「法条保留历史版本」这条硬约定的数据基础。含地方性法规 19,773 部。
+    include:
+      # 注意：HF datasets 的 data split 落在子目录 data/ 下，路径必须带前缀
+      - data/train-00000-of-00001-8329bce6db03c820.parquet
+
+  - id: pandalla/chinese_law_examples
+    adapter: pandalla
+    role: statutes
+    note: "条级法条样例（1,000 条），字段 title/classification/num/contents。仅作格式参考。"
+    include:
+      - law_item.jsonl
+
+# -----------------------------------------------------------------------------
+# 质量过滤阈值（记录被丢弃的原因，不静默删数据）
+# -----------------------------------------------------------------------------
+filters:
+  min_output_chars: 8      # 答案过短视为无效样本
+  min_input_chars: 4       # 问题过短视为无效样本
+  require_cjk: true        # 必须含中日韩统一表意文字
+  drop_empty_output: true
+
+# -----------------------------------------------------------------------------
+# 域打标参数（可调，改动需在提交信息里说明理由）
+# -----------------------------------------------------------------------------
+domain_labeling:
+  weights:
+    statute_ref_in_question: 2.0    # 问句里引用的法条
+    statute_ref_in_answer: 1.0      # 答案/解析里引用的法条
+    doc_type: 2.5                   # 文书类型（刑事判决书/民事判决书）
+    task_hint: 1.5                  # 任务型强指示（如刑期预测→刑法）
+    crime_concept: 3.0              # 罪名释义类
+    # 议题关键词：只在「问句」里找。
+    # 存在意义：大量司考/问答样本**不引用具体法条**（如「下列哪个选项不属于法官应当遵守的司法礼仪」），
+    # 只靠引用法条会把它们全部丢到 general。关键词信号权重刻意低于引用法条，只做兜底与平局裁决。
+    # 程序法给最高权重 —— 因为「程序议题就是考点」时它才该被判为程序法（照 docs 里那条约定）。
+    topic_procedural_each: 0.8
+    topic_procedural_cap: 3.0
+    topic_criminal_each: 0.5
+    topic_criminal_cap: 2.0
+    topic_civil_each: 0.5
+    topic_civil_cap: 2.0
+  case_analysis_proc_discount: 0.35 # 判决类任务中程序法引用降权（判决问的是实体结论）
+  multilabel_ratio: 0.6             # 次域得分 ≥ 主域 * 该比例 → 判为跨域多标签
+
+# -----------------------------------------------------------------------------
+# 任务型 → 域 强指示（仅用于「任务本身决定域」的少数情况）
+# -----------------------------------------------------------------------------
+task_domain_hint:
+  sent_pred: criminal          # 刑期预测
+  crime_concept: criminal      # 罪名释义

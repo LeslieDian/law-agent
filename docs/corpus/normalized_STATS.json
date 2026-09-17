@@ -1,0 +1,265 @@
+{
+  "generated_at": "2026-09-17T16:55:50",
+  "drop_files": [
+    {
+      "dataset": "Dusker/lawyer-llama",
+      "file": "DISC-Law-SFT-Pair.json",
+      "reason": "与 ShengbinYue/DISC-Law-SFT/DISC-Law-SFT-Pair.jsonl 完全重复： 案件正文指纹交集 153,231 = 153,231，两侧独有均为 0（100% 覆盖）。 字段布局略有差异（Dusker 多一个通用 system/instruction），内容同一。",
+      "verdict": "DUPLICATE_CONFIRMED"
+    }
+  ],
+  "keep_files_note": [
+    {
+      "dataset": "Dusker/lawyer-llama",
+      "file": "DISC-Law-SFT-Triplet.json",
+      "reason": "与 ShengbinYue/DISC-Law-SFT/DISC-Law-SFT-Triplet-released.jsonl **仅 20.5% 重合** （交集 3,270 / 15,954），另有约 12,684 条案件正文为本来源独有 → 必须保留。 两者虽然都是 16,000 条判决预测任务，但抽样不同。"
+    }
+  ],
+  "sources": {
+    "ShengbinYue/DISC-Law-SFT": {
+      "slug": "ShengbinYue__DISC-Law-SFT",
+      "role": "qa",
+      "adapter": "disc_law_sft",
+      "received": {
+        "drop_content_dup": 7531,
+        "drop_output_too_short": 25895,
+        "files_read": 4
+      },
+      "written": 252355,
+      "output": "/mnt/data/lidian/law-agent/data/corpus/normalized/qa/ShengbinYue__DISC-Law-SFT.jsonl",
+      "domain_dist": {
+        "civil": 98498,
+        "criminal": 80019,
+        "general": 50627,
+        "procedural": 23211
+      }
+    },
+    "Dusker/lawyer-llama": {
+      "slug": "Dusker__lawyer-llama",
+      "role": "qa",
+      "adapter": "disc_law_sft_dusker",
+      "received": {
+        "files_read": 4,
+        "drop_content_dup": 421
+      },
+      "written": 18435,
+      "output": "/mnt/data/lidian/law-agent/data/corpus/normalized/qa/Dusker__lawyer-llama.jsonl",
+      "domain_dist": {
+        "criminal": 16363,
+        "civil": 1452,
+        "procedural": 162,
+        "general": 458
+      }
+    },
+    "Skepsun/lawyer_llama_data": {
+      "slug": "Skepsun__lawyer_llama_data",
+      "role": "qa",
+      "adapter": "skepsun",
+      "received": {
+        "drop_content_dup": 7003,
+        "drop_output_too_short": 2,
+        "drop_input_too_short": 4,
+        "files_read": 1
+      },
+      "written": 14467,
+      "output": "/mnt/data/lidian/law-agent/data/corpus/normalized/qa/Skepsun__lawyer_llama_data.jsonl",
+      "domain_dist": {
+        "procedural": 2072,
+        "civil": 4741,
+        "general": 6622,
+        "criminal": 1032
+      }
+    },
+    "twang2218/chinese-law-and-regulations": {
+      "slug": "twang2218__chinese-law-and-regulations",
+      "role": "statutes",
+      "adapter": "twang2218",
+      "received": {
+        "drop_content_dup": 42,
+        "files_read": 1
+      },
+      "written": 22510,
+      "output": "/mnt/data/lidian/law-agent/data/corpus/normalized/statutes/twang2218__chinese-law-and-regulations.jsonl",
+      "domain_dist": {
+        "general": 18528,
+        "civil": 3024,
+        "procedural": 553,
+        "criminal": 405
+      }
+    },
+    "pandalla/chinese_law_examples": {
+      "slug": "pandalla__chinese_law_examples",
+      "role": "statutes",
+      "adapter": "pandalla",
+      "received": {
+        "files_read": 1
+      },
+      "written": 1000,
+      "output": "/mnt/data/lidian/law-agent/data/corpus/normalized/statutes/pandalla__chinese_law_examples.jsonl",
+      "domain_dist": {
+        "general": 991,
+        "civil": 7,
+        "procedural": 1,
+        "criminal": 1
+      }
+    }
+  },
+  "totals": {
+    "in": 349665,
+    "out": 308767,
+    "files": 11
+  },
+  "domain_by_source": {
+    "ShengbinYue/DISC-Law-SFT": {
+      "civil": 98498,
+      "criminal": 80019,
+      "general": 50627,
+      "procedural": 23211
+    },
+    "Dusker/lawyer-llama": {
+      "criminal": 16363,
+      "civil": 1452,
+      "procedural": 162,
+      "general": 458
+    },
+    "Skepsun/lawyer_llama_data": {
+      "procedural": 2072,
+      "civil": 4741,
+      "general": 6622,
+      "criminal": 1032
+    },
+    "twang2218/chinese-law-and-regulations": {
+      "general": 18528,
+      "civil": 3024,
+      "procedural": 553,
+      "criminal": 405
+    },
+    "pandalla/chinese_law_examples": {
+      "general": 991,
+      "civil": 7,
+      "procedural": 1,
+      "criminal": 1
+    }
+  },
+  "domain_source_dist": {
+    "doc_type": 15018,
+    "statute_ref_in_answer": 74357,
+    "topic_keyword": 114912,
+    "fallback": 68115,
+    "statute_ref_in_question": 27316,
+    "task_hint": 8623,
+    "crime_concept": 426
+  },
+  "task_dist": {
+    "legal_question_answering": 92381,
+    "jud_read_compre": 38214,
+    "judgement_predit": 32000,
+    "leg_ele_extra": 23809,
+    "statute_doc": 22510,
+    "exam": 22054,
+    "leg_eve_detec": 21260,
+    "sent_pred": 11657,
+    "jud_doc_sum": 8233,
+    "sim_case_match": 7987,
+    "leg_case_cls": 6509,
+    "legal_advice": 5998,
+    "op_sum": 5251,
+    "qa": 3000,
+    "judical_examination_v2": 2998,
+    "judical_examination": 1999,
+    "legal_counsel": 1000,
+    "statute_item": 1000,
+    "legal_counsel_multi_turn": 472,
+    "crime_concept": 435
+  },
+  "multilabel_count": 16520,
+  "merged_qa": {
+    "path": "/mnt/data/lidian/law-agent/data/corpus/normalized/qa/_all.jsonl",
+    "rows": 288855
+  },
+  "qa_domain_total": {
+    "civil": 104691,
+    "criminal": 97414,
+    "general": 57707,
+    "procedural": 25445
+  },
+  "target_comparison": [
+    {
+      "domain": "criminal",
+      "target": 30000,
+      "have": 97414,
+      "ratio_have": 0.3415,
+      "delta": 67414,
+      "gap": 0
+    },
+    {
+      "domain": "civil",
+      "target": 40000,
+      "have": 104691,
+      "ratio_have": 0.367,
+      "delta": 64691,
+      "gap": 0
+    },
+    {
+      "domain": "procedural",
+      "target": 20000,
+      "have": 25445,
+      "ratio_have": 0.0892,
+      "delta": 5445,
+      "gap": 0
+    },
+    {
+      "domain": "general",
+      "target": 10000,
+      "have": 57707,
+      "ratio_have": 0.2023,
+      "delta": 47707,
+      "gap": 0
+    }
+  ],
+  "target_mix_total": 100000,
+  "target_mix_raw": {
+    "criminal": {
+      "target": 30000,
+      "share": 0.3
+    },
+    "civil": {
+      "target": 40000,
+      "share": 0.4
+    },
+    "procedural": {
+      "target": 20000,
+      "share": 0.2,
+      "synthetic_quota": 8000
+    },
+    "general": {
+      "target": 10000,
+      "share": 0.1
+    },
+    "total": 100000
+  },
+  "total_gap_to_target": 0,
+  "drop_by_task": {
+    "leg_case_cls": {
+      "output_too_short": 14052
+    },
+    "legal_question_answering": {
+      "output_too_short": 7755
+    },
+    "leg_ele_extra": {
+      "output_too_short": 3772
+    },
+    "jud_read_compre": {
+      "output_too_short": 316
+    },
+    "legal_counsel_multi_turn": {
+      "input_too_short": 4
+    },
+    "legal_advice": {
+      "output_too_short": 1
+    },
+    "qa": {
+      "output_too_short": 1
+    }
+  }
+}

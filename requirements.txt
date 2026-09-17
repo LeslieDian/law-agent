@@ -1,46 +1,80 @@
 # ===== 法律领域智能体 实验依赖 =====
-# 安装：pip install -r requirements.txt
-# 冻结：pip freeze > requirements-lock.txt
+#
+# ⚠️ 本文件是「人类可读的依赖清单」，实际安装请用一键脚本：
+#      bash scripts/server_env.sh
+# 或参考 docs/env_setup.md。
+#
+# ⚠️ 冻结后的精确清单在 requirements-lock.txt（由服务器实装环境导出，206 行）。
+#   复现实验时以 lock 文件为准，本文件只用于说明依赖构成。
+#
+# ⚠️ torch 的版本必须与服务器驱动支持的 CUDA 主版本一致（本机为 12.4），
+#   且**不要**用 `--index-strategy unsafe-best-match` 安装（会挑到 CUDA 13 版导致 GPU 不可用）。
+#   本机正确装法（PyPI 上 torch 2.6.0 的 Linux 默认 wheel 即 cu124 构建）：
+#      uv pip install torch==2.6.0 --default-index https://pypi.tuna.tsinghua.edu.cn/simple
 
 # ---- 基础 ----
 numpy
+scipy
 pandas
 pyarrow
 scikit-learn
 tqdm
+rich
+loguru
+tenacity
+tabulate
 pyyaml
 python-dotenv
+tensorboard
 
 # ---- 深度学习 ----
-# 注意：torch 需按本机 CUDA 驱动版本单独安装，见 https://pytorch.org/get-started/locally/
-# pip install torch --index-url https://download.pytorch.org/whl/cu121
-transformers
+torch==2.6.0                 # ★ 与驱动 CUDA 12.4 匹配，勿随意升级
+transformers                 # 实测 5.17.0
 datasets
 accelerate
 peft
 trl
 bitsandbytes
+sentencepiece
+protobuf
+safetensors
+einops
 
 # ---- 向量与嵌入 ----
-sentence-transformers
-FlagEmbedding          # BGE-M3 / bge-reranker-v2-m3
+sentence-transformers        # 统一承载 BGE-M3 / Qwen3-Embedding / bge-reranker
+# 注意：不装 FlagEmbedding —— 其旧版本对 transformers 有上界约束，会与 Qwen3 所需新版冲突
+faiss-cpu                    # 向量索引（HNSW/IVF）
 
 # ---- 知识图谱 ----
-neo4j
+neo4j                        # Python 驱动；服务端 Neo4j 5.26 走 Docker，见 docs/env_setup.md
 
 # ---- 检索与文本处理 ----
 rank_bm25
 jieba
 rapidfuzz
-datasketch             # MinHash 近似查重
+datasketch                   # MinHash 近似查重
 
 # ---- 评测指标 ----
 rouge-score
 sacrebleu
 bert-score
 evaluate
+nltk
 
 # ---- 生成评测 Judge ----
 # 使用官方 Judge：Gemini-2.5-Pro / DeepSeek-R1，通过 API 调用，密钥写入 .env
-openai                 # 兼容大多数第三方 OpenAI 协议网关
+openai                       # 兼容大多数第三方 OpenAI 协议网关
 google-genai
+
+# ---- 交互式开发（可选）----
+ipykernel
+jupyterlab
+
+# ============================================================
+# 明确不安装（以及原因）
+# ============================================================
+# flash-attn    —— 服务器无 nvcc / 无 CUDA Toolkit，无法编译。
+#                  默认使用 PyTorch 原生 sdpa 注意力，A800 上性能已足够。
+#                  若确需：pip install nvidia-cuda-nvcc-cu12 后再源码编译。
+# vllm          —— 对 torch 版本有硬钉死要求，会与主环境冲突。
+#                  若需高速批量推理，单开 envs/vllm 环境。

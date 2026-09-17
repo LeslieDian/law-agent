@@ -15,12 +15,15 @@
 
 | 编号 | 模型训练 | 检索系统 | 用途 | 输出目录 |
 |---|---|---|---|---|
-| **E0** | 原始 Qwen2.5-7B | 无 | 基础闭卷基线 | `outputs/closed_book/E0` |
+| **E0** | 原始 Qwen3-8B | 无 | 基础闭卷基线 | `outputs/closed_book/E0` |
 | **E1** | QLoRA 法律微调 | 无 | 验证训练效果 | `outputs/closed_book/E1` |
-| **E2** | 原始 Qwen2.5-7B | 纯向量 RAG | 验证向量库效果 | `outputs/rag/E2` |
-| **E3** | 原始 Qwen2.5-7B | 向量 + 关键词 + 知识图谱 | 验证混合检索 | `outputs/rag/E3` |
+| **E2** | 原始 Qwen3-8B | 纯向量 RAG | 验证向量库效果 | `outputs/rag/E2` |
+| **E3** | 原始 Qwen3-8B | 向量 + 关键词 + 知识图谱 | 验证混合检索 | `outputs/rag/E3` |
 | **E4** | QLoRA 法律微调 | 纯向量 RAG | 训练 + 检索结合 | `outputs/rag/E4` |
 | **E5** | QLoRA 法律微调 | 混合检索 + 知识图谱 + 路由 | 论文完整系统 | `outputs/rag/E5` |
+
+> 底座：`Qwen/Qwen3-8B`（HF 上不存在 `Qwen3-8B-Instruct`）。
+> 论文原稿写 Qwen2.5-7B，已在实验层面升级，需同步修订论文表述。
 
 ### 关键对比（论文主结论）
 
@@ -39,16 +42,17 @@
 | **A2** | 去掉法条时间版本过滤 | `time_filter.enabled=false` |
 | **A3** | 去掉知识图谱，仅保留向量检索 | `graph_expand_hops=0` + 关闭 BM25 |
 | **A4** | 不使用领域适配器路由 | 仅加载 `unified`，`router.enabled=false` |
-| **A5** | 换向量模型 | `chinese-bert-wwm-ext`(768) vs `bge-m3`(1024) |
-
-## 3. 结果表（论文最终至少 4 张）
+| **A5** | 换向量模型 | 四路：`chinese-bert-wwm-ext`(768) / `bge-m3`(1024) / `Qwen3-Embedding-0.6B`(1024) / `Qwen3-Embedding-4B`(2560) |
+| **A6** | 换底座模型 | `Qwen2.5-7B-Instruct` / `Qwen3-8B` / `Qwen3-14B` / `Qwen3-30B-A3B` / `LegalOne-R1-8B` |
 
 **表1 检索性能**（先单独评检索，不用大模型回答）
 
-| 向量模型 | Recall@5 | Recall@10 | MRR | nDCG@10 | 版本准确率 |
-|---|---|---|---|---|---|
-| Chinese-BERT-wwm-ext | | | | | |
-| BGE-M3 | | | | | |
+| 向量模型 | 维度 | Recall@5 | Recall@10 | MRR | nDCG@10 | 版本准确率 |
+|---|---|---|---|---|---|---|
+| chinese-bert-wwm-ext | 768 | | | | | |
+| BGE-M3 | 1024 | | | | | |
+| Qwen3-Embedding-0.6B | 1024 | | | | | |
+| Qwen3-Embedding-4B | 2560 | | | | | |
 
 **表2 法条闭卷测评**（E0 / E1）
 

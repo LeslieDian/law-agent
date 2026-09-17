@@ -2,7 +2,7 @@
 
 > 论文《基于混合专家模型和知识图谱的法律领域智能体研究与构建》实验代码仓库
 
-面向**民法、刑法、程序法**三法域的法律智能问答系统。以 Qwen2.5-7B-Instruct 为共享底座，
+面向**民法、刑法、程序法**三法域的法律智能问答系统。以 Qwen3-8B 为共享底座，
 训练三个 QLoRA 领域适配器；以 Neo4j 统一存储法律知识图谱与案例向量索引；在线链路采用
 「向量召回 → 图谱关系扩展 → RRF 融合 → 重排序 → 请求级适配器路由」的混合检索增强生成。
 
@@ -12,9 +12,9 @@
 
 | 层 | 组件 | 说明 |
 |---|---|---|
-| 底座模型 | `Qwen/Qwen3-8B-Instruct` | 固定 commit hash；12GB 显存下 ≤9B 稠密 + QLoRA 4bit。选型分析见 [`docs/model_selection.md`](docs/model_selection.md) |
+| 底座模型 | `Qwen/Qwen3-8B` | 固定 commit hash。注意：HF 上**不存在** `Qwen3-8B-Instruct`。选型分析见 [`docs/model_selection.md`](docs/model_selection.md) |
 | 领域适配 | QLoRA（4bit NF4 + 双重量化 + BF16） | 民法 / 刑法 / 程序法 三个适配器 + 请求级路由 |
-| 知识层 | Neo4j（Community / Enterprise） | Law / LawVersion / Provision / Case / Cause / Court… |
+| 知识层 | Neo4j 5.26 Community（Docker） | Law / LawVersion / Provision / Case / Cause / Court… |
 | 检索 | Qwen3-Embedding-0.6B 向量 + BM25/全文 + 图谱扩展 | 排名融合 RRF(k=60)；向量模型四路消融（BERT-wwm / BGE-M3 / Qwen3-Emb-0.6B / -4B） |
 | 重排 | `BAAI/bge-reranker-v2-m3` | 精排 Top-5 / Top-8 |
 | 编排 | LangGraph | 事实整理 → 证据检索 → 专家路由 → 适配器调用 → 结果聚合 |
@@ -27,14 +27,17 @@
 
 | 编号 | 模型训练 | 检索系统 | 用途 |
 |---|---|---|---|
-| E0 | 原始 Qwen2.5-7B | 无 | 基础闭卷基线 |
+| E0 | 原始 Qwen3-8B | 无 | 基础闭卷基线 |
 | E1 | QLoRA 法律微调 | 无 | 验证训练效果 |
-| E2 | 原始 Qwen2.5-7B | 纯向量 RAG | 验证向量库效果 |
-| E3 | 原始 Qwen2.5-7B | 向量 + 关键词 + 知识图谱 | 验证混合检索 |
+| E2 | 原始 Qwen3-8B | 纯向量 RAG | 验证向量库效果 |
+| E3 | 原始 Qwen3-8B | 向量 + 关键词 + 知识图谱 | 验证混合检索 |
 | E4 | QLoRA 法律微调 | 纯向量 RAG | 验证训练 + 检索结合 |
 | E5 | QLoRA 法律微调 | 混合检索 + 知识图谱 | 论文完整系统 |
 
-消融：去重排序器 / 去时间版本过滤 / 去知识图谱 / 去领域适配器路由 / 换向量模型（Chinese-BERT-wwm-ext vs BGE-M3）。
+> 底座统一为 `Qwen3-8B`。论文原稿写的是 Qwen2.5-7B，已升级为同尺寸级别的更新一代，
+> 需在论文中同步修订（见 `docs/env_setup.md` 第 8 节）。
+
+消融：去重排序器 / 去时间版本过滤 / 去知识图谱 / 去领域适配器路由 / 换向量模型（四路：Chinese-BERT-wwm-ext vs BGE-M3 vs Qwen3-Embedding-0.6B vs Qwen3-Embedding-4B）。
 
 详见 [`docs/experiment_matrix.md`](docs/experiment_matrix.md)。
 
@@ -68,33 +71,62 @@ law_agent/
 │  ├─ closed_book/  # 闭卷输出
 │  ├─ rag/          # RAG 输出
 │  └─ judge/        # Judge 评分结果
+├─ scripts/         # 环境脚本：activate / selfcheck / smoke_test / server_env
 ├─ reports/         # 最终结果表
-└─ docs/            # 实验设计、数据清单、防泄漏规则
+└─ docs/            # 实验设计、环境说明、数据清单、防泄漏规则、模型选型
 ```
 
-## 4. 环境
+## 4. 环境（实验服务器）
 
-Windows 11 + WSL2 Ubuntu，Python 3.10/3.11，CUDA 版 PyTorch，12GB 显存。
-模型与向量模型**分阶段加载**，不同时常驻显存。
+> 论文原稿写的「Windows 11 + WSL2 + 12GB 显存」已作废。实验实际在实验服务器上完成。
+> 完整环境说明见 **[`docs/env_setup.md`](docs/env_setup.md)**。
+
+| 项 | 实测值 |
+|---|---|
+| GPU | **2 × NVIDIA A800 80GB PCIe**（160GB 显存，sm_80） |
+| 驱动 | 550.163.01 → 驱动侧 **CUDA 12.4** 为上限（**决定 torch 版本**） |
+| OS / 权限 | Ubuntu 20.04.6，**无 sudo** |
+| Python | 3.11.16（uv 安装的 python-build-standalone，系统只有 3.8） |
+| PyTorch | **`torch==2.6.0+cu124`**（不能用 cu13x，驱动会拒绝） |
+| 图谱 | Neo4j 5.26 Community，Docker 部署，端口 7474 / 7687 |
+
+### 快速开始
 
 ```bash
-python -m venv .venv && source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
+# 服务器上
+source /mnt/data/lidian/law-agent/scripts/activate.sh   # 激活环境 + 设置全部变量
+python scripts/selfcheck.py                            # 环境自检
+python scripts/smoke_test.py                           # 端到端冒烟（加载模型 + LoRA 反向传播）
 ```
 
-环境冻结：`pip freeze > requirements-lock.txt`
-
-自检：
+一键重建环境（幂等，可重复执行）：
 
 ```bash
-nvidia-smi
-python -c "import torch; print(torch.cuda.is_available(), torch.cuda.get_device_name(0), torch.cuda.get_device_capability())"
+bash scripts/server_env.sh
 ```
 
-> **Windows 原生环境下运行脚本**：控制台默认代码页会导致中文输出乱码。
-> 请先设置 `set PYTHONUTF8=1`（cmd）/ `$env:PYTHONUTF8="1"`（PowerShell），或在 WSL2 内运行。
-> 建议整体在 WSL2 Ubuntu 中执行，避免路径与编码问题。
+### 实测性能（Qwen3-8B）
+
+| 指标 | 数值 |
+|---|---|
+| 4bit NF4 加载耗时 | 11 s |
+| 4bit 常驻显存 | 5.66 GB |
+| LoRA r=16 可训练参数 | 43.6 M（占 0.917%） |
+| 单步训练峰值显存 | 9.14 GB |
+
+单卡 80GB 意味着显存**不再是约束**：可提高 LoRA rank、放大 batch 与序列长度，
+底座也完全可以换成 14B/32B。但对比实验只允许换一个变量——**底座一旦定下不要中途改**。
+
+### 大陆网络注意
+
+- `huggingface.co` **不可达** → 必须走 `hf-mirror.com`（已写入 `activate.sh`）
+- `dist.neo4j.org` 返回 403 → Neo4j 改用 Docker 镜像
+- `pypi.nvidia.com` 不可达 → torch 从清华 PyPI 装，不要用 PyTorch 官方索引单独装
+- Docker 镜像加速器已在 daemon 配好，直接 `docker pull` 即可
+
+> ⚠️ **PyTorch 版本必须按驱动 CUDA 主版本钉死**，且安装时**不要**用
+> `--index-strategy unsafe-best-match`（会跨索引挑到 CUDA 13 版，导致 GPU 完全不可用）。
+> 详见 `docs/env_setup.md` 第 3.3 节的事故记录。
 
 ## 5. 数据与合规（强制）
 

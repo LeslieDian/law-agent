@@ -36,14 +36,19 @@
 
 ## 立即可做的三件事（无需等数据到位）
 
-- [ ] 建仓库、推骨架、写 README（本仓库已完成）
-- [ ] 搭 WSL2 + Python 环境，跑通 `nvidia-smi` 与 `torch.cuda.is_available()`
-- [ ] 起 Neo4j 容器，验证约束 / 向量索引 / 全文索引三条 DDL 可执行
+- [x] 建仓库、推骨架、写 README（本仓库已完成）
+- [x] 服务器环境搭建完成：Python 3.11 + torch 2.6.0+cu124 + 全栈依赖，冒烟测试 6/6 通过
+- [x] Neo4j 5.26 容器已起，7 约束 + 4 向量索引 + 2 全文索引全部 ONLINE（见 `docs/neo4j_setup.cypher`）
+- [ ] 取得 CLaw 官方数据 → 跑 `src/prepare/register_data.py` 校验 306/64,849/254
 
-## 最合理的 GPU 时间分配（12GB 显存）
+## GPU 资源策略（2×A800 80GB）
 
-| 动作 | 显存策略 |
+显存已不是约束，策略从「省着用」改为「并行提速」：
+
+| 动作 | 资源策略 |
 |---|---|
-| QLoRA 训练 Qwen2.5-7B | 4bit NF4 + 双重量化 + gradient checkpointing + paged_adamw_8bit + micro_batch=1 |
-| 向量生成（BGE-M3） | 先卸载训练模型，再加载嵌入模型 |
-| Judge 评分 | 走 API，不占显存 |
+| QLoRA 训练 Qwen3-8B | 4bit NF4 + 双重量化 + BF16 + paged_adamw_8bit；**实测常驻 5.66GB / 单步峰值 9.14GB** |
+| 三适配器训练 | 两卡各跑一个进程，或单进程 `device_map` 双卡切分 |
+| 向量生成 | 与训练**分卡**并行，不必再卸载模型（GPU0 训练 / GPU1 建索引） |
+| Judge 评分 | 走 API，不占显存；`concurrency` 可开高 |
+| ⚠️ 注意 | 本机为共享服务器，跑长任务前先 `nvidia-smi` 确认卡空闲 |

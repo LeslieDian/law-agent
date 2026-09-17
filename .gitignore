@@ -25,6 +25,16 @@ venv/
 env/
 ENV/
 conda-env/
+# 服务器上 envs/main 就是 venv
+envs/
+
+# ---------- 缓存 ----------
+# HF_HOME / uv 缓存（服务器上指向 /mnt/data/lidian/.cache）
+.cache/
+huggingface/
+uv/
+# Neo4j 容器的 data/logs/import/plugins 挂载卷
+neo4j/
 
 # ---------- Notebook / 缓存 ----------
 .ipynb_checkpoints/
@@ -90,6 +100,8 @@ Thumbs.db
 desktop.ini
 .idea/
 .vscode/
+# IDE 本地状态
+.codebuddy/
 *.swp
 *.swo
 *~

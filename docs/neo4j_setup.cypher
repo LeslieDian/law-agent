@@ -32,7 +32,9 @@ FOR (p:Provision) ON (p.effective_from, p.effective_to);
 CREATE INDEX provision_article_no IF NOT EXISTS
 FOR (p:Provision) ON (p.law_name, p.article, p.paragraph);
 
-// ---------- 3. 向量索引（BGE-M3 = 1024 维） ----------
+// ---------- 3. 向量索引（四路消融，各模型维度不同，必须分开建） ----------
+// 主索引：Qwen3-Embedding-0.6B (1024d) 与 BAAI/bge-m3 (1024d) 共用同一维度，
+// 两者用各自的字段区分，切换向量模型时对该字段全量重建（换模型 = 全量重建索引）
 CREATE VECTOR INDEX provision_embedding IF NOT EXISTS
 FOR (p:Provision) ON (p.embedding)
 OPTIONS {
@@ -42,12 +44,32 @@ OPTIONS {
   }
 };
 
-// 基线向量模型 Chinese-BERT-wwm-ext (768 维) 单独建索引用于消融对比
+CREATE VECTOR INDEX provision_embedding_bge_m3 IF NOT EXISTS
+FOR (p:Provision) ON (p.embedding_bge_m3)
+OPTIONS {
+  indexConfig: {
+    `vector.dimensions`: 1024,
+    `vector.similarity_function`: 'cosine'
+  }
+};
+
+// 退化对照：hfl/chinese-bert-wwm-ext (768d)
+// 注意这是预训练语言模型而非检索嵌入模型，用作「非检索专用模型」的基线
 CREATE VECTOR INDEX provision_embedding_bert768 IF NOT EXISTS
 FOR (p:Provision) ON (p.embedding_bert768)
 OPTIONS {
   indexConfig: {
     `vector.dimensions`: 768,
+    `vector.similarity_function`: 'cosine'
+  }
+};
+
+// 消融上限：Qwen3-Embedding-4B (2560d)
+CREATE VECTOR INDEX provision_embedding_4b IF NOT EXISTS
+FOR (p:Provision) ON (p.embedding_qwen3_4b)
+OPTIONS {
+  indexConfig: {
+    `vector.dimensions`: 2560,
     `vector.similarity_function`: 'cosine'
   }
 };

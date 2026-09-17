@@ -6,32 +6,32 @@ run_name: qlora_unified_v1
 
 # ------------------------------------------------------------
 # 底座模型选型（详见 docs/model_selection.md）
-# 12GB 显存下的可行区间：≤9B 稠密，且必须 QLoRA 4bit
+# 算力：实验服务器 2×A800 80GB —— 显存不再是约束
+#   Qwen3-8B 4bit 常驻 5.66GB、LoRA r=16 单步峰值 9.14GB（已实测）
 #
-# 主力（推荐）：Qwen/Qwen3-8B-Instruct
-#   同尺寸级别、工具链最成熟、仅非思考模式（输出格式最可控）
-# 备选：Qwen/Qwen3-8B
-#   支持思考/非思考双模式，调用时加 /no_think 关闭思考
-# 进阶：Qwen/Qwen3.5-9B（2026-03，262K ctx，Apache 2.0）
-#   ⚠️ 新架构 Gated DeltaNet 混合注意力 + 原生多模态，
-#      peft/bitsandbytes 兼容性验证不如 Qwen3 稠密充分，先跑 500 条冒烟再定
+# 主力（已下载到服务器 models/Qwen3-8B）：Qwen/Qwen3-8B
+#   ⚠️ HF 上不存在 Qwen3-8B-Instruct。Qwen3-8B 自带聊天模板，
+#      支持思考/非思考双模式，非思考在 system/user 后加 /no_think
 # 对照基线：Qwen/Qwen2.5-7B-Instruct（论文原方案）
+# 进阶（160GB 显存下完全可行，作为额外消融）：Qwen3-14B / Qwen3-32B / Qwen3-30B-A3B
 # 法律专用对照：LegalOne-R1-8B（清华，2026-01 开源，LexEval/LawBench 有成绩）
 #
-# ✗ 不可用：Qwen3-14B / Qwen3.5-27B / Qwen3-30B-A3B 及以上
-#   4bit 量化后仍需 9~16GB+，12GB 单卡必然 OOM
+# ⚠️ 对比实验只允许换一个变量：底座一旦定下，E0–E5 必须用同一个底座跑完，
+#    不要中途更换（换底座 = 全部适配器重训）
 # ------------------------------------------------------------
 model:
-  base_model: "Qwen/Qwen3-8B-Instruct"
+  base_model: "/mnt/data/lidian/law-agent/models/Qwen3-8B"   # 服务器本地路径
+  hf_repo_id: "Qwen/Qwen3-8B"                                 # HF 仓库名（下载用）
   base_revision: "PIN_COMMIT_HASH"        # ★ 必须固定到具体 commit，不要用 main
   trust_remote_code: true
-  torch_dtype: bfloat16
-  attn_implementation: "flash_attention_2" # 装不上则改 "sdpa"
-  # 底座对比实验（论文表 5，见 docs/model_selection.md）
+  dtype: bfloat16                         # transformers>=5.0 用 dtype，torch_dtype 已弃用
+  attn_implementation: "sdpa"             # 服务器无 nvcc，无法编译 flash-attn；sdpa 已足够
+  # 底座对比实验（见 docs/model_selection.md）
   base_model_candidates:
-    - "Qwen/Qwen2.5-7B-Instruct"   # 原始方案，作对照
-    - "Qwen/Qwen3-8B-Instruct"     # 主力
-    - "Qwen/Qwen3.5-9B"            # 进阶（需先验证兼容性）
+    - "Qwen/Qwen2.5-7B-Instruct"   # 论文原方案，作对照
+    - "Qwen/Qwen3-8B"              # ★ 主力（已落地）
+    - "Qwen/Qwen3-14B"             # 160GB 显存下可行，作规模消融
+    - "Qwen/Qwen3-30B-A3B"         # MoE，与「混合专家」主题呼应，值得做一组
     - "LegalOne-R1-8B"             # 法律专用对照
 
 quantization:
@@ -56,9 +56,9 @@ lora:
     - down_proj
 
 training:
-  max_seq_length: 2048
-  micro_batch_size: 1
-  gradient_accumulation_steps: 16      # 等效 batch = 16
+  max_seq_length: 4096                  # A800 80GB 下可放宽（原 12GB 方案只能 2048）
+  micro_batch_size: 4                    # 原 12GB 方案只能 1
+  gradient_accumulation_steps: 4         # 等效 batch = 16（与原方案等效，便于对比）
   gradient_checkpointing: true
   learning_rate: 0.0001
   num_train_epochs: 2
@@ -66,7 +66,7 @@ training:
   weight_decay: 0.01
   lr_scheduler_type: cosine
   max_grad_norm: 1.0
-  optim: paged_adamw_8bit               # 12GB 显存关键
+  optim: paged_adamw_8bit
   bf16: true
   fp16: false
   logging_steps: 10
@@ -79,7 +79,7 @@ data:
   dev_file: data/dev/dev.jsonl
   format: chat                         # messages 列表格式
   assistant_only_loss: true            # ★ 只对 assistant 段计算 loss
-  chat_template: qwen2                  # 需与底座模型自带模板一致
+  chat_template: auto                  # 用底座自带模板（Qwen3 与 Qwen2 模板不同，勿硬编码）
 
 output:
   output_dir: models/adapters/unified

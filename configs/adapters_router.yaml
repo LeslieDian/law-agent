@@ -22,7 +22,7 @@ adapters:
 router:
   enabled: true
   strategy: "rule_then_llm"     # 先规则匹配关键词，失败再走 LLM 分类
-  llm_model: "Qwen/Qwen2.5-7B-Instruct"
+  llm_model: "/mnt/data/lidian/law-agent/models/Qwen3-8B"   # 与底座一致，勿混用两个模型
   confidence_threshold: 0.6     # 低于此值 → 回退 unified
   log_decision: true            # 必须记录路由决策，供消融分析
   cross_domain_policy: "multi_adapter"   # 跨法域问题按子任务调用多个适配器后聚合

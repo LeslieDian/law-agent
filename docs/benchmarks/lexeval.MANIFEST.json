@@ -1,0 +1,433 @@
+{
+  "dataset": "LexEval",
+  "schema_version": "1.0",
+  "retrieved_at_utc": "2026-09-17T07:42:02Z",
+  "root_scanned": "/mnt/data/lidian/law-agent/data/benchmark/lexeval/repo",
+  "hash_algorithm": "sha256",
+  "source_repo": "https://github.com/CSHaitao/LexEval",
+  "license": "MIT",
+  "paper": "arXiv:2409.20288",
+  "summary": {
+    "file_count": 65,
+    "total_bytes": 38940792,
+    "total_mib": 37.137,
+    "by_extension": {
+      ".py": 32,
+      ".json": 23,
+      ".md": 4,
+      ".png": 2,
+      "(noext)": 1,
+      ".jpg": 1,
+      ".txt": 1,
+      ".sh": 1
+    },
+    "excluded_by_rule": [],
+    "excluded_rule_dirs": [
+      ".DS_Store",
+      ".git",
+      ".ipynb_checkpoints",
+      "__pycache__"
+    ],
+    "excluded_rule_ext": [
+      ".o",
+      ".pyc",
+      ".pyo",
+      ".so"
+    ]
+  },
+  "files": [
+    {
+      "path": "LICENSE",
+      "size": 1066,
+      "sha256": "8216b689656c13975fbe272176c4b6e45f89abfbe36a18f85559706dfc18696d"
+    },
+    {
+      "path": "README.md",
+      "size": 9675,
+      "sha256": "6b342d7f561aad1e2e00baa09bd1ca76b12ba6be86c1e0bb3d7cb3d1d51c810d"
+    },
+    {
+      "path": "README_ZH.md",
+      "size": 8715,
+      "sha256": "f7f0804d8ac92f9e3afbd05cea79d62bb868f0b5829e0b072a3aa877dacf4e10"
+    },
+    {
+      "path": "code/README.md",
+      "size": 3863,
+      "sha256": "a63a194927abb43f9d042b418a4f84bfaa86da26ea7ab85c53ea0bb1a02ea834"
+    },
+    {
+      "path": "code/README_zh.md",
+      "size": 3544,
+      "sha256": "9b17df80cfecfb3622485d49f64536b8f778ea281352a9fc7d7654fb593ac59e"
+    },
+    {
+      "path": "code/evaluation/evaluate.py",
+      "size": 9355,
+      "sha256": "32145f61dbfb2945176b8ee4b9d363e58ca67fec78c716969c1816fe8bcdeb9b"
+    },
+    {
+      "path": "code/evaluation/process.py",
+      "size": 4249,
+      "sha256": "54ff54ef1ede5875996758c9f2fd4d042ea1f1b903ef9a5a8c12774d68a3bbe4"
+    },
+    {
+      "path": "code/generation/Alpaca_gen.py",
+      "size": 4798,
+      "sha256": "60845ae5c9783fea3964280d192fa5db03083dc15f7c1cb72d96c249b3a7c9c3"
+    },
+    {
+      "path": "code/generation/Baichuan_base_gen.py",
+      "size": 2496,
+      "sha256": "c13a8b7de1c951820bdd15472a8b67c12356700d06b87323000d4974ac7c0803"
+    },
+    {
+      "path": "code/generation/Baichuan_chat_gen.py",
+      "size": 2625,
+      "sha256": "53dbdadf7527e3efdb2dca77704d0144ac7ecb5836d1643559db79c020394691"
+    },
+    {
+      "path": "code/generation/Belle_llama_gen.py",
+      "size": 4258,
+      "sha256": "af43b9ec212285d186bb8e19a70fc381e4432c9246c1592438c479221a123f87"
+    },
+    {
+      "path": "code/generation/Chatglm_gen.py",
+      "size": 2262,
+      "sha256": "0e00fd0c01a2c99fd1947c0e3e4e36524eb8054235588dc975cb6085331132a3"
+    },
+    {
+      "path": "code/generation/Chatgpt_gen.py",
+      "size": 2254,
+      "sha256": "3079d61fb30f4b1af48c53bccca4c43c9493de1f295054b8b0bede9af7e57b53"
+    },
+    {
+      "path": "code/generation/Chatlaw_gen.py",
+      "size": 2741,
+      "sha256": "8ea9a345fead97c68757ddc52257bedce545245adabe87eaa29802c26d7389dd"
+    },
+    {
+      "path": "code/generation/Chinese_alpaca_gen.py",
+      "size": 6159,
+      "sha256": "5bb857e2146b74c11f0f1a1b7fa6a83f4be2e9aa7c8fe754580459b27e75220b"
+    },
+    {
+      "path": "code/generation/Chinese_llama_gen.py",
+      "size": 5410,
+      "sha256": "9a91aca61cdf767af00a197c56704df9750837065573754427f81b6d26f9ff70"
+    },
+    {
+      "path": "code/generation/Fuzi_gen.py",
+      "size": 2148,
+      "sha256": "fc6eceb30da9eb86abc335296bbc9e4e31bed160b5c14f82e676a9dc70e4368b"
+    },
+    {
+      "path": "code/generation/Gogpt_gen.py",
+      "size": 5067,
+      "sha256": "686ec1fa40d1de2c8c50b9ba096412f26d5e6d841dde424599f316cc26c0bdc4"
+    },
+    {
+      "path": "code/generation/Hanfei_gen.py",
+      "size": 3975,
+      "sha256": "4e505108082da4f4f969e5bc92766f0131405233448b27a7b2e200fcf25d31d1"
+    },
+    {
+      "path": "code/generation/Internlm_base_gen.py",
+      "size": 4075,
+      "sha256": "8c145c22af1790bc7732b6b53cc2ba05a97768042e4af538a1c09d86dcc03f55"
+    },
+    {
+      "path": "code/generation/Internlm_chat_gen.py",
+      "size": 3716,
+      "sha256": "4ab176b118513d6ce1277838032f1e964ecaa3fe29dcc5f348953d8688c7e847"
+    },
+    {
+      "path": "code/generation/Lawgpt_gen.py",
+      "size": 5285,
+      "sha256": "d52b5dace2555b4345bae10fb46a25a3a1c71e35a517cf7f5656e2df2da7436d"
+    },
+    {
+      "path": "code/generation/Lawyer_llama_gen.py",
+      "size": 4972,
+      "sha256": "8ac2c88c9f83d4b057759a61d8066c84d04336fc428a2b5fe0bf43de091759fa"
+    },
+    {
+      "path": "code/generation/Lexilaw_gen.py",
+      "size": 2484,
+      "sha256": "4b11f1274e844bcf3d98e5feac956a156de6a3945be117cdc6ac572a934d9431"
+    },
+    {
+      "path": "code/generation/Llama_base_gen.py",
+      "size": 3918,
+      "sha256": "b419143525a34665fcbf0be361fa90804962db0085e077d8e3a372da27ae29fe"
+    },
+    {
+      "path": "code/generation/Llama_chat_gen.py",
+      "size": 4396,
+      "sha256": "96b4f7f47fda27a46405a0230ef03c5b03b4f7ba23258656e8b304b76da70ab4"
+    },
+    {
+      "path": "code/generation/MPT_base_gen.py",
+      "size": 4083,
+      "sha256": "770597a6d44281359ed6c6c0efded3618696a37f35b22e698fda0d6f89dd7a3e"
+    },
+    {
+      "path": "code/generation/MPT_instruct_gen.py",
+      "size": 5683,
+      "sha256": "9211241449cedb7f7b2bb8f57c3ee0891d02744252d4d733095b72e3b900894a"
+    },
+    {
+      "path": "code/generation/Mossmoon_gen.py",
+      "size": 2873,
+      "sha256": "123d8525737193f1d2fa9a4560e61f2e25febb0b27ff81702a2339b2e7eac03c"
+    },
+    {
+      "path": "code/generation/Qwen_gen.py",
+      "size": 2359,
+      "sha256": "917761695068dc15787fd4a3d60205a537f1df0239b935d8b510210fcfa3e2e2"
+    },
+    {
+      "path": "code/generation/Tigerbot_gen.py",
+      "size": 4136,
+      "sha256": "e60c02741e41e1c6f29f599b1b69a0c6f66a2e99a417c621f62f10f93ee96580"
+    },
+    {
+      "path": "code/generation/Vicuna_gen.py",
+      "size": 4693,
+      "sha256": "8c4cf2681ef7e52ad3d2abd3c884e2f496781561a0390edcd9e5195f425486cd"
+    },
+    {
+      "path": "code/generation/Wisdom_gen.py",
+      "size": 4339,
+      "sha256": "b32a2fe4029b818bf9530fbf74929dd100c38911e94f2e1624361e5a2cd92d6a"
+    },
+    {
+      "path": "code/generation/Xverse_gen.py",
+      "size": 4149,
+      "sha256": "b78f6bd6d7151c659a3ed5227a94ace485f32b9b60efa4434f6be9b09b8504a8"
+    },
+    {
+      "path": "code/generation/Ziya_gen.py",
+      "size": 4369,
+      "sha256": "a7e379f85d086d3845cd12676959a43877f6eaec8cb55ce11c819dd5e4a14d83"
+    },
+    {
+      "path": "code/generation/model_gen.py",
+      "size": 5502,
+      "sha256": "814f5bbf047acd7ed45e99fd4f870a84af6200d96e0b87de7c67933732bda0dc"
+    },
+    {
+      "path": "code/main.py",
+      "size": 14436,
+      "sha256": "2969e0403c1d0b3d578d4ea04a69c3e25eca0abbc0f00664a82de23cee5a68ce"
+    },
+    {
+      "path": "code/model_name.txt",
+      "size": 453,
+      "sha256": "2a524a94a74d9ba0d25f7ac740a4d13b2a5dfa885b126bb97650be8775305ff6"
+    },
+    {
+      "path": "code/run.sh",
+      "size": 5253,
+      "sha256": "8217ca01956c6231f7d9839670e96d852b271d615c1b44e7af27925b3172dd53"
+    },
+    {
+      "path": "data/1_1.json",
+      "size": 281948,
+      "sha256": "5ca932f1ee319ee3d7bb4808f7dec0e74ba55b42e7c7a24eea77beda025c49b8"
+    },
+    {
+      "path": "data/1_2.json",
+      "size": 928443,
+      "sha256": "72d1ca2c87bebe08c0a9c9a27f3f3195d543578f291a5eb9b8d6d3143f07e0ae"
+    },
+    {
+      "path": "data/1_3.json",
+      "size": 195267,
+      "sha256": "65b6c5226bce1795b1fa7ea27d08bd26d613f2c50208d58981401e18883d0af3"
+    },
+    {
+      "path": "data/2_1.json",
+      "size": 262601,
+      "sha256": "038b10e1e953861255693f5c60024e6c42fe8ba917bd1411b87696a0dc501c93"
+    },
+    {
+      "path": "data/2_2.json",
+      "size": 815757,
+      "sha256": "de469f48594960d5e428e5a64837483feb275507438928b4542a5dc98fa49115"
+    },
+    {
+      "path": "data/2_3.json",
+      "size": 204510,
+      "sha256": "e6a21078d09c3ad35423476933b903dc5bc0cfd2987c24eeefa532efd1afad98"
+    },
+    {
+      "path": "data/2_4.json",
+      "size": 500214,
+      "sha256": "75d699a7eb3032035c38033b2845f590f4836d6a6db58d453b4391e8e907b58d"
+    },
+    {
+      "path": "data/2_5.json",
+      "size": 795752,
+      "sha256": "2997819ce8d4aa9266e4fd435213186140fc40b059ea967e99df38fbf0cd4d24"
+    },
+    {
+      "path": "data/3_1.json",
+      "size": 2792020,
+      "sha256": "30cd96dd9f517b31cbff908a6f879b44414a8dc5e5e9d55452bbd8baa631e5bc"
+    },
+    {
+      "path": "data/3_2.json",
+      "size": 2419366,
+      "sha256": "821b883fee7808c3a6aa423e6bafe9d416f81a927a3b055ff17319eec9e433ed"
+    },
+    {
+      "path": "data/3_3.json",
+      "size": 1215288,
+      "sha256": "34154f68950bb8d43f8801883e68d176ce78199e2c85faa61d3c788ef0a2548b"
+    },
+    {
+      "path": "data/3_4.json",
+      "size": 390593,
+      "sha256": "057c203b1df6cd10370328c36ad7b64dfaeed8673a0e75453cd0efa7491536db"
+    },
+    {
+      "path": "data/3_5.json",
+      "size": 230950,
+      "sha256": "dfeb484743379f176539e0617098d03a97f09c10def1057aaac5addbf6dca532"
+    },
+    {
+      "path": "data/3_6.json",
+      "size": 675961,
+      "sha256": "f73bdbc2cc40487f2c120fc3ce8fa30ac24c754ac3f70a8e88773c5c1dcb7a51"
+    },
+    {
+      "path": "data/4_1.json",
+      "size": 6129495,
+      "sha256": "c92921b52be525b13b78f5305b5c924d039f209a46e97f79eead73a46c8e4262"
+    },
+    {
+      "path": "data/4_2.json",
+      "size": 241964,
+      "sha256": "3cc23d6bb78cab3ab61af739a7dc6cdefb5c31620a58591e05eecdca99a635ea"
+    },
+    {
+      "path": "data/5_1.json",
+      "size": 5657241,
+      "sha256": "9a1dc46c6c51c584f45322092fe0674d32541d38b59aa8aacb224c14489a3aa2"
+    },
+    {
+      "path": "data/5_2.json",
+      "size": 11521974,
+      "sha256": "648d978c79ae9f6aee1bf43a6551ec9c1546dc93c779d6a3cc633395341bb070"
+    },
+    {
+      "path": "data/5_3.json",
+      "size": 132741,
+      "sha256": "c024a0cd318f17982c70890fbf6870aa57cfdc57e94069281f08d3786185f71f"
+    },
+    {
+      "path": "data/5_4.json",
+      "size": 1298576,
+      "sha256": "18914ec0f990911ce74c4230533788d7e368515336ed2ba7230a9cf9b40d5f88"
+    },
+    {
+      "path": "data/6_1.json",
+      "size": 510608,
+      "sha256": "ebbd5688d8de195def1221fc449bc50dae36bd84c5b2b283911a9def88ccb03b"
+    },
+    {
+      "path": "data/6_2.json",
+      "size": 496964,
+      "sha256": "f2e661a567bbb7c36c02b1dd83fc567ac4c9878705e1f228fac16c5860bea6f8"
+    },
+    {
+      "path": "data/6_3.json",
+      "size": 274466,
+      "sha256": "44719b84bc8a6d87754df88314f233b0c97de75d23acb5a683ce0e517663af68"
+    },
+    {
+      "path": "figure/logo.jpg",
+      "size": 78978,
+      "sha256": "5b22812044c55910c0eefd1b31203a40622cc66c58ac7ab578c512a400b0a2fb"
+    },
+    {
+      "path": "figure/tasks.png",
+      "size": 301108,
+      "sha256": "9f583bb5015b404db224d7399e38f5277981238c58ad0f32cc0b879ca89c746d"
+    },
+    {
+      "path": "figure/taxonomy.png",
+      "size": 412173,
+      "sha256": "06986f4945e1a5d15272ea1e51f4e5e1a53bb5da30428937413bfea3fab270dd"
+    }
+  ],
+  "commit_hash": "044c695f62894deef41ad9a30797e1da0404945c",
+  "commit_date": "2024-10-30T14:34:28Z",
+  "commit_subject": "update",
+  "provenance": "api+cdn (no .git)",
+  "fetch_summary": {
+    "downloaded": 65,
+    "cached": 0,
+    "failed": 0,
+    "bytes_downloaded": 38940792,
+    "elapsed_s": 555.5,
+    "total_in_tree": 1814,
+    "total_in_tree_bytes": 3105233971,
+    "selected": 65,
+    "excluded": 1749,
+    "excluded_bytes": 3066293179
+  },
+  "excluded_paths_sample": [
+    "model_output/README_new.md",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_1_1.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_1_2.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_1_3.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_2_1.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_2_2.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_2_3.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_2_4.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_2_5.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_3_1.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_3_2.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_3_3.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_3_4.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_3_5.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_3_6.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_4_1.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_4_2.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_5_1.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_5_2.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_5_3.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_5_4.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_6_1.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_6_2.jsonl",
+    "model_output/few_shot/Alpaca_7B/Alpaca_7B_6_3.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_1_1.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_1_2.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_1_3.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_2_1.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_2_2.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_2_3.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_2_4.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_2_5.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_3_1.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_3_2.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_3_3.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_3_4.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_3_5.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_3_6.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_4_1.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_4_2.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_5_1.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_5_2.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_5_3.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_5_4.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_6_1.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_6_2.jsonl",
+    "model_output/few_shot/Baichuan_13B_base/Baichuan_13B_base_6_3.jsonl",
+    "model_output/few_shot/Baichuan_13B_chat/Baichuan_13B_chat_1_1.jsonl",
+    "model_output/few_shot/Baichuan_13B_chat/Baichuan_13B_chat_1_2.jsonl",
+    "model_output/few_shot/Baichuan_13B_chat/Baichuan_13B_chat_1_3.jsonl"
+  ]
+}

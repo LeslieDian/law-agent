@@ -1,0 +1,105 @@
+{
+  "dataset": "LexRubric",
+  "schema_version": "1.0",
+  "retrieved_at_utc": "2026-09-17T07:45:11Z",
+  "root_scanned": "/mnt/data/lidian/law-agent/data/benchmark/lexrubric/repo",
+  "hash_algorithm": "sha256",
+  "source_repo": "https://github.com/foggpoy/LexRubric",
+  "source_ref": "main",
+  "license": "MIT",
+  "paper": "arXiv:2606.09389",
+  "venue": "EMNLP 2026 Main",
+  "license_file": "repo/LICENSE",
+  "note": "数据在 repo/data/ 下；实测字段名为 ID/point/dimension，与 README 示例里的 id/points 不一致，以实测为准",
+  "summary": {
+    "file_count": 9,
+    "total_bytes": 13151608,
+    "total_mib": 12.542,
+    "by_extension": {
+      "(noext)": 2,
+      ".png": 2,
+      ".json": 2,
+      ".md": 1,
+      ".py": 1,
+      ".txt": 1
+    },
+    "excluded_by_rule": [
+      ".DS_Store"
+    ],
+    "excluded_rule_dirs": [
+      ".DS_Store",
+      ".git",
+      ".ipynb_checkpoints",
+      "__pycache__"
+    ],
+    "excluded_rule_ext": [
+      ".o",
+      ".pyc",
+      ".pyo",
+      ".so"
+    ]
+  },
+  "files": [
+    {
+      "path": ".gitignore",
+      "size": 4628,
+      "sha256": "fe07aeae2cfd1ff2ce4c0c5911dfbb550a3f1065e213175039abadfc3a5a15bb"
+    },
+    {
+      "path": "LICENSE",
+      "size": 1067,
+      "sha256": "3dc314e51f432adec49619b9c3cca4aa84fdbf0e8a39d343d263402c0a08a92f"
+    },
+    {
+      "path": "README.md",
+      "size": 7090,
+      "sha256": "02211718ca841d2f87f4cdb496063d7e7ab3eeff0262ca1473803ea6d237010f"
+    },
+    {
+      "path": "code/eval.py",
+      "size": 23686,
+      "sha256": "5926d293f4517eb9a28c7c3e4f7716be9535c8312a28e093dcc4cfe13f5b45f5"
+    },
+    {
+      "path": "code/prompt.txt",
+      "size": 4959,
+      "sha256": "1df1ab49d860bceeac92856967ca9d8623cc2215d0753bab8496390ba3b56db6"
+    },
+    {
+      "path": "data/falvzixun.json",
+      "size": 7559792,
+      "sha256": "2bd326e165400eeb389e405520380a1273cf6bbdbe8eac4e3ab66665831b2439"
+    },
+    {
+      "path": "data/sifakaoshi.json",
+      "size": 1286590,
+      "sha256": "73161f11fde9fe3d0ee1910eee92a585f76b81b6af6e20301ae70e7ce35c85d6"
+    },
+    {
+      "path": "figure/comparison.png",
+      "size": 608460,
+      "sha256": "7802b81c07d6db132ccb143444fc766285d05884a3a70f66b91a8cfb26f10157"
+    },
+    {
+      "path": "figure/overview.png",
+      "size": 3655336,
+      "sha256": "1e67cdeac690d3bda653cceaa7f0ea959e28756de68d020484a4789a71d5192d"
+    }
+  ],
+  "commit_hash": "9141ee4b3715834ac7e1507cbfc225cf858f7328",
+  "commit_date": "2026-08-29T13:58:40Z",
+  "commit_subject": "update",
+  "provenance": "api+cdn (no .git)",
+  "fetch_summary": {
+    "downloaded": 10,
+    "cached": 0,
+    "failed": 0,
+    "bytes_downloaded": 13157756,
+    "elapsed_s": 82.8,
+    "total_in_tree": 10,
+    "total_in_tree_bytes": 13157756,
+    "selected": 10,
+    "excluded": 0,
+    "excluded_bytes": 0
+  }
+}

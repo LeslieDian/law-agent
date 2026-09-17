@@ -1,7 +1,16 @@
 {
-  "_comment": "数据固化清单。data/raw 下载后立即登记，此后只读。所有 sha256 由 scripts/register_data.py 自动填充。",
+  "_comment": "数据固化清单。data/raw 下载后立即登记，此后只读。所有 sha256 由 src/prepare/register_data.py 自动填充。",
   "created_at": "2026-09-17",
   "last_updated": null,
+  "scope": "仅登记 CLaw 语料（民法/刑法/程序法）与案例推理原始数据。",
+  "benchmarks_registry": {
+    "note": "外部评测基准（LexRubric / LexEval）单独登记，与本清单彻底分离，禁止并入本文件 files[]。",
+    "path": "docs/benchmarks/README.md",
+    "manifests": [
+      "docs/benchmarks/lexrubric.MANIFEST.json",
+      "docs/benchmarks/lexeval.MANIFEST.json"
+    ]
+  },
   "protocol": {
     "raw_dir_readonly": true,
     "hash_algorithm": "sha256",

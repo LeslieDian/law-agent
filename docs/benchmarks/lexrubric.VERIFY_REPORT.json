@@ -1,0 +1,125 @@
+{
+  "tool": "verify_benchmarks",
+  "datasets": {
+    "LexRubric": {
+      "root": "/mnt/data/lidian/law-agent/data/benchmark/lexrubric",
+      "files": {
+        "code/eval.py": 23686,
+        "code/prompt.txt": 4959,
+        "data/falvzixun.json": 7559792,
+        "data/sifakaoshi.json": 1286590,
+        "README.md": 7090,
+        "LICENSE": 1067
+      },
+      "expect": {
+        "法律咨询 falvzixun": {
+          "n": 473,
+          "expected": 473
+        },
+        "司法考试 sifakaoshi": {
+          "n": 176,
+          "expected": 176
+        },
+        "total": {
+          "n": 649,
+          "expected": 649
+        }
+      },
+      "schema": {
+        "n": 649,
+        "top_keys": {
+          "ID": 500,
+          "question": 500,
+          "answer": 500,
+          "rubrics": 500
+        }
+      },
+      "id_field": "ID",
+      "rubric_item_fields": [
+        "criterion",
+        "point",
+        "dimension"
+      ],
+      "id_uniqueness": {
+        "法律咨询 falvzixun": {
+          "n": 473,
+          "unique": 473,
+          "duplicates": []
+        },
+        "司法考试 sifakaoshi": {
+          "n": 176,
+          "unique": 176,
+          "duplicates": []
+        }
+      },
+      "cross_split_id_collision": [
+        "111",
+        "195"
+      ],
+      "rubrics": {
+        "total_items": 12335,
+        "expected_total_items": 12337,
+        "mean_items": 19.01,
+        "min_items": 4,
+        "max_items": 67,
+        "records_with_no_rubric": 0
+      },
+      "dimensions": {
+        "逻辑推理与分析": 4151,
+        "法律准确性": 3945,
+        "指令/题意遵从": 1641,
+        "全面性": 1505,
+        "表达与结构": 593,
+        "伦理安全": 500
+      },
+      "points": {
+        "positive_items": 11723,
+        "negative_items": 612,
+        "zero_items": 0,
+        "distinct_values": 32
+      },
+      "score_range_sum": {
+        "sum_positive": 73060.0,
+        "sum_negative": -3489.0
+      },
+      "dimension_check": {
+        "法律准确性": {
+          "got": 3945,
+          "paper": 3947,
+          "delta": -2
+        },
+        "逻辑推理与分析": {
+          "got": 4151,
+          "paper": 4151,
+          "delta": 0
+        },
+        "全面性": {
+          "got": 1505,
+          "paper": 1505,
+          "delta": 0
+        },
+        "表达与结构": {
+          "got": 593,
+          "paper": 593,
+          "delta": 0
+        },
+        "指令/题意遵从": {
+          "got": 1641,
+          "paper": 1641,
+          "delta": 0
+        },
+        "伦理安全": {
+          "got": 500,
+          "paper": 500,
+          "delta": 0
+        }
+      }
+    }
+  },
+  "failures": [],
+  "warnings": [
+    "rubric 总数 12335 != 论文自述 12,337（差 -2，差额位置见下方逐维度对账）",
+    "维度「法律准确性」实测 3945 != 论文 3947（差 -2）"
+  ],
+  "verdict": "PASS"
+}

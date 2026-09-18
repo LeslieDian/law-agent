@@ -1,8 +1,8 @@
 {
   "generated_by": "scripts/corpus/downsample_split.py",
-  "generated_at": "2026-09-18 19:28:25",
+  "generated_at": "2026-09-18 19:50:19",
   "host": "aidda80061",
-  "elapsed_sec": 39.8,
+  "elapsed_sec": 39.3,
   "config": {
     "train_target": 100000,
     "mix": {

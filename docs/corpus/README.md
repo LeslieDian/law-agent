@@ -354,7 +354,7 @@ raw **349,665 条** → qa 流 **285,257 条** + 法条库 **23,510 条**。
 
 ## 八、阶段 2c：程序法条文任务派生（✅ 已完成，verdict = PASS，2026-09-18）
 
-脚本 `scripts/corpus/derive_statute_tasks.py`（只读输入、确定性、无随机数），
+脚本 `scripts/corpus/derive_statute_tasks.py`（只读输入、无随机数；时间戳用 `--stamp` 固定，见 8.4），
 包装 `scripts/corpus/prepare_derive_statute_tasks.sh`。
 报告：`DERIVE_REPORT.md` + `DERIVE_STATS.json`。
 
@@ -389,7 +389,22 @@ raw **349,665 条** → qa 流 **285,257 条** + 法条库 **23,510 条**。
   —— 实测 **0 条**异常，异常即 `verdict = FAIL`。
 - **跨法规逐字相同的条文**：`dup_content` 丢弃 862 / 862 / 79 条（附则模板句一类）。
 
-### 8.4 与阶段 4 的接口
+### 8.4 确定性的**边界**（必须说清，否则「可复现」是句空话）
+
+脚本**不含随机数**：输入扫描顺序（文件名排序）、派生顺序、丢弃顺序全部确定 →
+相同输入必然得到**相同的样本集合、相同的 uid、相同的 `content_sha1`、相同的行序**。
+
+但产物的 **SHA-256 不是天然稳定的**：每条记录写 `normalized_at`（= 运行时刻），
+报告写 `generated_at`，二者同源。**这是唯一的非确定性来源。**
+→ 要逐字节复现产物：`--stamp 2026-09-18T19:27:41`（传与上次相同的值）。
+实测：无 `--stamp` 重跑得 `cf7dafe0…`，带同一 `--stamp` 重跑精确回到 `3b11ae6b…`。
+`--stamp` 的值也会写进 `DERIVE_STATS.json` 的 `config.stamp`，便于审计。
+
+**为什么这不会让阶段 4 失效**：`content_sha1 = sha1(instruction, input, output)`，不含时间戳
+→ 阶段 4 的样本键与配额分配完全不受时间戳影响。实测对照：train 里的 3,000 条派生记录
+与新 2c 产物**逐字段一致**，仅 `normalized_at` 与阶段 4 追加的 `split`/`split_stage`/`uid_g` 不同。
+
+### 8.5 与阶段 4 的接口
 - 阶段 4 读 `data/corpus/derived/`，把本流视为独立 source（`derived/statute-items`）；
 - **派生份额上限 `--derived-max-share`（默认 0.15）按「域内配额」生效**：
   程序法域 20,000 × 15% = **3,000 条**上限，实测正好取满 3,000（其余 10,484 条不启用）。
@@ -426,9 +441,12 @@ val/test 按目标配比分层（criminal 300 / civil 400 / procedural 200 / gen
 
 ### 9.2 切分口径（写死）
 1. 样本唯一键 = `content_sha1`（实测 284,473 条**全局唯一**，0 重复）
-2. 四份 split 全部用 **sha1 排序确定性抽取，不使用随机数** → 重跑逐字节一致
+2. 四份 split 全部用 **sha1 排序确定性抽取，不使用随机数**，且**不向记录写入任何时间戳**
+   → **实测验证（2026-09-18）**：同一份输入重跑阶段 4，**16 个产物文件 SHA-256 全部不变**
+   （`REPRO_RESULT = IDENTICAL`，含 train/val/test/router 主文件与全部逐域视图）
 3. 顺序：先切 router（20,000）→ 再切 val/test（按域分层）→ 余下才是训练池 → 下采样到 100,000
 4. **硬卡口**：四份两两不相交，`uid_g` 与 `content_sha1` 双口径断言 = 0（质检 C3 —— 六对组合**全部为 0**）
+5. 报告侧由 **C11** 把 16 个产物的 SHA-256 与 `SPLIT_STATS.json` 的声明逐一对账（`checked = 16`）
 
 **为什么锚点是「先切 router 再下采样」而不是「从 10 万里抽 20%」**：
 后者会把训练集从 10 万削到 8 万，与论文声称的 10 万训练量不符。池子有 28.4 万，

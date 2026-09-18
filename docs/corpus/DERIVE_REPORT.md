@@ -2,14 +2,16 @@
 
 **verdict = PASS**
 
-> 生成脚本 `scripts/corpus/derive_statute_tasks.py`（只读输入、确定性、无随机数）
+> 生成脚本 `scripts/corpus/derive_statute_tasks.py`（只读输入、无随机数）
 > 生成时间 2026-09-18T19:27:41（服务器 aidda80061，耗时 3.6s）
+> **`--stamp` = `2026-09-18T19:27:41`** —— 这是产物里唯一的非确定性来源（每条 `normalized_at`）；
+> 传固定值即可逐字节复现产物（样本集合/顺序/uid/content_sha1 本来就确定）。
 
 ## 0. 口径与动机
 
 - 输入：`/mnt/data/lidian/law-agent/data/corpus/statute_items/*.jsonl`（阶段 2b 法条条目，只读）
 - 输出：`/mnt/data/lidian/law-agent/data/corpus/derived/statute_tasks.jsonl`
-- **动机**：阶段 4 实测程序法池仅目标的 1.08 倍、头号任务独占 45.6%，「单任务份额 ≤35%」数学上不可达 → 只能放宽并留痕。根因是**池子太窄、题型单一**，本脚本按 README 3.1 地把「诉讼法条文任务」这一来源补齐。
+- **动机**：阶段 4 实测程序法真实池仅目标的 1.10 倍（21,980 / 20,000）、头号任务独占 49.3%，「单任务份额 ≤35%」数学上不可达 → 只能放宽并留痕。根因是**池子太窄、题型单一**，本脚本按 README 3.1 地把「诉讼法条文任务」这一来源补齐。
 - 只派生 `domain=procedural` 且 `level=item` 的条目；**答案逐字取自原文，不做生成式改写**。
 - 全部样本 `synthetic=true` + `derived=true`：阶段 4 只允许其进 **train**，val/test 保持真实数据。
 

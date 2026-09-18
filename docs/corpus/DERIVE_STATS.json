@@ -14,7 +14,8 @@
     "target_domain": "procedural",
     "target_level": "item",
     "min_text_chars": 20,
-    "derivation": "statute_item_procedural:v1"
+    "derivation": "statute_item_procedural:v1",
+    "stamp": "2026-09-18T19:27:41"
   },
   "input": {
     "files": {

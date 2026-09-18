@@ -695,6 +695,12 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   [`docs/corpus/DERIVE_REPORT.md`](docs/corpus/DERIVE_REPORT.md)。
   一个实测坑：源 `law_title` 自带书名号，模板再包一层会产出 `《《…》》` →
   加 `unwrap_title()` 剥壳 + `title_wrap_check` 硬断言（实测嵌套书名号 = **0**）。
+  **确定性边界（必须说清）**：脚本无随机数，相同输入必得**相同的样本集合 / uid /
+  `content_sha1` / 行序**；但每条记录写 `normalized_at`（运行时刻），这是**唯一的非确定性来源**
+  → 要逐字节复现产物必须 `--stamp 2026-09-18T19:27:41`（实测：带同一 `--stamp` 重跑，
+  产物 SHA-256 精确回到 `3b11ae6b…`）。`content_sha1` 不含时间戳，故**重跑 2c 不影响阶段 4**
+  （已实测：train 里 3,000 条派生记录与新 2c 产物逐字段一致，仅 `normalized_at` 与
+  阶段 4 追加的 `split`/`split_stage`/`uid_g` 不同）。
 
 - ✅ **阶段 4：分层下采样 + 切分（★ 硬卡口）**（2026-09-18，质检 verdict = PASS）。
   **122,000 条四份 split，两两不相交（uid_g 与 content_sha1 双口径交集均 0）**：
@@ -705,7 +711,9 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   训练来源分布：`DISC-Law-SFT` 85,095 / `Skepsun` 6,048 / `Dusker` 5,857 / 派生 3,000。
   产物直接落在 `configs/` 写死的路径上（`data/train/train.jsonl`、`data/train/{civil,criminal,procedure,general}.jsonl`、
   `data/dev/dev.jsonl`、`data/test/test.jsonl`、`data/router/router_train.jsonl`），**配置零改动**。
-  切分口径：样本键 = `content_sha1`（实测全局唯一）、全 sha1 排序确定性抽取（**无随机数**，重跑逐字节一致）、
+  切分口径：样本键 = `content_sha1`（实测全局唯一）、全 sha1 排序确定性抽取
+  （**无随机数、不写任何时间戳**）→ **2026-09-18 实测验证：同一份输入重跑阶段 4，
+  16 个产物文件 SHA-256 全部不变（逐字节一致）**，脚本也不写 `generated_at` 进记录。
   先预留 router/val/test 再对训练池下采样。报告
   [`docs/corpus/SPLIT_REPORT.md`](docs/corpus/SPLIT_REPORT.md) + [`SPLIT_VERIFY.md`](docs/corpus/SPLIT_VERIFY.md)。
   **三层约束全部满足、零放宽**：单任务软上限 35% → 派生组上限 15%（按域内配额生效）

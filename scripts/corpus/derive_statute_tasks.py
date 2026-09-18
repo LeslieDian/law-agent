@@ -7,13 +7,25 @@
 报告  --out-json / --out-md
 
 ============================ 为什么需要它（实测驱动） ============================
-阶段 4 实测：程序法训练池只有 **21,635** 条（目标 20,000 的 1.08 倍），且头号任务
-`legal_question_answering` 独占池子 **45.6%**。这导致「单任务份额 ≤35%」的软上限
+阶段 4 实测：程序法真实训练池只有 **21,980** 条（目标 20,000 的 **1.10 倍**），且头号任务
+`legal_question_answering` 独占池子 **49.3%**。这导致「单任务份额 ≤35%」的软上限
 在程序法上**数学上不可达**（Σ min(cap, avail) < target），只能放宽上限并留痕
-（实测 49.4%，cap_relaxed=true）。根因不是配额算法，是**程序法池子太窄、题型单一**。
+（实测 49.3%，cap_relaxed=true）。根因不是配额算法，是**程序法池子太窄、题型单一**。
+接入本脚本产物后：池 21,980 → **35,464**、头号任务 49.3% → **35.0%**、cap_relaxed → **false**。
 
 README 3.1 已把「诉讼法条文任务」列为程序法来源之一，本脚本实现该来源：
 用阶段 2b 已切出的程序法条文（逐字权威文本）派生出**题型不同**的训练样本。
+
+========================= 确定性与可复现性（说清边界） ==========================
+本脚本**不含随机数**：输入扫描顺序（文件名排序）、派生顺序、丢弃顺序全部确定；
+相同输入必然得到**相同的样本集合、相同的 uid、相同的 content_sha1、相同的行序**。
+
+但产物的 **SHA-256 不是天然逐字节稳定的** —— 每条记录写
+`normalized_at`（= 运行时刻），报告写 `generated_at`。这是唯一的非确定性来源。
+→ 要得到逐字节一致的产物：`--stamp 2026-09-18T19:27:41`（传与上次相同的值）。
+→ 生产运行留空即可；**复现实验/校验产物哈希时必须传 `--stamp`**。
+（`content_sha1 = sha1(instruction, input, output)`，不含时间戳 —— 所以下游阶段 4 的
+ 选择与配比不受时间戳影响，这也是「重跑 2c 不会让阶段 4 失效」的原因。）
 
 ====================== 派生原则（违反任一条即产物不可信） ======================
 1. **答案逐字取自原文，不做任何生成式改写** → 正确率 100%，不引入 LLM 幻觉。
@@ -229,6 +241,10 @@ def main():
                     help="要派生的任务型（逗号分隔）")
     ap.add_argument("--out-json", required=True)
     ap.add_argument("--out-md", default="")
+    ap.add_argument("--stamp", default="",
+                    help="固定时间戳（YYYY-MM-DDTHH:MM:SS）。留空 = 用当前时间。"
+                         "每条记录写 normalized_at、报告写 generated_at，二者同源 ——"
+                         "**这是本脚本唯一的非确定性来源**。要逐字节复现产物就传与上次相同的值。")
     a = ap.parse_args()
 
     kinds = [x.strip() for x in a.types.split(",") if x.strip()]
@@ -241,7 +257,7 @@ def main():
     if not os.path.isdir(items_dir):
         sys.exit("法条条目目录不存在：%s" % items_dir)
     os.makedirs(out_dir, exist_ok=True)
-    now = time.strftime("%Y-%m-%dT%H:%M:%S")
+    now = a.stamp.strip() or time.strftime("%Y-%m-%dT%H:%M:%S")
     t0 = time.time()
 
     files = sorted(f for f in os.listdir(items_dir)
@@ -354,6 +370,7 @@ def main():
             "items_dir": items_dir, "out_path": out_path, "types": kinds,
             "target_domain": TARGET_DOMAIN, "target_level": TARGET_LEVEL,
             "min_text_chars": MIN_TEXT_CHARS, "derivation": DERIVATION_TAG,
+            "stamp": a.stamp.strip() or "(now)",
         },
         "input": {
             "files": in_files, "total_items": n_items,
@@ -437,15 +454,19 @@ def render_md(S, path):
         W()
         W("**verdict = %s**" % S["verdict"])
         W()
-        W("> 生成脚本 `scripts/corpus/derive_statute_tasks.py`（只读输入、确定性、无随机数）")
+        W("> 生成脚本 `scripts/corpus/derive_statute_tasks.py`（只读输入、无随机数）")
         W("> 生成时间 %s（服务器 %s，耗时 %.1fs）"
           % (S["generated_at"], S["host"], S["elapsed_sec"]))
+        W("> **`--stamp` = `%s`** —— 这是产物里唯一的非确定性来源（每条 `normalized_at`）；"
+          % S["config"]["stamp"])
+        W("> 传固定值即可逐字节复现产物（样本集合/顺序/uid/content_sha1 本来就确定）。")
         W()
         W("## 0. 口径与动机")
         W()
         W("- 输入：`%s/*.jsonl`（阶段 2b 法条条目，只读）" % S["config"]["items_dir"])
         W("- 输出：`%s`" % S["config"]["out_path"])
-        W("- **动机**：阶段 4 实测程序法池仅目标的 1.08 倍、头号任务独占 45.6%，"
+        W("- **动机**：阶段 4 实测程序法真实池仅目标的 1.10 倍（21,980 / 20,000）、"
+          "头号任务独占 49.3%，"
           "「单任务份额 ≤35%」数学上不可达 → 只能放宽并留痕。根因是**池子太窄、题型单一**，"
           "本脚本按 README 3.1 地把「诉讼法条文任务」这一来源补齐。")
         W("- 只派生 `domain=%s` 且 `level=%s` 的条目；**答案逐字取自原文，不做生成式改写**。"

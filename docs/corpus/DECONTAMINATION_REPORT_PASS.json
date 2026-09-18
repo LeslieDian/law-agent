@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T13:18:37",
+  "generated_at": "2026-09-18T20:41:35",
   "method": {
     "exact": "sha1(normalize(instruction+input)) 与 sha1(normalize(instruction+input+output))",
     "near": "simhash64(char-3gram, crc32), 汉明距离 <= 3",
@@ -18,15 +18,17 @@
     "claw_path_expected": "/mnt/data/lidian/law-agent/data/benchmark/claw/repo/data/claw254.json"
   },
   "checked": {
-    "total_rows": 294937,
+    "total_rows": 293760,
     "by_domain": {
-      "criminal": 92827,
-      "civil": 102798,
-      "procedural": 24528,
-      "general": 74784
+      "criminal": 91782,
+      "civil": 102626,
+      "procedural": 24610,
+      "general": 74742
     },
     "by_file": {
-      "_all.jsonl": 272166,
+      "Dusker__lawyer-llama.jsonl": 17318,
+      "ShengbinYue__DISC-Law-SFT.jsonl": 239757,
+      "Skepsun__lawyer_llama_data.jsonl": 13914,
       "pandalla__chinese_law_examples.jsonl": 984,
       "twang2218__chinese-law-and-regulations.jsonl": 21787
     }
@@ -53,5 +55,5 @@
   },
   "verdict": "PASS",
   "blockers": [],
-  "elapsed_sec": 5748.1
+  "elapsed_sec": 5716.4
 }

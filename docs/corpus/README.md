@@ -20,7 +20,9 @@
 | `sources/<slug>.source.json` | 每个数据集的采集溯源（commit / 体积 / 命中文件） |
 | [`DEDUP_REPORT.md`](DEDUP_REPORT.md) | **跨源判重报告**（三指纹交叉证据 + 丢弃/保留判定） |
 | `normalized_STATS.json` / `normalized_DEDUP_REPORT.json` | 阶段 2 统计与全局精确去重明细 |
-| `DECONTAMINATION_REPORT.md` / `DECONTAMINATION_REPORT_PASS.md` / `.json` | 阶段 3 首扫 FAIL 证据 / 复扫 **PASS** 证据 |
+| `DECONTAMINATION_REPORT.md` / `.json` | 阶段 3 **首扫**证据（`verdict = FAIL`，含 18,587 处命中明细） |
+| `DECONTAMINATION_REPORT_PASS.md` / `.json` | 阶段 3 **复扫 PASS** 证据（门禁用） |
+| `DECONTAM_REMOVED_UIDS.txt` / `DECONTAM_REMOVED_UIDS_PASS.txt` | 剔除清单 15,007 行 / 复扫清单**空文件**（门禁证据） |
 | `STATUTE_SPLIT_REPORT.md` / `statute_items_STATS.json` / `statute_items_VERIFY.md` / `.json` | 阶段 2b 切条报告 + 质检 **PASS** |
 | `DERIVE_REPORT.md` / `DERIVE_STATS.json` | 阶段 2c 程序法条文任务派生报告 + 自检 |
 | `SPLIT_REPORT.md` / `SPLIT_STATS.json` / `SPLIT_VERIFY.md` / `.json` | 阶段 4 切分报告 + 质检门禁 **PASS** |
@@ -235,10 +237,25 @@ raw **349,665 条** → qa 流 **285,257 条** + 法条库 **23,510 条**。
    - `uid_unique_assert = true` —— 输入 308,767 行 / 308,767 个唯一 uid / **重复 0**；
    - `removal_identity_assert = true` —— **实际剔除 15,007 条 == 命中 15,007 个 uid**（恒等式成立）。
    - 另有 `banned_missing_uids = 0`、`stale_files_in_dst = []`（镜像目录无未登记残留）。
-3. **复扫**（同量级耗时）：**精确 0 / 近似 0 → verdict = PASS**，二次剔除清单为空。
+3. **复扫**（清洗镜像 293,760 行 / 耗时 5,716s）：**精确 0 / 近似 0 → verdict = PASS**，
+   `DECONTAM_REMOVED_UIDS_PASS.txt` 为**空文件**（0 行，门禁证据）。
+   **恒等式闭环**：首扫 308,767 − 复扫 293,760 = **15,007 = 剔除 uid 数**；
+   逐域差额 criminal 6,038 / civil 5,096 / procedural 1,389 / general 2,484 合计亦为 15,007。
 
-**同源风险专项**：Skepsun 司考 13,914 条 vs LexRubric `sifakaoshi` 176 条 ——
-**精确 0 / 近似 1，风险排除**（两者虽都源自公开司考真题，但题目集不相交）。
+**逐文件剔除明细**（`APPLY_SUMMARY.json` 的 `per_file`，合计 removed = 15,007）：
+
+| 文件 | kept | removed |
+|---|---|---|
+| `qa/Dusker__lawyer-llama.jsonl` | 17,318 | 1,117 |
+| `qa/ShengbinYue__DISC-Law-SFT.jsonl` | 239,757 | **12,598** |
+| `qa/Skepsun__lawyer_llama_data.jsonl` | 13,914 | 553 |
+| `statutes/pandalla__chinese_law_examples.jsonl` | 984 | 16 |
+| `statutes/twang2218__chinese-law-and-regulations.jsonl` | 21,787 | 723 |
+
+**同源风险专项**：Skepsun 司考（首扫 normalized **14,467** 条 → 剔除后 **13,914** 条）
+vs LexRubric `sifakaoshi`（**176** 条）——
+首扫 **精确 0 / 近似 1**（汉明 3，uid `Skepsun__lawyer_llama_data__all:12431`，**已落在 15,007 剔除集内**）；
+剔除后复扫 **精确 0 / 近似 0** → **风险排除**（两者虽都源自公开司考真题，但题目集不相交）。
 
 **清洗后分域（唯一记录，排除 `_all.jsonl` 合并副本双计）**：
 
@@ -260,6 +277,13 @@ raw **349,665 条** → qa 流 **285,257 条** + 法条库 **23,510 条**。
    复扫会读到旧产物 → **直接给出错误的 PASS**。
 2. **跳过 `_` 前缀与 `*.sample.jsonl`**：合并副本与调试抽样残留一律不参与扫描/剔除，
    否则会双计（详见第十节 10.2）。
+
+> **实证：假 PASS 不是假想。** 本轮修复前，2026-09-18 **13:18:37** 曾产出过一份同名
+> `DECONTAMINATION_REPORT_PASS.json` —— 它也确实写着 `verdict = PASS`，但 `checked.total_rows = 294,937`、
+> `by_file` 里**只有 `_all.jsonl`(272,166) + pandalla + twang2218**：它信任了**陈旧的合并副本**。
+> 修复后复扫（**20:41:35**）改走五份正式分文件，`checked = 293,760`，与 `apply` 阶段登记的
+> `kept = 293,760` **逐个数字吻合**。**凡是不能与"被查总量"对上的 PASS，都不是证据。**
+> 这也是"新鲜度守卫"必须存在的直接原因（详见第十节 10.2）。
 
 之后阶段 4 需在**已有超额数据上做分层下采样**（按 `task` × `domain` × `source` 分层，
 避免某一任务型垄断某个专家），并在此之前先切出 val/test 与路由集（与专家训练集 disjoint）。

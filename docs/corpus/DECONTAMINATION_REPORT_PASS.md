@@ -1,5 +1,5 @@
 # 阶段 3：双向去污报告（DECONTAMINATION REPORT）
-> 生成时间：2026-09-18T13:18:37　耗时 5748.1s
+> 生成时间：2026-09-18T20:41:35　耗时 5716.4s
 > **verdict = `PASS`**
 ## 0. 结论
 - 训练语料与已就位评测集之间**未发现精确复制或近似改写**。
@@ -16,8 +16,10 @@
 - CLaw 254 案：**缺失**（官方未公开发布，走自建路线）
 
 ## 3. 被查训练语料
-- 合计 **294937** 行；按域 {'criminal': 92827, 'civil': 102798, 'procedural': 24528, 'general': 74784}
-  - `_all.jsonl`：272166
+- 合计 **293760** 行；按域 {'criminal': 91782, 'civil': 102626, 'procedural': 24610, 'general': 74742}
+  - `Dusker__lawyer-llama.jsonl`：17318
+  - `ShengbinYue__DISC-Law-SFT.jsonl`：239757
+  - `Skepsun__lawyer_llama_data.jsonl`：13914
   - `pandalla__chinese_law_examples.jsonl`：984
   - `twang2218__chinese-law-and-regulations.jsonl`：21787
 

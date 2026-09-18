@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-17T16:55:50",
+  "generated_at": "2026-09-18T17:05:21",
   "drop_files": [
     {
       "dataset": "Dusker/lawyer-llama",
@@ -173,9 +173,20 @@
     "crime_concept": 435
   },
   "multilabel_count": 16520,
+  "uid_unique": {
+    "total": 308767,
+    "duplicates": 0,
+    "samples": []
+  },
   "merged_qa": {
     "path": "/mnt/data/lidian/law-agent/data/corpus/normalized/qa/_all.jsonl",
-    "rows": 288855
+    "rows": 285257,
+    "files": [
+      "Dusker__lawyer-llama.jsonl",
+      "ShengbinYue__DISC-Law-SFT.jsonl",
+      "Skepsun__lawyer_llama_data.jsonl"
+    ],
+    "stray_not_merged": []
   },
   "qa_domain_total": {
     "civil": 104691,

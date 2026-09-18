@@ -15,6 +15,10 @@
   C9 逐域视图文件与主文件的行数/内容一致
   C10 路由集自带 `router_label` 与 `router_query`
   C11 逐文件 SHA-256 与 `SPLIT_STATS.json` 登记值一致
+  C12 **派生(合成)样本只出现在 train** —— router/val/test 必须 100% 真实样本
+  C13 派生样本份额不超过 `--derived-max-share`（超限须在 SPLIT_STATS 留痕）
+  C14 `uid` 与 `uid_g` 必须逐条相等（证明阶段 2 的 uid 唯一化修复已生效），
+      且**必须覆盖全部行**（`checked == expected`）—— 空 Counter 不能冒充 PASS
 
 用法：
   python scripts/corpus/verify_split.py --root /mnt/data/lidian/law-agent \
@@ -86,6 +90,10 @@ def main():
     synth_bad = collections.Counter()
     field_bad = collections.Counter()
     router_bad = collections.Counter()
+    derived_by_split = collections.Counter()
+    derived_train_domain = collections.Counter()
+    uid_eq_bad = collections.Counter()
+    uid_eq_checked = collections.Counter()
 
     # ---------------- C1 / C2 / C6 / C7 / C8 / C10
     for split, path in files.items():
@@ -119,6 +127,16 @@ def main():
                 field_bad["%s:split_field_mismatch" % split] += 1
             if split in ("val", "test") and rec.get("synthetic"):
                 synth_bad[split] += 1
+            if rec.get("derived"):
+                derived_by_split[split] += 1
+                if split == "train":
+                    derived_train_domain[d] += 1
+            if ug:
+                # ★ 必须计数「实际比较了多少行」：空 Counter 无法区分
+                #   「全部相等」与「一行都没比过」—— 后者是永远为真的假断言。
+                uid_eq_checked[split] += 1
+                if (rec.get("uid") or "") != ug:
+                    uid_eq_bad[split] += 1
             msgs = rec.get("messages") or []
             roles = [m.get("role") for m in msgs]
             if "user" not in roles or "assistant" not in roles:
@@ -275,11 +293,75 @@ def main():
         res["warnings"].append("C11 SHA-256 与登记不一致（若为切分后再次改动则正常）：%s"
                                % sha_mismatch)
 
+    # ---------------- C12 派生样本只许进 train
+    leak = {s: derived_by_split.get(s, 0)
+            for s in ("val", "test", "router") if derived_by_split.get(s, 0) > 0}
+    res["checks"]["C12_derived_only_in_train"] = {
+        "derived_by_split": dict(derived_by_split),
+        "train_derived": derived_by_split.get("train", 0),
+        "leaked": leak,
+    }
+    if leak:
+        res["failures"].append(
+            "C12 派生(合成)样本泄漏到 router/val/test：%s —— 评测公平性被破坏" % leak)
+
+    # ---------------- C13 派生份额上限
+    dcap = exp["config"].get("derived_max_share")
+    dcap_relaxed = {d: bool(exp["train_domain"][d].get("derived_cap_relaxed"))
+                    for d in DOMAINS}
+    d_share = {d: (derived_train_domain.get(d, 0) / got[d]) if got.get(d) else 0.0
+               for d in DOMAINS}
+    over_d = []
+    if dcap is not None:
+        for d in DOMAINS:
+            if got.get(d) and d_share[d] > dcap + 1e-9:
+                over_d.append({"domain": d, "share": round(d_share[d], 4),
+                               "cap": dcap,
+                               "cap_relaxed_documented": dcap_relaxed.get(d, False)})
+    res["checks"]["C13_derived_share"] = {
+        "cap": dcap,
+        "derived_by_domain": {d: derived_train_domain.get(d, 0) for d in DOMAINS},
+        "share": {d: round(d_share[d], 4) for d in DOMAINS},
+        "over_cap": over_d,
+    }
+    for o in over_d:
+        if o["cap_relaxed_documented"]:
+            res["warnings"].append(
+                "C13 域 %s 派生份额 %.1f%% 超上限 %.0f%%，已在 SPLIT_STATS 留痕"
+                "（derived_cap_relaxed=true）" % (o["domain"], 100 * o["share"],
+                                                   100 * dcap))
+        else:
+            res["failures"].append(
+                "C13 域 %s 派生份额 %.1f%% 超上限 %.0f%% 且无留痕"
+                % (o["domain"], 100 * o["share"], 100 * dcap))
+
+    # ---------------- C14 uid == uid_g（阶段 2 唯一化修复生效的交叉验证）
+    uid_eq_total = sum(uid_eq_checked.values())
+    uid_eq_expected = sum(counts.values())
+    res["checks"]["C14_uid_equals_uid_g"] = {
+        "mismatch": dict(uid_eq_bad),
+        "checked": uid_eq_total,
+        "expected": uid_eq_expected,
+    }
+    if uid_eq_bad:
+        res["failures"].append(
+            "C14 存在 uid != uid_g 的记录：%s —— 阶段 2 的 uid 唯一化修复未生效"
+            "或该记录来自旧产物" % dict(uid_eq_bad))
+    elif uid_eq_total != uid_eq_expected:
+        # 覆盖不全同样是失败：不能让「没比过」冒充「都比过且都相等」
+        res["failures"].append(
+            "C14 覆盖不全：只比较了 %d 行 / 应有 %d 行 —— 存在缺 uid_g 的记录"
+            % (uid_eq_total, uid_eq_expected))
+
     # ---------------- 汇总
     res["summary"] = {
         "files": {k: v for k, v in counts.items()},
         "splits_total": sum(counts.values()),
         "train_mix": got,
+        "derived_by_split": dict(derived_by_split),
+        "derived_train_by_domain": {d: derived_train_domain.get(d, 0) for d in DOMAINS},
+        "derived_share_by_domain": {d: round(d_share[d], 4) for d in DOMAINS},
+        "derived_cap": dcap,
         "router_multilabel_pct": exp.get("router_multilabel_pct"),
         "leftover_pool": exp["splits"]["leftover"],
         "task_strata": len(train_dt),
@@ -316,16 +398,29 @@ def main():
                                                     or not v.get("domain_consistent")]))
             W("| C10 路由集字段 | %s |" % _ok(not router_bad))
             W("| C11 SHA-256 登记比对 | %s |" % _ok(not sha_mismatch))
+            W("| C12 **派生(合成)样本只出现在 train** | %s |" % _ok(not leak))
+            W("| C13 派生份额不超上限 | %s |"
+              % _ok(not [o for o in over_d
+                         if not o["cap_relaxed_documented"]]))
+            W("| C14 `uid` == `uid_g`（阶段 2 修复生效） | %s（%d/%d 行已比对） |"
+              % (_ok(not uid_eq_bad and uid_eq_total == uid_eq_expected),
+                 uid_eq_total, uid_eq_expected))
             W()
             W("## 规模")
             W()
-            W("| split | 行数 |")
-            W("|---|---|")
+            W("| split | 行数 | 其中派生(合成) |")
+            W("|---|---|---|")
             for k in ("train", "val", "test", "router"):
-                W("| %s | %d |" % (k, counts.get(k, 0)))
+                W("| %s | %d | %d |" % (k, counts.get(k, 0),
+                                        derived_by_split.get(k, 0)))
             W()
             W("训练集逐域实测：%s" % got)
             W()
+            if dcap is not None:
+                W("训练集逐域派生份额（上限 %.0f%%）：%s"
+                  % (100 * dcap,
+                     "、".join("%s %.1f%%" % (d, 100 * d_share[d]) for d in DOMAINS)))
+                W()
             W("未使用池剩余：%d" % exp["splits"]["leftover"])
             W()
             W("## 不相交性明细（硬卡口）")
@@ -336,12 +431,21 @@ def main():
                 W("| %s | **%d** | **%d** |" % (k, v["uid_g"], v["content_sha1"]))
             W()
             if over:
-                W("## 份额上限留痕")
+                W("## 份额上限留痕（单任务）")
                 W()
                 for o in over:
                     W("- 域 **%s**：`%s` 占 %.1f%%（上限 %.0f%%），"
                       "已留痕 cap_relaxed=%s"
                       % (o["domain"], o["task"], 100 * o["share"], 100 * cap,
+                         o["cap_relaxed_documented"]))
+                W()
+            if over_d:
+                W("## 份额上限留痕（派生组）")
+                W()
+                for o in over_d:
+                    W("- 域 **%s**：派生样本占 %.1f%%（上限 %.0f%%），"
+                      "已留痕 derived_cap_relaxed=%s"
+                      % (o["domain"], 100 * o["share"], 100 * o["cap"],
                          o["cap_relaxed_documented"]))
                 W()
             if weak_tasks:
@@ -369,6 +473,11 @@ def main():
     print("train_mix=%s (target %s)" % (got, {d: mix[d] for d in DOMAINS}))
     print("missing_tasks=%s weak=%d over_cap=%d"
           % (missing_tasks, len(weak_tasks), len(over)))
+    print("derived_by_split=%s" % dict(derived_by_split))
+    print("derived_train_by_domain=%s (cap %s)"
+          % ({d: derived_train_domain.get(d, 0) for d in DOMAINS}, dcap))
+    print("derived_share=%s" % {d: round(d_share[d], 4) for d in DOMAINS})
+    print("uid_uidg_mismatch=%s" % dict(uid_eq_bad))
     print("failures=%s" % res["failures"])
     print("warnings=%s" % res["warnings"])
     print("OK -> %s" % args.out_json)

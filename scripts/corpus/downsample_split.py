@@ -3,25 +3,29 @@
 """阶段 4：分层下采样 + train/val/test + 路由集切分（确定性、幂等、输入只读）。
 
 ============================ 硬约定（改动必须同步 docs 与本文件顶部） ============================
-1. 输入 = 阶段 3 去污后的 QA 流（`data/corpus/decontaminated/qa/*.jsonl`），
+1. 输入 = 阶段 3 去污后的 QA 流（`data/corpus/decontaminated/qa/*.jsonl`）
+   **+ 阶段 2c 派生流**（`data/corpus/derived/*.jsonl`），
    **显式排除 `_all.jsonl`**（合并副本，读它必然双计）。输入只读，一个字节都不改。
-2. 样本唯一键 = `content_sha1`。阶段 4 前置探查实测：268,768 条记录的 content_sha1
-   **全局唯一（0 重复）**；但 `uid` 只有 247,821 个唯一值 —— 20,947 条是 **uid 撞号**
-   （`DISC-Law-SFT-Pair-QA-released.jsonl` 与 `-Triplet-QA-released.jsonl` 同任务名同行号），
-   内容并不重复。故本脚本新增 **`uid_g`**（`<dataset>__<file_stem>:<index>`，实测唯一）
-   作为下游唯一键；原 `uid` 字段原样保留，维持与阶段 3 剔除清单的血缘。
+2. 样本唯一键 = `content_sha1`。重跑实测：真实 QA **270,989** 条 + 派生 **13,484** 条（合计池
+   **284,473**），`content_sha1` **全局唯一（0 重复）**。2026-09-18 起阶段 2 的 `uid` 已修为
+   `<dataset>__<file_stem>:<source_index>`（与下方 `uid_g` 同口径），不再撞号。
+   `uid_g` 保留为下游唯一键，并额外保留 `uid_legacy` 供血缘回溯。
 3. 切分**全部**基于 sha1 排序的确定性抽取（不使用随机数、不依赖字典序以外的隐式状态），
    同一份输入重跑结果逐字节一致。
 4. 规模：router 20,000（= 训练目标的 20%）/ val 1,000 / test 1,000 / train 100,000。
    四者**两两不相交**，由「每个样本只被指派一次」的构造保证，并由 verify 脚本断言。
-5. train 按 `domain × task × source_dataset` 三层分层下采样。
+5. **派生样本（`derived=true` / `synthetic=true`）只能进 train**：
+   router / val / test 一律**只从真实样本**抽（评测公平性 + verify C6 硬卡口）。
+6. train 按 `domain × task × source_dataset` 三层分层下采样。
    * 域内任务配额：`weight = count^alpha`（alpha=1 → 等比，标准分层抽样）；alpha<1 抹平。
    * **任务份额软上限** `--task-max-share`（默认 0.35）：单任务不得超过域配额的 35%。
-   * **软上限可能必须放宽**：程序法池 23,735 条 vs 目标 20,000（仅 1.09 倍），
-     强制封顶会让 20% 程序法配额数学上不可达 —— 此时自动放宽并**在报告里如实留痕**
-     （`cap_relaxed: true` + 实测最大份额），绝不静默改口径。绝不静默丢数据。
-6. val / test 按**目标配比**分层（每域 300/400/200/100），保证程序法有足够评测样本。
-7. 法条条目流（`data/corpus/statute_items/`，65,037 条）**不进 SFT 训练集**：
+   * **派生组份额上限** `--derived-max-share`（默认 0.15）：派生样本（合成）合计不得超过
+     域配额的该比例 —— 下限是「把单任务份额压回上限所需的最小补量」（实测约 4%），
+     上限是「防止合成样本喧宾夺主」，0.15 取两者的保守中间值。
+   * 约束**逐级放宽且必须留痕**：① 单任务上限 → ② 派生组上限 → ③ 报告里写清
+     `cap_relaxed` / `derived_cap_relaxed` + 实测份额，**绝不静默改口径，绝不静默丢数据**。
+7. val / test 按**目标配比**分层（每域 300/400/200/100），保证程序法有足够评测样本。
+8. 法条条目流（`data/corpus/statute_items/`，65,037 条）**不进 SFT 训练集**：
    它是检索语料（向量库主料）。本脚本只做登记 + 跨流 `content_sha1` 重叠检查。
 
 用法：
@@ -51,7 +55,10 @@ import sys
 import time
 
 QA_REL = "data/corpus/decontaminated/qa"
+DERIVED_REL = "data/corpus/derived"
 ST_REL = "data/corpus/statute_items"
+
+DERIVED_GROUP = "__derived_group__"
 
 DOMAINS = ("criminal", "civil", "procedural", "general")
 # 域 → 落盘文件名（adapters_router.yaml 用的是 procedure，不是 procedural，必须对齐）
@@ -132,40 +139,127 @@ def waterfill(weights: dict, room: dict, total: int, max_iter: int = 200):
 
 # ============================================================ 配额计算
 
-def allocate_tasks(counts: dict, total: int, alpha: float, max_share: float,
-                   min_samples: int):
-    """域内任务配额：地板 + alpha 比例 + 软上限（不可行时自动放宽并留痕）。"""
+def _split_group(dkeys, counts, group_alloc, min_samples):
+    """把派生组的配额拆到各派生任务（先满足每个任务的地板，再按可用量等比）。
+
+    返回 (alloc, lost)；lost = 组内拆不完的量（由调用方回填给非派生任务）。
+    """
+    if not dkeys:
+        return {}, max(0, group_alloc)
+    if group_alloc <= 0:
+        return {k: 0 for k in dkeys}, max(0, group_alloc)
+    floors = {k: min(min_samples, counts[k]) for k in dkeys}
+    F = sum(floors.values())
+    if F >= group_alloc:
+        alloc = largest_remainder(floors, group_alloc)
+    else:
+        w = {k: max(counts[k] - floors[k], 1) for k in dkeys}
+        room = {k: counts[k] - floors[k] for k in dkeys}
+        extra, _ = waterfill(w, room, group_alloc - F)
+        alloc = {k: floors[k] + extra[k] for k in dkeys}
+    alloc = {k: min(v, counts[k]) for k, v in alloc.items()}
+    return alloc, group_alloc - sum(alloc.values())
+
+
+def allocate_tasks(counts, total, alpha, max_share, min_samples,
+                   derived_keys=(), derived_max_share=None):
+    """域内任务配额：地板 + alpha 比例 + 单任务软上限 + **派生组上限**。
+
+    三层约束**逐级放宽、每级留痕**（绝不静默改口径）：
+      第 1 轮：单任务上限 `max_share` 且派生组上限 `derived_max_share` 同时生效；
+      第 2 轮：只剩分不完的余量时，放宽**单任务上限**（`cap_relaxed=true`）；
+      第 3 轮：仍分不完，再放宽**派生组上限**（`derived_cap_relaxed=true`）。
+
+    注意判据是 `Σ min(cap, avail) ≥ target`，不是「有没有任务超过上限」。
+    返回 (alloc, info)。
+    """
+    info = {"cap_binding": False, "cap_relaxed": False,
+            "derived_cap_relaxed": False, "derived_cap": None,
+            "derived_alloc": 0, "unallocated": 0}
     keys = [k for k, v in counts.items() if v > 0]
     if not keys:
-        return {}, {"empty": True}
+        info["empty"] = True
+        return {}, info
+
+    dset = set(derived_keys or ())
+    dkeys = sorted(k for k in keys if k in dset)
+    ndkeys = sorted(k for k in keys if k not in dset)
+
     floors = {k: min(min_samples, counts[k]) for k in keys}
     F = sum(floors.values())
+    info["floors"] = floors
     if F >= total:
-        alloc = largest_remainder({k: floors[k] for k in keys}, total)
-        return alloc, {"floors_scaled": True, "cap_relaxed": False,
-                       "unallocated": 0}
+        info["floors_scaled"] = True
+        return largest_remainder(floors, total), info
 
     budget = total - F
     cap_total = int(max_share * total)
-    room_cap = {k: max(0, min(counts[k], cap_total) - floors[k]) for k in keys}
-    w = {k: max((counts[k] - floors[k]), 1) ** alpha for k in keys}
-    extra, leftover = waterfill(w, room_cap, budget)
-    alloc = {k: floors[k] + extra[k] for k in keys}
-    relaxed = leftover > 0
+    info["cap_total"] = cap_total
+    info["cap_binding"] = any(counts[k] > cap_total for k in keys)
 
+    dsum = sum(counts[k] for k in dkeys)
+    dfloor = sum(floors[k] for k in dkeys)
+    info["derived_available"] = dsum
+    info["derived_floor"] = dfloor
+    dcap = None
+    if dkeys:
+        dcap = dsum if derived_max_share is None else int(derived_max_share * total)
+        dcap = max(dcap, dfloor)
+    info["derived_cap"] = dcap
+
+    w = {k: max(counts[k] - floors[k], 1) ** alpha for k in ndkeys}
+    if dkeys:
+        w[DERIVED_GROUP] = max(dsum - dfloor, 1) ** alpha
+
+    alloc = {k: floors[k] for k in ndkeys}
+    group_alloc = dfloor
+
+    def room_of(group_room):
+        r = {k: max(0, min(counts[k], cap_total) - floors[k]) for k in ndkeys}
+        if dkeys:
+            r[DERIVED_GROUP] = max(0, group_room - dfloor)
+        return r
+
+    # ---- 第 1 轮：单任务上限 + 派生组上限
+    extra, leftover = waterfill(w, room_of(min(dsum, dcap) if dkeys else 0), budget)
+    for k in ndkeys:
+        alloc[k] += extra.get(k, 0)
+    group_alloc += extra.get(DERIVED_GROUP, 0)
+
+    # ---- 第 2 轮：放宽单任务上限（派生组上限不动）
     if leftover > 0:
-        # 软上限绑死 → 放宽，按剩余可用量比例补齐（口径变化必须留痕）
-        room2 = {k: counts[k] - alloc[k] for k in keys if counts[k] - alloc[k] > 0}
-        if room2:
-            extra2, leftover = waterfill(
-                {k: counts[k] for k in room2}, room2, leftover)
-            for k in room2:
-                alloc[k] += extra2[k]
+        room2 = {k: max(0, counts[k] - alloc[k]) for k in ndkeys}
+        if dkeys:
+            room2[DERIVED_GROUP] = max(0, min(dsum, dcap) - group_alloc)
+        e2, leftover = waterfill(w, room2, leftover)
+        for k in ndkeys:
+            alloc[k] += e2.get(k, 0)
+        group_alloc += e2.get(DERIVED_GROUP, 0)
+        info["cap_relaxed"] = True
 
-    cap_binding = any(counts[k] > cap_total for k in keys)
-    return alloc, {"cap_binding": cap_binding, "cap_relaxed": relaxed,
-                   "cap_total": cap_total, "unallocated": leftover,
-                   "floors": floors}
+    # ---- 第 3 轮：放宽派生组上限
+    if leftover > 0 and dkeys:
+        room3 = {k: max(0, counts[k] - alloc[k]) for k in ndkeys}
+        room3[DERIVED_GROUP] = max(0, dsum - group_alloc)
+        e3, leftover = waterfill(w, room3, leftover)
+        for k in ndkeys:
+            alloc[k] += e3.get(k, 0)
+        group_alloc += e3.get(DERIVED_GROUP, 0)
+        info["derived_cap_relaxed"] = True
+
+    # ---- 拆分派生组配额
+    sub, lost = _split_group(dkeys, counts, group_alloc, min_samples)
+    alloc.update(sub)
+    info["derived_alloc"] = sum(sub.values())
+
+    # ---- 组内拆不完（可用量不足）→ 回填给非派生任务
+    if lost > 0 and ndkeys:
+        room4 = {k: max(0, counts[k] - alloc[k]) for k in ndkeys}
+        e4, lost = waterfill({k: max(counts[k], 1) for k in ndkeys}, room4, lost)
+        for k in ndkeys:
+            alloc[k] += e4.get(k, 0)
+    info["unallocated"] = lost
+    return alloc, info
 
 
 def allocate_sources(counts: dict, total: int):
@@ -191,16 +285,38 @@ def parse_mix(text: str) -> dict:
 
 # ============================================================ 主流程
 
-def load_light(qa_dir, max_records):
+def input_files(root, derived_dir=""):
+    """返回 `[(path, is_derived)]`：正式 QA 流 + 派生流。
+
+    两个目录都**显式排除 `_` 开头的文件**（`_all.jsonl` 合并副本 → 读了必然双计）。
+    """
+    out, skipped = [], []
+    qa_dir = os.path.join(root, QA_REL)
+    if not os.path.isdir(qa_dir):
+        raise SystemExit("QA 目录不存在：%s" % qa_dir)
+    for fn in sorted(os.listdir(qa_dir)):
+        if fn.endswith(".jsonl") and not fn.startswith("_"):
+            out.append((os.path.join(qa_dir, fn), False))
+        elif fn.endswith(".jsonl"):
+            skipped.append("qa/" + fn)
+    dd = derived_dir or os.path.join(root, DERIVED_REL)
+    if os.path.isdir(dd):
+        for fn in sorted(os.listdir(dd)):
+            if fn.endswith(".jsonl") and not fn.startswith("_"):
+                out.append((os.path.join(dd, fn), True))
+            elif fn.endswith(".jsonl"):
+                skipped.append("derived/" + fn)
+    return out, skipped
+
+
+def load_light(files, max_records):
     """第一遍：只读轻字段，建立样本表。"""
-    files = sorted(f for f in os.listdir(qa_dir)
-                   if f.endswith(".jsonl") and not f.startswith("_"))
-    skipped = sorted(f for f in os.listdir(qa_dir) if f.startswith("_"))
     recs = []
     per_file = collections.Counter()
     bad = collections.Counter()
-    for fn in files:
-        for lineno, rec in iter_jsonl(os.path.join(qa_dir, fn)):
+    for path, is_derived in files:
+        fn = ("derived/" if is_derived else "") + os.path.basename(path)
+        for lineno, rec in iter_jsonl(path):
             key = rec.get("content_sha1") or ""
             if not key:
                 bad["missing_content_sha1"] += 1
@@ -220,6 +336,7 @@ def load_light(qa_dir, max_records):
                 "source": ds,
                 "source_file": sf,
                 "synthetic": bool(rec.get("synthetic")),
+                "derived": bool(rec.get("derived")) or is_derived,
                 "replay": bool(rec.get("replay")),
             })
             per_file[fn] += 1
@@ -227,19 +344,31 @@ def load_light(qa_dir, max_records):
                 break
         if max_records and len(recs) >= max_records:
             break
-    return recs, files, skipped, per_file, bad
+    return recs, per_file, bad
 
 
 def build_splits(recs, mix, router_size, val_size, test_size,
-                 task_alpha, task_max_share, min_task_samples):
-    """构造四份互不相交的样本键集合 + 分层明细。"""
+                 task_alpha, task_max_share, min_task_samples,
+                 derived_max_share=None):
+    """构造四份互不相交的样本键集合 + 分层明细。
+
+    ★ 路由集 / val / test **只从真实样本抽**：派生样本 `synthetic=true`，仅能进 train
+      （评测公平性；verify C6 会硬卡口 val/test 无合成数据）。
+    """
     by_key = {r["key"]: r for r in recs}
     if len(by_key) != len(recs):
         raise SystemExit("输入 content_sha1 不唯一，无法作为样本键（%d vs %d）"
                          % (len(by_key), len(recs)))
 
-    # ---- 1) 路由集：取 router 哈希键最小的 router_size 个（均匀随机子集）
-    order = sorted(recs, key=lambda r: hkey("stage4/router", r["key"]))
+    real = [r for r in recs if not r["derived"]]
+    derived = [r for r in recs if r["derived"]]
+    need = router_size + val_size + test_size + sum(mix.values())
+    if len(real) < need:
+        raise SystemExit("真实样本不足以支撑 router/val/test + 训练目标：%d < %d"
+                         % (len(real), need))
+
+    # ---- 1) 路由集：取 router 哈希键最小的 router_size 个（真实样本，均匀子集）
+    order = sorted(real, key=lambda r: hkey("stage4/router", r["key"]))
     router_keys = {r["key"] for r in order[:router_size]}
     rest = order[router_size:]
 
@@ -264,11 +393,18 @@ def build_splits(recs, mix, router_size, val_size, test_size,
         test_keys |= {r["key"] for r in pick[v_quota:]}
         dev_detail[d] = {"val": v_quota, "test": len(pick) - v_quota}
 
-    # ---- 3) 训练池 = 其余全部
+    # ---- 3) 训练池 = 真实剩余 + 全部派生样本
     train_pool = [r for r in rest
-                  if r["key"] not in val_keys and r["key"] not in test_keys]
+                  if r["key"] not in val_keys and r["key"] not in test_keys] + derived
 
     # ---- 4) 分层下采样
+    real_tasks = {r["task"] for r in real}
+    d_by_dom = {d: {r["task"] for r in train_pool
+                    if r["derived"] and r["domain"] == d} for d in DOMAINS}
+    clash = set().union(*d_by_dom.values()) & real_tasks
+    if clash:
+        raise SystemExit("派生任务名与真实任务名撞名，配额无法区分：%s" % sorted(clash))
+
     train_keys = set()
     detail = {"domain": {}, "task_alloc_info": {}, "source_alloc": {}}
     for d in DOMAINS:
@@ -276,9 +412,11 @@ def build_splits(recs, mix, router_size, val_size, test_size,
         sub = [r for r in train_pool if r["domain"] == d]
         tc = collections.Counter(r["task"] for r in sub)
         alloc_t, info = allocate_tasks(tc, target, task_alpha, task_max_share,
-                                       min_task_samples)
+                                       min_task_samples, d_by_dom[d],
+                                       derived_max_share)
         detail["task_alloc_info"][d] = info
         got_total = 0
+        got_derived = 0
         for t in sorted(alloc_t):
             q = alloc_t[t]
             if q <= 0:
@@ -297,11 +435,15 @@ def build_splits(recs, mix, router_size, val_size, test_size,
                 strat.sort(key=lambda r: hkey("stage4/train", r["key"]))
                 for r in strat[:qs]:
                     train_keys.add(r["key"])
+                    if r["derived"]:
+                        got_derived += 1
                 got_total += min(qs, len(strat))
         detail["domain"][d] = {
             "target": target,
             "achieved": got_total,
+            "derived_achieved": got_derived,
             "pool_available": len(sub),
+            "pool_derived_available": sum(1 for r in sub if r["derived"]),
             "pool_usage": round(100.0 * got_total / max(1, len(sub)), 2),
             "requested": sum(alloc_t.values()),
         }
@@ -319,6 +461,13 @@ def build_splits(recs, mix, router_size, val_size, test_size,
             if inter:
                 raise SystemExit("切分不相交断言失败：%s ∩ %s = %d"
                                  % (names[i], names[j], len(inter)))
+
+    # ---- 6) 派生样本不得出现在 router/val/test（构造上已保证，显式断言以防回退）
+    non_train = router_keys | val_keys | test_keys
+    leak = [k for k in non_train if by_key[k]["derived"]]
+    if leak:
+        raise SystemExit("派生（合成）样本泄漏到 router/val/test：%d 条，"
+                         "评测公平性被破坏" % len(leak))
     return by_key, groups, dev_detail, detail, files_and_skipped(recs)
 
 
@@ -331,8 +480,8 @@ def files_and_skipped(recs):
 
 # ============================================================ 落盘
 
-def write_splits(args, by_key, groups, qa_dir):
-    """第二遍：重读输入，按已定好的键集写四个 split（含逐域视图）。"""
+def write_splits(args, by_key, groups, files):
+    """第二遍：重读输入（QA 流 + 派生流），按已定好的键集写四个 split（含逐域视图）。"""
     paths = {
         "train_all": os.path.join(args.train_dir, "train.jsonl"),
         "dev_all": os.path.join(args.dev_dir, "dev.jsonl"),
@@ -359,10 +508,9 @@ def write_splits(args, by_key, groups, qa_dir):
     cnt = collections.Counter()
     seen_uidg = collections.Counter()
     try:
-        files = sorted(f for f in os.listdir(qa_dir)
-                       if f.endswith(".jsonl") and not f.startswith("_"))
-        for fn in files:
-            for _, rec in iter_jsonl(os.path.join(qa_dir, fn)):
+        for path, is_derived in files:
+            cnt["input_files"] += 1
+            for _, rec in iter_jsonl(path):
                 key = rec.get("content_sha1") or ""
                 split = None
                 for g, keys in groups.items():
@@ -381,6 +529,8 @@ def write_splits(args, by_key, groups, qa_dir):
                     rec.get("source_index"))
                 out["split"] = split
                 out["split_stage"] = "stage4"
+                if is_derived:
+                    cnt["derived_%s" % split] += 1
                 if split == "router":
                     out["router_label"] = rec.get("domains") or [dom]
                     out["router_query"] = _router_query(rec)
@@ -473,12 +623,18 @@ def render_md(args, stats, path):
         W()
         W("## 0. 口径")
         W()
-        W("- 输入：`%s/*.jsonl`（已排除 `%s`，防合并副本双计）" %
-          (QA_REL, ", ".join(S["input"]["skipped_files"]) or "无"))
-        W("- 池记录：**%d**（`content_sha1` 全局唯一 → 样本键）"
-          % S["input"]["records"])
-        W("- `uid` 撞号：%d 条记录共用已存在的 uid（内容不同）→ 新增 `uid_g` 作唯一键；"
-          "原 `uid` 原样保留" % S["input"]["uid_collision_records"])
+        W("- 输入：`%s/*.jsonl`（真实 QA 流）+ `%s/*.jsonl`（阶段 2c 派生流）；"
+          "已排除 `%s`（合并副本，读它必然双计）"
+          % (QA_REL, DERIVED_REL,
+             "、".join(S["input"]["skipped_files"]) or "无"))
+        W("- 池记录：**%d** = 真实 **%d** + 派生(合成) **%d**（`content_sha1` 全局唯一 → 样本键）"
+          % (S["input"]["records"], S["input"]["real_records"],
+             S["input"]["derived_records"]))
+        W("- `uid` 撞号（旧口径 `uid_legacy`）：**%d** 条 —— 阶段 2 已把 `uid` 修为"
+          "`<dataset>__<file_stem>:<source_index>`，与 `uid_g` 同口径，不再撞号；"
+          "`uid_legacy` 仅作血缘回溯。"
+          % S["input"]["uid_collision_records"])
+        W("- **派生样本只进 train**：router/val/test 全部来自真实样本（评测公平性）。")
         W("- 切分方式：sha1 排序确定性抽取（无随机数）；四份 split 两两不相交")
         W("- 目标配比：" + "、".join("%s %d" % (k, v)
                                   for k, v in S["config"]["mix"].items()))
@@ -511,44 +667,64 @@ def render_md(args, stats, path):
                  100.0 * x["achieved"] / max(1, x["target"]),
                  x["pool_available"], x["pool_usage"]))
         W()
-        W("## 3. 训练集分层（域 × 任务）—— 份额软上限的留痕")
+        W("## 3. 训练集分层（域 × 任务）—— 三层约束的留痕")
         W()
-        W("软上限 `--task-max-share %.2f`（单任务不得超过域配额的该比例）。"
+        W("- 单任务软上限 `--task-max-share %.2f`：单任务不得超过域配额的该比例。"
           % S["config"]["task_max_share"])
-        W("**程序法必须放宽**，原因写在表后。")
+        W("- **派生组上限** `--derived-max-share %s`：合成样本合计不得超过域配额的该比例"
+          "（防止「程序法专家只会背法条」）。"
+          % ("禁用" if S["config"]["derived_max_share"] is None
+             else "%.2f" % S["config"]["derived_max_share"]))
+        W("- 放宽顺序：① 单任务上限 → ② 派生组上限；每级放宽都记进本表。")
         W()
-        W("| 域 | 任务数 | 实测最大单任务份额 | 最大份额任务 | 上限绑定 | 上限放宽 |")
-        W("|---|---|---|---|---|---|")
+        W("| 域 | 任务数 | 最大单任务份额 | 最大份额任务 | 单任务上限放宽 |")
+        W("|---|---|---|---|---|")
         for d in DOMAINS:
             x = S["train_domain"][d]
-            W("| %s | %d | **%.1f%%** | %s | %s | %s |"
+            W("| %s | %d | **%.1f%%** | %s | %s |"
               % (d, x["n_tasks"], x["max_task_share_pct"], x["max_task_share_name"],
-                 "是" if x["cap_binding"] else "否",
                  "**是**" if x["cap_relaxed"] else "否"))
         W()
-        PP = S["train_domain"]["procedural"]
-        ratio = PP["pool_available"] / max(1, S["config"]["mix"]["procedural"])
-        share = 100.0 * PP["max_task_share_avail"] / max(1, PP["pool_available"])
-        W("为什么程序法必须放宽：程序法训练池只有 **%d** 条，目标是 **%d** 条，"
-          "仅 **%.2f 倍** —— 可用量已吃掉池子的 %.1f%%。"
-          % (PP["pool_available"], S["config"]["mix"]["procedural"], ratio,
-             PP["pool_usage"]))
-        W("而域内头号任务 `%s` 独占池子的 %.1f%%。" % (PP["max_task_share_name"], share))
+        W("| 域 | 训练集 | 其中派生(合成) | 派生份额 | 派生池可用 | 派生上限 | 派生上限放宽 |")
+        W("|---|---|---|---|---|---|---|")
+        for d in DOMAINS:
+            x = S["train_domain"][d]
+            W("| %s | %d | %d | %.1f%% | %d | %s | %s |"
+              % (d, x["achieved"], x["derived_achieved"], x["derived_share_pct"],
+                 x["pool_derived_available"],
+                 "-" if x["derived_cap"] is None else x["derived_cap"],
+                 "**是**" if x["derived_cap_relaxed"] else "否"))
         W()
-        W("**若强制 %.0f%% 上限，程序法 %.0f%% 配额在数学上不可达**："
-          % (100 * S["config"]["task_max_share"],
-             100.0 * S["config"]["mix"]["procedural"] / S["config"]["train_target"]))
-        W("其余任务的可用量之和不足以补上被砍掉的量。本脚本的处理是：")
-        W("**先按上限分配 → 分配不完的部分自动放宽上限补齐 → 把 `cap_relaxed` 与实测最大份额"
-          "如实写进本报告**。既不静默改口径，也不静默丢数据。")
+        for d in DOMAINS:
+            x = S["train_domain"][d]
+            if not (x["cap_relaxed"] or x["derived_cap_relaxed"]):
+                continue
+            W("**为什么 %s 放宽了**：训练池 %d 条 vs 目标 %d 条（%.2f 倍）；"
+              "域内头号任务 `%s` 池内可用 %d 条（占池 %.1f%%）。"
+              "判据是 `Σ min(cap, avail) ≥ target` —— 不成立时只能放宽，"
+              "否则配额数学上不可达。实测最大单任务份额 %.1f%%。"
+              % (d, x["pool_available"], x["target"],
+                 x["pool_available"] / max(1, x["target"]),
+                 x["max_task_share_name"], x["max_task_share_avail"],
+                 100.0 * x["max_task_share_avail"] / max(1, x["pool_available"]),
+                 x["max_task_share_pct"]))
+            W()
+        P = S["train_domain"]["procedural"]
+        W("**程序法口径**：目标 %d 条，训练池 %d 条（其中派生 %d 条，占配额 %.1f%%）。"
+          % (P["target"], P["pool_available"], P["pool_derived_available"],
+             P["derived_share_pct"]))
+        if not P["cap_relaxed"]:
+            W("程序法**本轮无需放宽单任务上限**：阶段 2c 已用程序法条文派生"
+              "「程序法条文任务」把池子加宽（README 3.1 的「诉讼法条文任务」来源），"
+              "头号任务份额从 49.4%% 降到 %.1f%%（上限 %.0f%%）。"
+              % (P["max_task_share_pct"], 100 * S["config"]["task_max_share"]))
+        else:
+            W("程序法仍放宽了单任务上限 —— 说明**派生补量仍不足以撑起题型多样性**，"
+              "需要继续扩源（扩采真实程序法数据，而非加大派生比例，"
+              "因为派生组本身有 %.0f%% 上限）。"
+              % (100 * (S["config"]["derived_max_share"] or 0)))
         W()
-        W("要真正把程序法单任务份额压下来，只有一条路：**扩大程序法来源** ——")
-        W("阶段 2b 已切出 %d 条程序法条文（`data/corpus/statute_items/`），"
-          "可派生「程序法条文任务」补量（README 3.1 已把「诉讼法条文任务」列为程序法来源之一），"
-          "属**扩采/派生**动作，不在本阶段范围内。"
-          % S["statutes"].get("by_domain", {}).get("procedural", 0))
-        W()
-        W("| 域\\|任务 | 配额 | 池可用 |")
+        W("| 域\\|任务 | 配额 | 池可用（训练池口径） |")
         W("|---|---|---|")
         for k, v in sorted(S["task_alloc"].items(),
                            key=lambda x: (-int(x[0].split("|")[0] in ("procedural",)),
@@ -631,6 +807,12 @@ def main():
                     help="域内任务配额权重指数（1=等比分层，<1 抹平）")
     ap.add_argument("--task-max-share", type=float, default=0.35,
                     help="单任务占域配额的软上限（不可行时自动放宽并留痕）")
+    ap.add_argument("--derived-max-share", type=float, default=0.15,
+                    help="派生(合成)样本占域配额的组上限；<0 表示禁用该上限。"
+                         "0.15 的取值依据：下限=把单任务份额压到 task-max-share 所需的最小补量"
+                         "（实测约 0.04），上限=防止合成样本喧宾夺主；0.15 是两者之间的保守值")
+    ap.add_argument("--derived-dir", default="",
+                    help="派生流目录（默认 <root>/data/corpus/derived）")
     ap.add_argument("--min-task-samples", type=int, default=100,
                     help="每个有数据的任务型至少给多少条（不足则给满）")
     ap.add_argument("--train-dir", default="")
@@ -655,14 +837,19 @@ def main():
     router_size = args.router_size or int(round(args.router_rate * args.train_target))
 
     t0 = time.time()
-    qa_dir = os.path.join(args.root, QA_REL)
-    if not os.path.isdir(qa_dir):
-        sys.exit("QA 目录不存在：%s" % qa_dir)
+    derived_max_share = None if args.derived_max_share < 0 else args.derived_max_share
+    files, skipped = input_files(args.root, args.derived_dir)
+    derived_files = [os.path.basename(p) for p, d in files if d]
+    if not derived_files:
+        print("!! 警告：未发现派生流（%s 为空）—— 程序法题型多样性回到纯真实数据，"
+              "单任务上限可能需要放宽"
+              % (args.derived_dir or os.path.join(args.root, DERIVED_REL)))
 
-    recs, files, skipped, per_file, bad = load_light(qa_dir, args.max_records)
+    recs, per_file, bad = load_light(files, args.max_records)
     by_key, groups, dev_detail, detail, per_source_file = build_splits(
         recs, mix, router_size, args.val_size, args.test_size,
-        args.task_alpha, args.task_max_share, args.min_task_samples)
+        args.task_alpha, args.task_max_share, args.min_task_samples,
+        derived_max_share)
 
     # ---------------- 统计
     domain_cnt = collections.Counter(r["domain"] for r in recs)
@@ -679,10 +866,16 @@ def main():
         tc = collections.Counter(r["task"] for r in sub)
         top = tc.most_common(1)
         info = detail["task_alloc_info"][d]
+        d_ach = sum(1 for r in sub if r["derived"])
         train_domain[d] = {
             "target": mix[d],
             "achieved": len(sub),
             "pool_available": detail["domain"][d]["pool_available"],
+            "pool_derived_available": detail["domain"][d]["pool_derived_available"],
+            "derived_achieved": d_ach,
+            "derived_share_pct": pct(d_ach, len(sub)),
+            "derived_cap": info.get("derived_cap"),
+            "derived_cap_relaxed": bool(info.get("derived_cap_relaxed")),
             "pool_usage": detail["domain"][d]["pool_usage"],
             "n_tasks": len(tc),
             "max_task_share_name": top[0][0] if top else "",
@@ -707,7 +900,7 @@ def main():
                                     if r["key"] in groups["train"])
 
     # ---------------- 落盘
-    paths, write_info = write_splits(args, by_key, groups, qa_dir)
+    paths, write_info = write_splits(args, by_key, groups, files)
 
     outputs = {}
     for p in sorted(set(paths.values())):
@@ -746,11 +939,15 @@ def main():
             "test_size": args.test_size,
             "task_alpha": args.task_alpha,
             "task_max_share": args.task_max_share,
+            "derived_max_share": derived_max_share,
+            "derived_dir": args.derived_dir or os.path.join(args.root, DERIVED_REL),
             "min_task_samples": args.min_task_samples,
             "dry_run": bool(args.dry_run),
         },
         "input": {
             "records": len(recs),
+            "real_records": len(recs) - sum(1 for r in recs if r["derived"]),
+            "derived_records": sum(1 for r in recs if r["derived"]),
             "files": per_file,
             "skipped_files": skipped,
             "unique_content_sha1": len(by_key),
@@ -785,16 +982,21 @@ def main():
     if args.out_md:
         render_md(args, stats, args.out_md)
 
-    print("POOL=%d" % len(recs))
+    print("POOL=%d (real=%d derived=%d)"
+          % (len(recs), stats["input"]["real_records"],
+             stats["input"]["derived_records"]))
     print("SPLITS train=%d val=%d test=%d router=%d leftover=%d"
           % (len(groups["train"]), len(groups["val"]), len(groups["test"]),
              len(groups["router"]), len(recs) - total_used))
     for d in DOMAINS:
         x = train_domain[d]
-        print("  %-11s want=%d got=%d pool=%d use=%.1f%% maxtask=%s %.1f%% relaxed=%s"
+        print("  %-11s want=%d got=%d pool=%d use=%.1f%% maxtask=%s %.1f%% "
+              "relaxed=%s derived=%d(%.1f%%) dcap=%s drelax=%s"
               % (d, x["target"], x["achieved"], x["pool_available"],
                  x["pool_usage"], x["max_task_share_name"],
-                 x["max_task_share_pct"], x["cap_relaxed"]))
+                 x["max_task_share_pct"], x["cap_relaxed"],
+                 x["derived_achieved"], x["derived_share_pct"],
+                 x["derived_cap"], x["derived_cap_relaxed"]))
     print("DRY_RUN=%s elapsed=%.1fs" % (args.dry_run, stats["elapsed_sec"]))
     print("OK -> %s" % args.out_json)
 

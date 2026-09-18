@@ -40,6 +40,12 @@
    法规名是最强信号（「中华人民共和国刑法」→ criminal），比条文正文引用更可靠。
    命中不了 → general + `fallback`，占比在报告里登记。
 
+7. **条目 uid 必须含源文件**：格式 `<dataset>__<file_stem>:<source_index>#<条号>`（`level="doc"`
+   为 `…#__doc__`）。旧实现用 `<source_id>#<条号>`，而 `source_id` 只是文档在文件内的序号
+   —— 与阶段 2 的 uid 撞号缺陷同源（漏了「源文件」这一维）。当前 twang2218 只有 1 个
+   parquet 所以没暴露，但分片 parquet 或跨数据集同号时会**静默撞号**，下游按 uid 操作
+   会整组连坐。改由 `doc_uid()` 统一生成，唯一性由构造成立，并由质检 C1 断言。
+
 只读约定：不修改任何输入文件。
 """
 import argparse
@@ -201,6 +207,21 @@ def strip_header_for_fallback(title: str, text: str):
     return clean_text("\n".join(lines[i:])), skipped
 
 
+def doc_uid(rec):
+    """来源文档的全局唯一键：`<dataset>__<file_stem>:<source_index>`。
+
+    ★ 为什么要它（2026-09-18 加固）：旧的条目 uid 是 `<source_id>#<条号>`，而
+      `source_id` 是**文档在文件内的序号**，同样漏了「源文件」这一维。当前 twang2218
+      只有 1 个 parquet → 暂时不撞号，但一旦换成分片 parquet（`train-00000-of-00002`）
+      或另一个数据集用了同样的 id 命名，就会静默撞号，下游按 uid 操作会整组连坐。
+      本格式与阶段 2 的 `uid`、阶段 4 的 `uid_g` 完全同口径，唯一性由构造成立。
+    """
+    return "%s__%s:%s" % (
+        (rec.get("source_dataset") or "?").replace("/", "__"),
+        os.path.splitext(os.path.basename(rec.get("source_file") or "?"))[0],
+        rec.get("source_index"))
+
+
 def whole_doc_item(rec, body, split_mode):
     """无条号结构的文书 → **整篇**作为一个检索单元入库。
 
@@ -214,7 +235,7 @@ def whole_doc_item(rec, body, split_mode):
     dom, kw = title_domain(title)
     text_full = norm_space("%s %s" % (title, body))
     return {
-        "uid": "%s#__doc__" % rec.get("source_id", ""),
+        "uid": "%s#__doc__" % doc_uid(rec),
         "source_dataset": rec.get("source_dataset", ""),
         "source_file": rec.get("source_file", ""),
         "source_index": rec.get("source_index"),
@@ -281,7 +302,7 @@ def split_document(rec, args):
         dom, kw = title_domain(title)
         text_full = norm_space("%s %s %s" % (title, label, body))
         items.append({
-            "uid": "%s#%s" % (src_id, label),
+            "uid": "%s#%s" % (doc_uid(rec), label),
             "source_dataset": rec.get("source_dataset", ""),
             "source_file": rec.get("source_file", ""),
             "source_index": rec.get("source_index"),
@@ -645,7 +666,7 @@ def main() -> int:
                     continue
                 dom, kw = title_domain(title)
                 text_full = norm_space("%s %s %s" % (title, label, body))
-                uid = "%s#%s" % (rec.get("source_id", ""), label)
+                uid = "%s#%s" % (doc_uid(rec), label)
                 if uid in seen_uids:
                     dup_uids[uid] += 1
                     continue
@@ -733,8 +754,9 @@ def main() -> int:
         "unique_laws": len(law_items),
         "duplicate_uids": sum(dup_uids.values()),
         "duplicate_uid_samples": dup_uid_samples,
-        "duplicate_uid_note": ("uid = source_id#条号，重复说明该文档内同一条号出现两次"
-                               "（修正案体例/附则重排），保留首次出现"),
+        "duplicate_uid_note": ("uid = <dataset>__<file_stem>:<source_index>#<条号>，重复说明该文档内"
+                               "同一条号出现两次（修正案体例/附则重排），保留首次出现；"
+                               "本计数是**被跳过的重复条号数**，产物本身 uid 唯一（质检 C1 断言）"),
         "version_duplicates_note": ("同条号多版本内容重复由 uid 区分，未删；只统计 uid 完全重复"),
         "skipped_law_samples": law_skipped,
     }

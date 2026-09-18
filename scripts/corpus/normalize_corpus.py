@@ -16,6 +16,20 @@
     python scripts/corpus/normalize_corpus.py --list
     python scripts/corpus/normalize_corpus.py --limit-per-file 300 --suffix .sample
     python scripts/corpus/normalize_corpus.py
+
+======================= 硬约定（改动必须同步 docs 与本文件顶部） =======================
+1. 输入 raw 只读；同一份 raw 重跑，产出逐字节一致（无随机数）。
+2. **`uid` 是全局唯一键，格式 `<dataset>__<file_stem>:<source_index>`**，与阶段 4 的
+   `uid_g` 同口径。**绝不允许漏掉源文件**（旧实现漏了 → 20,947 条撞号，阶段 3 按 uid
+   剔除时连带多删 2,271 条真实样本；详见 `uid_of()` 的说明）。生成后当场断言唯一，
+   不唯一则 exit 3。
+3. **`content_sha1` 是样本唯一键**（`sha1(instruction, input, output)`，全局唯一）。
+4. 合并流 `_all.jsonl` **只合并本轮真正产出的文件**（以 `stats["sources"]` 登记为准）；
+   目录里出现的其它 `*.jsonl`（如调试残留 `*.sample.jsonl`）一律**排除并告警**。
+   历史缺陷：旧实现按「目录下所有非 `_` 开头 .jsonl」合并，把 3,598 条抽样残留吃进
+   合并流（288,855 = 285,257 + 3,598）。
+5. 调试抽样请用 `--suffix .sample`，**跑完把 `*.sample.jsonl` 移出 `data/corpus/`**，
+   否则会污染下一次合并（现已由第 4 条兜底，但仍应清理）。
 """
 import argparse
 import collections
@@ -173,6 +187,23 @@ def sha1(*parts, n=None):
         h.update(b"\x1e")
     d = h.hexdigest()
     return d[:n] if n else d
+
+
+def uid_of(dataset, source_file, source_index):
+    """全局唯一键：`<dataset>__<file_stem>:<source_index>`（与阶段 4 的 `uid_g` 同口径）。
+
+    ★ 为什么必须带 source_file（2026-09-18 修的真实缺陷）：
+      旧实现是 `<dataset>:<source_id>`，**漏了源文件**。DISC-Law-SFT 的
+      `DISC-Law-SFT-Pair-QA-released.jsonl` 与 `-Triplet-QA-released.jsonl` 共用同一套
+      `source_id`(行号) → 20,947 条记录撞号到同一个 uid（内容却完全不同）。
+      撞号的杀伤力不在统计虚高，而在**按 uid 操作会整组连坐**：
+      阶段 3 去污按 uid 剔除时，本该删 14,218 组、实际删了 16,489 条 —— 连带多删
+      2,271 条真实样本（方向是多删，保守，无污染风险，但数字被改动）。
+      `source_index` 在单份文件内严格唯一 → 本格式的全局唯一性由构造成立，且稳定可复现。
+    """
+    return "%s__%s:%s" % ((dataset or "?").replace("/", "__"),
+                          os.path.splitext(os.path.basename(source_file or "?"))[0],
+                          source_index)
 
 
 def read_text(path):
@@ -516,7 +547,13 @@ def build_record(raw, cfg, ds_meta):
     rec["domain_source"] = src
     rec["domain_evidence"] = ev
 
-    rec["uid"] = "%s:%s" % (raw["source_dataset"].replace("/", "__"), raw["source_id"])
+    # ★ uid = 全局唯一键，**必须含源文件**（见 uid_of 的说明：旧实现漏 source_file
+    #   导致 20,947 条撞号，阶段 3 按 uid 剔除时连带多删 2,271 条真实样本）。
+    #   `uid_legacy` 保留旧口径，仅作审计/血缘回溯用，下游一律不再使用。
+    rec["uid"] = uid_of(raw["source_dataset"], raw["source_file"],
+                        raw["source_index"])
+    rec["uid_legacy"] = "%s:%s" % (raw["source_dataset"].replace("/", "__"),
+                                   raw["source_id"])
     rec["content_sha1"] = sha1(instruction, inp, output)
     rec["case_sha1"] = sha1(inp[-400:]) if inp else ""
     if raw.get("statute"):
@@ -568,6 +605,8 @@ def main():
     }
     dedup = {"global_content_dup": 0, "internal": {}, "examples": []}
     seen_content = {}
+    seen_uid = {}
+    uid_dup = {"count": 0, "samples": []}
     drop_by_task = collections.defaultdict(collections.Counter)
 
     for s in cfg.get("sources") or []:
@@ -648,6 +687,19 @@ def main():
                     continue
                 seen_content[key] = "%s:%s" % (ds_id, rec["source_id"])
 
+                # --- uid 全局唯一性：当场暴露，绝不留给下游 ---
+                # 撞号的危害不是统计虚高，而是「按 uid 剔除/合并」会整组连坐（见 uid_of 说明）。
+                if rec["uid"] in seen_uid:
+                    uid_dup["count"] += 1
+                    if len(uid_dup["samples"]) < 20:
+                        uid_dup["samples"].append({
+                            "uid": rec["uid"], "file": fname,
+                            "source_id": rec["source_id"],
+                            "first_seen_in": seen_uid[rec["uid"]],
+                        })
+                else:
+                    seen_uid[rec["uid"]] = fname
+
                 ds_domain[rec["domain"]] += 1
                 stats["domain_source_dist"][rec["domain_source"]] += 1
                 stats["task_dist"][rec["task"]] += 1
@@ -683,22 +735,52 @@ def main():
     if a.list:
         return 0
 
+    # --- uid 唯一性硬断言（放在合并/汇总之前，fail loud） ---
+    stats["uid_unique"] = {"total": sum(s["written"] for s in stats["sources"].values()),
+                           "duplicates": uid_dup["count"],
+                           "samples": uid_dup["samples"]}
+    if uid_dup["count"]:
+        print("\n" + "!" * 78)
+        print("!!! uid 不唯一：%d 条撞号 —— 下游按 uid 剔除会整组连坐，拒绝继续" % uid_dup["count"])
+        for s in uid_dup["samples"][:10]:
+            print("    uid=%s  file=%s  first_seen_in=%s"
+                  % (s["uid"], s["file"], s["first_seen_in"]))
+        print("!" * 78)
+        return 3
+
     # 合并 qa 流
     if not a.no_merge:
         allp = os.path.join(OUT, "qa", "_all" + a.suffix + ".jsonl")
+        qa_dir = os.path.join(OUT, "qa")
+        # ★ 只合并**本轮真正产出**的文件（以 stats["sources"] 登记的 output 为准）。
+        #   历史缺陷：旧实现按「目录下所有非 `_` 开头的 *.jsonl」合并，会把调试遗留的
+        #   `*.sample.jsonl` 一起吃进合并流 —— 实测 `_all.jsonl` 288,855 行
+        #   = 285,257（三个正式文件）+ 3,598（三个 .sample.jsonl 残留）。
+        expected = sorted(os.path.basename(s["output"])
+                          for s in stats["sources"].values()
+                          if s.get("role") == "qa")
+        stray = sorted(f for f in os.listdir(qa_dir)
+                       if f.endswith(".jsonl") and not f.startswith("_")
+                       and f not in expected)
+        if stray:
+            print("\n!! 警告：qa 输出目录有本轮未产出的 .jsonl（**已排除，未合并**）：")
+            for f in stray:
+                print("     %s" % f)
+            print("     若为调试残留（如 *.sample.jsonl），建议移出 data/corpus/ 之外。")
         n = 0
         with open(allp, "w", encoding="utf-8") as out:
-            for fn in sorted(os.listdir(os.path.join(OUT, "qa"))):
-                if not fn.endswith(".jsonl") or fn.startswith("_"):
+            for fn in expected:
+                p = os.path.join(qa_dir, fn)
+                if not os.path.exists(p):
+                    print("!! 期望产出缺失，合并流将不完整：%s" % p)
                     continue
-                if a.suffix and not fn.endswith(a.suffix + ".jsonl"):
-                    continue
-                with open(os.path.join(OUT, "qa", fn), encoding="utf-8") as fh:
+                with open(p, encoding="utf-8") as fh:
                     for line in fh:
                         out.write(line)
                         n += 1
-        print("\n合并流 -> %s (%d 条)" % (allp, n))
-        stats["merged_qa"] = {"path": allp, "rows": n}
+        print("\n合并流 -> %s (%d 条，来自 %d 个文件)" % (allp, n, len(expected)))
+        stats["merged_qa"] = {"path": allp, "rows": n, "files": expected,
+                              "stray_not_merged": stray}
 
     # --- 汇总：域分布 ---
     dom_total = collections.Counter()

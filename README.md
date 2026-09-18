@@ -129,15 +129,19 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 
 1. **为什么要有 10% 通用回放**：纯法律数据微调会打崩底座通用能力。CLaw 254 案里有相当比例
    需要常识推理与语言组织，只喂法律数据会让这部分指标**不升反降**。
-2. **为什么曾计划程序法合成 40%（现已降为可选）**：程序法曾是三域里公开语料**最稀薄**的
-   （公开 SFT 集里占比普遍 <10%），而目标占 20%，故原计划自建补量。
-   **但阶段 2 实测证明程序法真实数据已够（25,445 > 20,000），合成不再是必需项** ——
-   能不用就不用，因为合成数据在论文里必须如实披露，**程序法合成占比 0% 比 40% 好写得多**。
-   若最终仍启用，合成规范写死、不许绕过：
-   - 必须以**三大诉讼法原文条文**为唯一事实来源，禁止模型自由发挥
-   - 每条登记 `synthetic: true` / `generator_model` / `prompt_sha256` / `source_articles[]`
-   - **合成数据一律不进验证集与测试集**
-   - 合成占比在论文里如实披露（若启用：程序法域 8000/20000 = 40%）
+2. **为什么曾计划程序法合成 40%（最终定为 15% 的"题型补量"）**：程序法曾是三域里公开语料
+   **最稀薄**的（公开 SFT 集里占比普遍 <10%），而目标占 20%，故原计划自建补量。
+   **阶段 2 实测证明程序法真实数据已够（25,445 > 20,000）→ "凑量型"合成取消**；
+   但重跑发现程序法**题型极度单一**（头号任务 `legal_question_answering` 独占 49.3%，
+   连 35% 单任务份额软上限都守不住，见 3.1.3），故保留**"题型补量型"合成 3,000 条**：
+   - 来源：阶段 2b 切出的 **6,601 条程序法条文**（116 部），**逐字派生**三种任务型
+     （`statute_recall` / `statute_locate` / `statute_structure`）；
+   - 上限：占程序法域配额 **15%**（`--derived-max-share 0.15`），实测正好取满 3,000；
+   - 合成规范写死、不许绕过：
+     - 答案**逐字取自条文原文**（`verbatim_check` 逐条回查，13,484 / 13,484 通过、不符 0）
+     - 每条登记 `synthetic: true` / `derived: true` / `derivation` / `derived_from_uid`
+     - **合成数据一律不进验证集与测试集**（质检 C12 断言：实测只出现在 train）
+   - 论文里如实披露「程序法域 15% 为条文任务派生样本」。
 
 ### 3.1.1 配比可得性核算（★ 阶段 2 实测结果：**每域都超额，总缺口 = 0**）
 
@@ -156,8 +160,11 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 
 1. **程序法不是"凑不齐"，而是"够用"** —— 实得 25,445 > 目标 20,000。
    → 8,000 条合成**不再是必需**：可选「25,445 真实中取 20,000」或「12,000 真实 + 8,000 合成」。
-   **建议保留合成配额但降比例**，因为合成数据在论文里要如实披露，
-   能不用就不用（程序法域合成占比 0% 比 40% 更好写）。
+   **实际决策（2026-09-18）**：真实数据足够，**不做"凑量型"合成**；只保留
+   **3,000 条"题型补量型"合成**（占程序法域配额的 15%，由阶段 2b 的 6,601 条程序法条文**逐字派生**而来，
+   见 3.1.3 与 [`docs/corpus/README.md`](docs/corpus/README.md) 第八节）——
+   目的是补**题型多样性**而不是补量，因为有派生时程序法的头号任务独占 49.3%、
+   会把 35% 单任务份额软上限打破（见 3.1.3）。论文里如实披露「程序法域 15% 为条文任务派生样本」。
 2. **不需要再单独找通用数据集** —— `general` 桶（宪法 / 行政法 / 法治理论 / 职业道德等
    **域不明确但仍属法律**的样本）已有 57,707 条，超过「通用回放 1 万」的需求。
    ⚠️ **但要注意它和"通用回放"不是一回事**：`general` 仍是**法律领域**内容（只是域不明确），
@@ -168,7 +175,7 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
    下采样必须**按 `task` × `source` 分层**，否则某个任务型（如 `legal_question_answering` 92,381 条）
    可能垄断某个专家，让该专家只学会一种题型。
 
-#### 3.1.3 阶段 4 实测结果（2026-09-18，配比 100% 命中）
+#### 3.1.3 阶段 4 实测结果（2026-09-18 修复 uid 后全链路重跑，配比 100% 命中）
 
 > 完整报告：[`docs/corpus/SPLIT_REPORT.md`](docs/corpus/SPLIT_REPORT.md) +
 > [`docs/corpus/SPLIT_VERIFY.md`](docs/corpus/SPLIT_VERIFY.md)。
@@ -180,22 +187,28 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 | 验证集 | `data/dev/dev.jsonl`（+ 逐域） | **1,000**（每域 400/300/200/100） |
 | 测试集 | `data/test/test.jsonl`（+ 逐域） | **1,000**（同配比） |
 | 路由集 | `data/router/router_train.jsonl` | **20,000**（query → domain 多标签） |
-| 合计占用 | | **122,000**（池剩余 146,768 可回溯） |
+| 合计占用 | | **122,000**（`uid_g` 唯一 122,000；池剩余 162,473 可回溯） |
 
+- 输入池 **284,473 条** = 真实 QA **270,989** + 派生 **13,484**；真实部分 `content_sha1`
+  **全局唯一 0 重复**，`uid_collision_records = 0`。
 - 逐域达成率 **100%**（30,000 / 40,000 / 20,000 / 10,000 精确命中）；
-  质检 verdict = **PASS**，四份 split 两两不相交（uid_g 与 content_sha1 双口径交集均 0）。
+  质检 verdict = **PASS**，四份 split 两两不相交（`uid_g` 与 `content_sha1` 双口径交集六对**全 0**）。
 - **路由集口径澄清**：不是「从 10 万里抽 20%」（那会把训练集削到 8 万），
-  而是**先从 26.8 万池子里预留路由集与 val/test，再对余下训练池下采样到 10 万** ——
+  而是**先从 28.4 万池子里预留路由集与 val/test，再对余下训练池下采样到 10 万** ——
   「训练集 10 万」与「路由集 disjoint」两件事因此不必二选一。
-- **留痕的一处放宽**：程序法池 21,635 条 vs 目标 20,000（仅 1.08 倍），头号任务
-  `legal_question_answering` 独占池 45.6% → 强制 35% 单任务份额上限会让 20% 配额
-  **数学上不可达**，故实测 49.4%（`cap_relaxed=true`，已写进报告，不静默改口径）。
-  要真正压下来只能扩源（用阶段 2b 的 6,601 条程序法条文派生条文任务），**待决策**。
-- **通用回放仍是缺口**：池里 `replay` 标记 **全部为 0** —— DISC-Law-SFT 内置的
+- ✅ **程序法的软上限问题已解决**（原为待决策项）。程序法域接入 **3,000 条**条文任务派生样本
+  （占该域配额 **15%**，上限 0.15，正好取满）后：训练池 21,980 → **35,464**，
+  头号任务 `legal_question_answering` 49.3% → **35.0%**，`cap_relaxed` **true → false**。
+  → **派生不只"补量"，它把 35% 软上限从"数学上不可达"变回"成立"。**
+  新增题型：`statute_recall` 1,227 / `statute_locate` 1,228 / `statute_structure` 545。
+  四个域**全部** `cap_relaxed=false`、`derived_cap_relaxed=false`。
+- **通用回放仍是缺口（待决策）**：池里 `replay` 标记 **全部为 0** —— DISC-Law-SFT 内置的
   Alpaca-GPT4 / Firefly 通用回放**不在已下载的 4 个文件内**，故「通用回放 10%」目前
   由 `general` 桶（法律领域内域不明确的样本）代充。**待决策**：是否另采非法律中文通用指令数据。
 - **法条流不进 SFT**：65,037 条法条条目是检索语料（向量库主料），不下采样、不参与配比；
-  跨流检查 QA ∩ 法条 `content_sha1` = **0**。
+  跨流检查 QA ∩ 法条 `content_sha1` = **0**（`cross_flow_overlap = 0`）。
+- 训练集来源分布：DISC-Law-SFT 85,095（85.10%）/ Skepsun 6,048（6.05%）/
+  Dusker 5,857（5.86%）/ **derived/statute-items 3,000（3.00%）**。
 
 #### 3.1.2 法条流（statutes）实测结构 —— 一处必须纠正的表述 + 一处必须补的工序
 
@@ -302,8 +315,12 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 阶段 0  源合规审查        → configs/corpus_sources.yaml（A/B 级分级，A 级才可进论文实验集）✅
 阶段 1  分批采集          → data/corpus/raw/<dataset>/ + data/corpus/MANIFEST.json（逐文件 SHA-256）✅
 阶段 2  归一化 + 域打标   → data/corpus/normalized/{qa,statutes}/*.jsonl + STATS.json + DEDUP_REPORT.json ✅
+                          （uid 全局唯一由构造成立 + 当场断言；合并流只并本轮正式产出）
+阶段 3  去污（双向）      → DECONTAMINATION_REPORT_PASS.json（复扫 verdict = PASS）★硬门禁 ✅
+                          （两条不变量：uid 唯一、removed == hit_uids）
 阶段 2b 法条切条 + 法条域打标 → data/corpus/statute_items/*.jsonl（整部法 → 65,037 条）✅
-阶段 3  去污              → DECONTAMINATION_REPORT_PASS.json（复扫 verdict = PASS）★硬门禁 ✅
+                          （切条与质检在同一包装脚本内，verdict ≠ PASS 即失败）
+阶段 2c 程序法条文任务派生 → data/corpus/derived/statute_tasks.jsonl（13,484 条，补题型多样性）✅
 阶段 4  切分 + 分层下采样  → data/{train,dev,test,router}/（122,000 条，四份两两不相交）✅
 ───────────────────────────────  以下才动 GPU ───────────────────────────────
 阶段 5  基线：单 LoRA 全域训练                 → A0
@@ -319,10 +336,11 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 |---|---|
 | 0 | 每个源都有 `license` + `license_grade`；B 级源明确标注「仅内部探索」 |
 | 1 | 每批落盘后立即算 SHA-256；`data/corpus/MANIFEST.json` 与磁盘实测一致 |
-| 2 | ✅ **每域实得量 ≥ 目标量**（本次总缺口 0）；`domain_source` = `fallback` 占比 **< 15%**；人工抽检 50 条准确率 ≥ 95% |
+| 2 | ✅ **每域实得量 ≥ 目标量**（本次总缺口 0）；`domain_source` = `fallback` 占比 **< 15%**；人工抽检 50 条准确率 ≥ 95%；**uid 全局唯一（当场断言）** |
 | 2b | ✅ 三大诉讼法条文齐备；法条域按法名判定；切条质检 C1–C7 全过、verdict PASS（残留条号 0 / 目录块 0） |
-| 3 | **去污 verdict = PASS**，且报告里能看到近重复命中明细 |
-| 4 | ✅ 路由集 ∩ 专家训练集 = **0**（`uid_g` 与 `content_sha1` **双口径**断言）；训练集逐域配比 = 目标（**精确相等，不是「接近」**）；val/test 与训练集也 disjoint |
+| 2c | ✅ 派生素材全为 `synthetic=true`；答案**逐字取自原文**（不符 0）；`domain=procedural` 100%；**只进 train** |
+| 3 | ✅ **去污 verdict = PASS**（复扫 0 命中），报告里有近重复命中明细；**两条硬断言**：uid 唯一、实际剔除行数 == 命中 uid 数 |
+| 4 | ✅ 路由集 ∩ 专家训练集 = **0**（`uid_g` 与 `content_sha1` **双口径**断言）；训练集逐域配比 = 目标（**精确相等，不是「接近」**）；val/test 与训练集也 disjoint；**派生份额 ≤ 15% 且零放宽** |
 | 5–8 | 每档消融都有独立 config + 独立输出目录，**不许共用目录覆盖** |
 | 9 | ★ checkpoint 只能由内部验证集选定；CLaw 只跑一次终评 |
 
@@ -503,10 +521,11 @@ law-agent/
 │  │  ├─ raw/<dataset>/    # 阶段 1：原始语料，只读，落盘即算 SHA-256
 │  │  ├─ normalized/
 │  │  │  ├─ qa/*.jsonl         # 阶段 2：问答/判决类统一 schema（285,257 条）
-│  │  │  ├─ qa/_all.jsonl      # 阶段 2：合并流（288,855 行）
-│  │  │  └─ statutes/*.jsonl   # 阶段 2：法条流（整部法规全文，22,771 部）
-│  │  ├─ decontaminated/   # 阶段 3：去污清洗镜像（只读基线；qa 268,768 + statutes 22,771）
+│  │  │  ├─ qa/_all.jsonl      # 阶段 2：合并流（285,257 行；uid 全局唯一，当场断言）
+│  │  │  └─ statutes/*.jsonl   # 阶段 2：法条流（整部法规全文，23,510 部）
+│  │  ├─ decontaminated/   # 阶段 3：去污清洗镜像（只读基线；qa 270,989 + statutes 22,771）
 │  │  ├─ statute_items/    # 阶段 2b：切条后的逐条法条（65,037 条 = 向量库主料）
+│  │  ├─ derived/          # 阶段 2c：程序法条文任务派生（13,484 条，synthetic，只进 train）
 │  │  └─ MANIFEST.json     # 逐文件 SHA-256 清单
 │  ├─ train/               # 阶段 4：train.jsonl(100,000) + {civil,criminal,procedure,general}.jsonl
 │  ├─ dev/                 # 阶段 4：dev.jsonl(1,000) + 逐域视图
@@ -635,20 +654,28 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   统一 schema（含 `messages` 规范 chat 渲染与 `domain_evidence` 审计链）；
   **配比核算结果：刑法 97,414 / 民法 104,691 / 程序法 25,445 / 通用 57,707 —— 每域都超额，总缺口 0**；
   跨源判重完成（`Dusker/.../DISC-Law-SFT-Pair.json` 100% 重复已丢弃，`-Triplet.json` 仅 20.5% 重复故保留）；
+  **uid 全局唯一**：`uid = <dataset>__<file_stem>:<source_index>`（含源文件词干，与阶段 2b/4 同口径），
+  构造成立即断言（`uid_unique_assert`：308,767 行 → 308,767 个唯一 uid，duplicates = 0）；
+  合并流只并本轮 `stats["sources"]` 登记的产出，`*.sample.jsonl` 残留与陈旧 `_all.jsonl` 已被守卫拦截；
   幂等链路 `bash scripts/corpus/prepare_normalize.sh`（[`docs/corpus/`](docs/corpus/)）
 
 - ✅ **阶段 3：双向去污（★ 硬门禁，两遍式）—— 复扫 verdict = PASS**（2026-09-18）。
-  首扫 312,365 行：精确命中 0 / 近似命中 18,778 处 → **剔除 14,957 个 uid**（主要是
-  `DISC-Law-SFT` −14,819 与 LexEval 案件类同案近文样本）；生成清洗镜像 `decontaminated/`
-  （normalized 保持只读）后复扫 **0 命中 = PASS**，二次剔除清单为空。
-  同源风险专项：Skepsun 司考 13,914 条 vs LexRubric `sifakaoshi` **精确 0 / 近似 0，风险排除**。
+  首扫 308,767 行：精确命中 0 / 近似命中 18,587 处（汉明距离分布 0:**493** / 1:986 / 2:2,524 / 3:14,584）
+  → **剔除 15,007 个 uid**（主要是 `DISC-Law-SFT` 同案近文与 LexEval 案件类样本）；
+  生成清洗镜像 `decontaminated/`（normalized 保持只读）后复扫 **0 命中 = PASS**，二次剔除清单为空。
+  两条硬断言随脚本生效：`uid_unique_assert`（输入行数 == 唯一 uid 数）、
+  `removal_identity_assert`（实际剔除行数 == 命中 uid 数），不成立即 `exit 3`。
+  同源风险专项：Skepsun 司考 14,467 条 vs LexRubric `sifakaoshi` **精确 0 / 近似 1（汉明 3），风险排除**。
   黑名单 = LexEval 14,150 + LexRubric 649（**CLaw 已退出论文，不在黑名单**）。
   报告：[`docs/corpus/DECONTAMINATION_REPORT_PASS.md`](docs/corpus/DECONTAMINATION_REPORT_PASS.md)。
-  **清洗后分域（唯一记录）**：qa —— 刑法 **91,145** / 民法 **98,513** / 程序法 **23,735** / 通用 **55,375**
-  （合计 268,768）+ 法条 22,771；**每域仍超额，10 万配比不受影响**。
+  **清洗后分域（唯一记录）**：qa —— 刑法 **91,400** / 民法 **99,705** / 程序法 **24,088** / 通用 **55,796**
+  （合计 270,989）+ 法条 22,771（刑法 382 / 民法 2,921 / 程序法 522 / 通用 18,946）；
+  **每域仍超额，10 万配比不受影响**。
 
 - ✅ **阶段 2b：法条切条（整部法规 → 逐条法条）**（2026-09-18，质检 verdict = PASS）。
-  22,771 部 → **65,037 条检索单元**（item 64,055 / doc 兜底 337 / pandalla 982）；
+  22,771 部 → **65,037 条检索单元**（twang2218 64,055 + pandalla 982；按 level：
+  `item` 64,700 / `doc` 兜底 337）；条目 uid = `<dataset>__<file_stem>:<source_index>#<条号>`，
+  与阶段 2/4 同口径，产物 uid 唯一（质检 C1 = 0）；文档内重复条号 75 处**被跳过不重复入库**。
   只留国家级规范（法律 382 / 司法解释 740 / 行政法规 663 / 法律解释 25 = 1,810 部），
   地方性法规 19,152 部（占源 87%）丢弃；`status="7"` 脏值 812 部**全落在被过滤类型上**
   → 白名单内脏值 = 0。质检 C1–C7 全过（残留条号 0 / 目录块 0 / 碎片 0.07%）。
@@ -657,30 +684,46 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   三个实测坑：锚点必须盯**行首**（交叉引用虚高 9.8 万）、目录后正文重启会吞首章、
   无条号批复需整篇入库但修正案必须排除。
 
+- ✅ **阶段 2c：程序法条文任务派生（补题型多样性）**（2026-09-18，质检 verdict = PASS）。
+  用阶段 2b 切出的 **6,601 条程序法条文**（候选 6,529 条 item、覆盖 **116 部**程序法）
+  派生出 **13,484 条**题型样本：`statute_recall` 5,605 / `statute_locate` 5,605 /
+  `statute_structure` 2,274。**三条硬原则**：
+  ① 答案**逐字取自条文原文**（`verbatim_check` 13,484/13,484 通过、不符 0）；
+  ② 只派生程序法（`domain=procedural` 100%，`domain_source=derived_from_statute_item`）；
+  ③ 一律 `synthetic=true` + `derived=true`，**只进 train**，不进 val/test/router。
+  脚本 `derive_statute_tasks.py` + 门禁 `prepare_derive_statute_tasks.sh`，报告
+  [`docs/corpus/DERIVE_REPORT.md`](docs/corpus/DERIVE_REPORT.md)。
+  一个实测坑：源 `law_title` 自带书名号，模板再包一层会产出 `《《…》》` →
+  加 `unwrap_title()` 剥壳 + `title_wrap_check` 硬断言（实测嵌套书名号 = **0**）。
+
 - ✅ **阶段 4：分层下采样 + 切分（★ 硬卡口）**（2026-09-18，质检 verdict = PASS）。
   **122,000 条四份 split，两两不相交（uid_g 与 content_sha1 双口径交集均 0）**：
+  质检 C1–C14 全过（含 C14 `uid == uid_g` **122,000/122,000 行全覆盖比对、0 处不一致**，
+  覆盖不全同样判 FAIL）。
   训练集 **100,000**（刑法 30,000 / 民法 40,000 / 程序法 20,000 / 通用 10,000，**精确命中**）
-  + 验证集 1,000 + 测试集 1,000 + 路由集 20,000；池剩余 146,768 可回溯。
+  + 验证集 1,000 + 测试集 1,000 + 路由集 20,000；池剩余 162,473 可回溯。
+  训练来源分布：`DISC-Law-SFT` 85,095 / `Skepsun` 6,048 / `Dusker` 5,857 / 派生 3,000。
   产物直接落在 `configs/` 写死的路径上（`data/train/train.jsonl`、`data/train/{civil,criminal,procedure,general}.jsonl`、
   `data/dev/dev.jsonl`、`data/test/test.jsonl`、`data/router/router_train.jsonl`），**配置零改动**。
   切分口径：样本键 = `content_sha1`（实测全局唯一）、全 sha1 排序确定性抽取（**无随机数**，重跑逐字节一致）、
   先预留 router/val/test 再对训练池下采样。报告
   [`docs/corpus/SPLIT_REPORT.md`](docs/corpus/SPLIT_REPORT.md) + [`SPLIT_VERIFY.md`](docs/corpus/SPLIT_VERIFY.md)。
-  ⚠️ **发现并登记阶段 2 的一个遗留缺陷**：`uid` 构造漏了 `source_file` → 20,947 条撞号，
-  导致阶段 3 按 uid 剔除时**连带多删 2,271 条**（方向是多删＝保守，**无污染风险**，对配比零影响）。
-  阶段 4 已用 `uid_g` 止血；根治需重跑阶段 2/3 —— 见 [`docs/corpus/README.md`](docs/corpus/README.md) 第九节。
+  **三层约束全部满足、零放宽**：单任务软上限 35% → 派生组上限 15%（按域内配额生效）
+  → 回填；四域 `cap_relaxed` **全为 false**（程序法派生实得 3,000 = 域内 15.0%，
+  `legal_question_answering` 由修复前的 49.3% 压到 **35.0%**）。
 
 ### 待办
 
-- ⬜ **决策项 A｜程序法任务多样性**：`legal_question_answering` 占程序法 49.4%（软上限 35% 已留痕放宽）。
-  程序法池 21,635 仅目标的 1.08 倍，要压份额只能扩源 → 建议用阶段 2b 已切出的
-  **6,601 条程序法条文**派生「程序法条文任务」（README 3.1 已列为程序法来源之一）。
-- ⬜ **决策项 B｜通用回放**：池里 `replay` 标记**全为 0** —— DISC-Law-SFT 内置的 Alpaca-GPT4/Firefly
+- ✅ **决策项 A｜程序法任务多样性 —— 已解决**：曾因 `legal_question_answering` 占程序法 49.3% 触发软上限放宽。
+  已按 README 3.1 规划用阶段 2b 的 6,601 条程序法条文派生「程序法条文任务」
+  （13,484 条，见上「阶段 2c」），阶段 4 实得 3,000 条派生进训练集后份额降到 35.0%，**不再需要放宽**。
+- ⬜ **决策项 B｜通用回放**（唯一未决项）：池里 `replay` 标记**全为 0** —— DISC-Law-SFT 内置的 Alpaca-GPT4/Firefly
   通用回放**不在已下载的 4 个文件内**，现由 `general` 桶（法律领域内样本）代充 10%。
   建议另采一份**非法律中文通用指令数据**（阶段 0/1 动作，须先过 license A 级审查），或实测「general 代充」
   与「真通用回放」的防遗忘差异并做消融。
-- ⬜ **决策项 C｜阶段 2 缺陷根治**：`normalize_corpus.py:519` 的 `uid` 加入 `source_file` 词干，
-  并清理 `normalized/qa/*.sample.jsonl` 残留 → 需**重跑阶段 2/3**（会改动已登记数字）。
+- ✅ **决策项 C｜阶段 2/3 缺陷根治 —— 已完成**（2026-09-18）：`normalize_corpus.py` 的 `uid` 已加入 `source_file`
+  词干、合并流只并本轮正式产出、`*.sample.jsonl` 残留已剔除，阶段 2/3/2b/4 **全链路已重跑一遍**。
+  详见 [`docs/corpus/README.md`](docs/corpus/README.md) 第十节「已修复缺陷与前后对照」。
 - ⬜ 阶段 4b（可选）：法条条目 **65,037 条向量化入库**（`indexes/` 目前为空）。
   ⚠️ 入库前必须先跑 `src/prepare/check_leakage.py` 四级查重。
 - ⬜ 阶段 5–9：LoRA 训练 → 路由 → MoE 消融 → 内部验证集选 checkpoint → 终评
@@ -781,7 +824,7 @@ bash scripts/corpus/prepare_split_statutes.sh   # ✅ 已实现（阶段 2b）
 
 ### 10.6 阶段 3 — 双向去污（★ 硬门禁，两遍式）
 
-> **✅ 已于 2026-09-18 跑完并 PASS**：首扫剔除 14,957 uid → 复扫 0 命中 = PASS。
+> **✅ 已于 2026-09-18 跑完并 PASS**：首扫 308,767 行 / 近似命中 18,587 处 → 剔除 15,007 uid → 复扫 0 命中 = PASS。
 > 实测结果与本节流程一致，以下操作说明保留供复现。
 
 **实测证明必须跑两遍**：第一遍在全量语料上找出所有命中并生成剔除清单；应用剔除后**第二遍必须复扫出 PASS**，
@@ -817,7 +860,7 @@ python scripts/corpus/decontaminate.py \
 - ✅ CLaw 已退出论文（2026-09-18 用户决策），黑名单 = LexEval + LexRubric，复扫可直接出**纯 PASS**；
   论文中不再出现 CLaw，评测基准以内部验证集 + LexEval/LexRubric 闭卷线为准。
 - 经验教训（2026-09-18 实测）：首版报告的 `near_hits.by_bench_tag` 是从**被截断的样例列表**
-  算出来的，导致「总数 18,778 vs 按基准 300」的自相矛盾 —— 统计口径必须**永远对全量命中集合**算，
+  算出来的，导致「总数 18,587 vs 按基准 300」的自相矛盾 —— 统计口径必须**永远对全量命中集合**算，
   样例列表只用于人读展示。
 
 ### 10.7 阶段 4 — 切分 + 分层下采样

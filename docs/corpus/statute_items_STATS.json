@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T15:54:52",
+  "generated_at": "2026-09-18T19:21:24",
   "root": "/mnt/data/lidian/law-agent",
   "src_dir": "/mnt/data/lidian/law-agent/data/corpus/decontaminated/statutes",
   "out_dir": "/mnt/data/lidian/law-agent/data/corpus/statute_items",
@@ -240,37 +240,37 @@
     "duplicate_uids": 75,
     "duplicate_uid_samples": [
       {
-        "uid": "法律-211#第四十五条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:211#第四十五条",
         "law": "中华人民共和国兵役法",
         "label": "第四十五条",
         "text_head": "第二款规定的培养预备役军官的短期集中训练,由军事部门派出现役军官与普通高等学校军事训练机构共同组织实施。"
       },
       {
-        "uid": "行政法规-1214#第一条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:1214#第一条",
         "law": "重新组建仲裁机构方案",
         "label": "第一条",
         "text_head": "为了保证公正、及时地仲裁经济纠纷,保护当事人的合法权益,根据《中华人民共和国仲裁法》(以下简称仲裁法)和《中华人民共和国民事诉讼法》(以下简称民事诉讼法)的有关"
       },
       {
-        "uid": "行政法规-1214#第二条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:1214#第二条",
         "law": "重新组建仲裁机构方案",
         "label": "第二条",
         "text_head": "平等主体的公民、法人和其他组织之间发生合同纠纷和其他财产权益纠纷,可以依法向本仲裁委员会申请仲裁。\n本仲裁委员会不受理因劳动争议和农业集体经济组织内部的农业承包"
       },
       {
-        "uid": "行政法规-1214#第三条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:1214#第三条",
         "law": "重新组建仲裁机构方案",
         "label": "第三条",
         "text_head": "当事人采用仲裁方式解决纠纷,应当双方自愿,达成仲裁协议。没有仲裁协议,一方申请仲裁的,本仲裁委员会不予受理。"
       },
       {
-        "uid": "行政法规-1214#第四条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:1214#第四条",
         "law": "重新组建仲裁机构方案",
         "label": "第四条",
         "text_head": "仲裁协议包括合同中订立的仲裁条款和以其他书面方式在纠纷发生前或者纠纷发生后达成的请求仲裁的协议。\n仲裁协议应当具有下列内容:\n(一)请求仲裁的意思表示;\n(二)"
       }
     ],
-    "duplicate_uid_note": "uid = source_id#条号，重复说明该文档内同一条号出现两次（修正案体例/附则重排），保留首次出现",
+    "duplicate_uid_note": "uid = <dataset>__<file_stem>:<source_index>#<条号>，重复说明该文档内同一条号出现两次（修正案体例/附则重排），保留首次出现；本计数是**被跳过的重复条号数**，产物本身 uid 唯一（质检 C1 断言）",
     "version_duplicates_note": "同条号多版本内容重复由 uid 区分，未删；只统计 uid 完全重复",
     "skipped_law_samples": [
       {

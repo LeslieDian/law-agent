@@ -1,9 +1,7 @@
 {
   "verdict": "PASS",
   "failures": [],
-  "warnings": [
-    "C5 域 procedural 单任务份额 49.4% > 上限 35%，已在 SPLIT_STATS 留痕（cap_relaxed=true，原因是池可用量不足）"
-  ],
+  "warnings": [],
   "checks": {
     "C1_counts": {
       "declared": {
@@ -77,15 +75,7 @@
     "C5_task_coverage": {
       "missing_tasks": [],
       "weak_tasks": [],
-      "over_cap": [
-        {
-          "domain": "procedural",
-          "task": "legal_question_answering",
-          "share": 0.4935,
-          "cap": 0.35,
-          "cap_relaxed_documented": true
-        }
-      ],
+      "over_cap": [],
       "cap": 0.35
     },
     "C6_no_synthetic_in_dev": {
@@ -172,6 +162,34 @@
     "C11_sha256": {
       "mismatch": [],
       "checked": 16
+    },
+    "C12_derived_only_in_train": {
+      "derived_by_split": {
+        "train": 3000
+      },
+      "train_derived": 3000,
+      "leaked": {}
+    },
+    "C13_derived_share": {
+      "cap": 0.15,
+      "derived_by_domain": {
+        "criminal": 0,
+        "civil": 0,
+        "procedural": 3000,
+        "general": 0
+      },
+      "share": {
+        "criminal": 0.0,
+        "civil": 0.0,
+        "procedural": 0.15,
+        "general": 0.0
+      },
+      "over_cap": []
+    },
+    "C14_uid_equals_uid_g": {
+      "mismatch": {},
+      "checked": 122000,
+      "expected": 122000
     }
   },
   "summary": {
@@ -188,8 +206,24 @@
       "procedural": 20000,
       "general": 10000
     },
-    "router_multilabel_pct": 5.46,
-    "leftover_pool": 146768,
-    "task_strata": 64
+    "derived_by_split": {
+      "train": 3000
+    },
+    "derived_train_by_domain": {
+      "criminal": 0,
+      "civil": 0,
+      "procedural": 3000,
+      "general": 0
+    },
+    "derived_share_by_domain": {
+      "criminal": 0.0,
+      "civil": 0.0,
+      "procedural": 0.15,
+      "general": 0.0
+    },
+    "derived_cap": 0.15,
+    "router_multilabel_pct": 5.43,
+    "leftover_pool": 162473,
+    "task_strata": 67
   }
 }

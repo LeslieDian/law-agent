@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-18T15:56:11",
+  "generated_at": "2026-09-18T19:21:30",
   "items_dir": "/mnt/data/lidian/law-agent/data/corpus/statute_items",
   "files": [
     "pandalla__chinese_law_examples.items.jsonl",
@@ -33,77 +33,77 @@
     "share": 0.0007,
     "samples": [
       {
-        "uid": "法律-14#第十六条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:14#第十六条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-26#第四十一条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:26#第四十一条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-32#第八十四条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:32#第八十四条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-40#第四十一条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:40#第四十一条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-42#第三十六条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:42#第三十六条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-43#第五十二条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:43#第五十二条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-47#第七十条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:47#第七十条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-50#第四条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:50#第四条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-51#第十七条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:51#第十七条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-52#第十条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:52#第十条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-53#第二十一条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:53#第二十一条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-60#第十六条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:60#第十六条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-64#第三十二条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:64#第三十二条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-81#第二十八条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:81#第二十八条",
         "len": 11,
         "text": "本法自公布之日起施行。"
       },
       {
-        "uid": "法律-85#第十七条",
+        "uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:85#第十七条",
         "len": 11,
         "text": "本法自公布之日起生效。"
       }

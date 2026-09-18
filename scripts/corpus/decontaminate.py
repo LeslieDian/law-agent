@@ -33,6 +33,15 @@
 ----
   python decontaminate.py --root /mnt/data/lidian/law-agent \
       --out-json .../DECONTAMINATION_REPORT.json --out-md .../DECONTAMINATION_REPORT.md
+
+硬约定（改动必须同步 docs 与本文件顶部）
+----------------------------------------
+1. 扫描源优先取 `qa/_all.jsonl`（合并副本，只扫一遍避免双计）；但**必须校验其新鲜度**：
+   `_all.jsonl` 的 mtime 若早于任何正式分文件，即判定为过期并改用分文件扫描
+   —— 否则复扫会读到旧产物，直接给出错误的 PASS。
+2. 分文件扫描一律排除 `_` 开头（合并副本）与 `*.sample.jsonl`（调试残留）。
+3. 命中以 `uid` 记入剔除清单；**前提是 uid 全局唯一**（阶段 2 已保证，
+   `apply_decontam.py` 有恒等式断言兜底）。uid 撞号会导致「按 uid 剔除」整组连坐。
 """
 from __future__ import annotations
 
@@ -262,16 +271,27 @@ def main() -> int:
     # ----------------------------------------------------------------------
     print("[2/4] 扫描训练语料", flush=True)
     targets = []
-    qa_all = os.path.join(norm_dir, "qa/_all.jsonl")
-    if os.path.exists(qa_all):
-        targets.append(("qa", qa_all))
-    else:
-        for fn in sorted(os.listdir(os.path.join(norm_dir, "qa"))):
-            if fn.endswith(".jsonl") and ".sample." not in fn:
-                targets.append(("qa", os.path.join(norm_dir, "qa", fn)))
+    qa_dir = os.path.join(norm_dir, "qa")
+    qa_parts = [os.path.join(qa_dir, fn) for fn in sorted(os.listdir(qa_dir))
+                if fn.endswith(".jsonl") and not fn.startswith("_")
+                and ".sample." not in fn]
+    qa_all = os.path.join(qa_dir, "_all.jsonl")
+    # ★ 合并副本优先（只扫一遍，避免双计）—— 但必须校验它是**新鲜的**：
+    #   过期/陈旧的 _all.jsonl 会让复扫看不到最新产物，直接给出错误的 PASS。
+    #   判据：_all.jsonl 的 mtime 不得早于任何正式分文件。
+    if os.path.exists(qa_all) and qa_parts:
+        if os.path.getmtime(qa_all) + 1e-6 < max(os.path.getmtime(p) for p in qa_parts):
+            print("  !! 警告：qa/_all.jsonl 比正式分文件旧 → 视为陈旧，改用分文件扫描：")
+            for p in qa_parts:
+                print("       %s" % os.path.basename(p))
+            targets.extend(("qa", p) for p in qa_parts)
+        else:
+            targets.append(("qa", qa_all))
+    elif qa_parts:
+        targets.extend(("qa", p) for p in qa_parts)
     stat_dir = os.path.join(norm_dir, "statutes")
     for fn in sorted(os.listdir(stat_dir)):
-        if fn.endswith(".jsonl") and ".sample." not in fn:
+        if fn.endswith(".jsonl") and not fn.startswith("_") and ".sample." not in fn:
             targets.append(("statutes", os.path.join(stat_dir, fn)))
 
     print(f"  待扫 {len(targets)} 个文件，合计 "

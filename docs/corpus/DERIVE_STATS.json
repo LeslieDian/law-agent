@@ -1,0 +1,665 @@
+{
+  "generated_by": "scripts/corpus/derive_statute_tasks.py",
+  "generated_at": "2026-09-18T19:27:41",
+  "host": "aidda80061",
+  "elapsed_sec": 3.6,
+  "config": {
+    "items_dir": "/mnt/data/lidian/law-agent/data/corpus/statute_items",
+    "out_path": "/mnt/data/lidian/law-agent/data/corpus/derived/statute_tasks.jsonl",
+    "types": [
+      "statute_recall",
+      "statute_locate",
+      "statute_structure"
+    ],
+    "target_domain": "procedural",
+    "target_level": "item",
+    "min_text_chars": 20,
+    "derivation": "statute_item_procedural:v1"
+  },
+  "input": {
+    "files": {
+      "pandalla__chinese_law_examples.items.jsonl": 982,
+      "twang2218__chinese-law-and-regulations.items.jsonl": 64055
+    },
+    "total_items": 65037,
+    "by_domain": {
+      "general": 42834,
+      "civil": 12356,
+      "procedural": 6601,
+      "criminal": 3246
+    },
+    "by_level": {
+      "item": 64700,
+      "doc": 337
+    },
+    "by_task": {
+      "statute_item": 64700,
+      "statute_doc": 337
+    },
+    "procedural_item_candidates": 6529,
+    "procedural_distinct_laws": 116
+  },
+  "output": {
+    "path": "/mnt/data/lidian/law-agent/data/corpus/derived/statute_tasks.jsonl",
+    "total": 13484,
+    "rows_reread": 13484,
+    "generated": 13484,
+    "by_task": {
+      "statute_recall": 5605,
+      "statute_locate": 5605,
+      "statute_structure": 2274
+    },
+    "by_domain": {
+      "procedural": 13484
+    },
+    "distinct_laws": 116,
+    "unique_content_sha1": 13484,
+    "unique_uid": 13484,
+    "synthetic_flag_bad": 0,
+    "sha256": "3b11ae6bd563779bba676d946e75401fc3517601899eb55233e5aeb83c4cd1e0",
+    "bytes": 35548954
+  },
+  "drop_reasons": {
+    "statute_structure|not_applicable": 4176,
+    "statute_recall|dup_content": 862,
+    "statute_locate|dup_content": 862,
+    "statute_structure|dup_content": 79,
+    "statute_recall|not_applicable": 62,
+    "statute_locate|not_applicable": 62
+  },
+  "verbatim_check": {
+    "checked": 13484,
+    "mismatch": 0,
+    "samples": []
+  },
+  "title_wrap_check": {
+    "checked": 13484,
+    "nested_brackets": 0,
+    "samples": []
+  },
+  "samples": {
+    "statute_recall": [
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 0,
+        "source_id": "pandalla__chinese_law_examples__law_item:30#第四十八条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_recall",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "请说明《中华人民共和国刑事诉讼法(2018修正)》第四十八条规定了什么。",
+        "input": "",
+        "output": "辩护律师对在执业活动中知悉的委托人的有关情况和信息,有权予以保密。但是,辩护律师在执业活动中知悉委托人或者其他人,准备或者正在实施危害国家安全、公共安全以及严重危害他人人身安全的犯罪的,应当及时告知司法机关。",
+        "references": [],
+        "refs_question": [
+          "《中华人民共和国刑事诉讼法(2018修正)》"
+        ],
+        "refs_answer": [],
+        "ask": "请说明《中华人民共和国刑事诉讼法(2018修正)》第四十八条规定了什么。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "pandalla__chinese_law_examples__law_item:30#第四十八条",
+        "derived_from_law_title": "《中华人民共和国刑事诉讼法(2018修正)》",
+        "derived_from_source_dataset": "pandalla/chinese_law_examples",
+        "char_len": {
+          "instruction": 36,
+          "input": 0,
+          "output": 104
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "《中华人民共和国刑事诉讼法(2018修正)》",
+          "source_uid": "pandalla__chinese_law_examples__law_item:30#第四十八条"
+        },
+        "uid": "derived__statute-items__statute_tasks:0",
+        "content_sha1": "005b83aec0f53952e195d7f5a5e0d8d1e7333c3e",
+        "case_sha1": ""
+      },
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 2,
+        "source_id": "pandalla__chinese_law_examples__law_item:64#第三十条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_recall",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "请说明《中华人民共和国引渡法》第三十条规定了什么。",
+        "input": "",
+        "output": "对于外国正式提出引渡请求前,因紧急情况申请对将被请求引渡的人采取羁押措施的,公安机关可以根据外国的申请采取引渡拘留措施。前款所指的申请应当通过外交途径或者向公安部书面提出,并应当载明:(一)本法第十一条、第十四条规定的内容;(二)已经具有本法第十二条第一项所指材料的说明;(三)即将正式提出引渡请求的说明。对于通过外交途径提出申请的,外交部应当及时将该申请转送公安部。对于向公安部提出申请的,公安部应当将申请的有关情况通知外交部。",
+        "references": [],
+        "refs_question": [
+          "《中华人民共和国引渡法》"
+        ],
+        "refs_answer": [],
+        "ask": "请说明《中华人民共和国引渡法》第三十条规定了什么。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "pandalla__chinese_law_examples__law_item:64#第三十条",
+        "derived_from_law_title": "《中华人民共和国引渡法》",
+        "derived_from_source_dataset": "pandalla/chinese_law_examples",
+        "char_len": {
+          "instruction": 25,
+          "input": 0,
+          "output": 215
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "《中华人民共和国引渡法》",
+          "source_uid": "pandalla__chinese_law_examples__law_item:64#第三十条"
+        },
+        "uid": "derived__statute-items__statute_tasks:2",
+        "content_sha1": "378b0675af730b5ddbd48f4e61743f6fde7abec4",
+        "case_sha1": ""
+      },
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 4,
+        "source_id": "pandalla__chinese_law_examples__law_item:108#第八十六条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_recall",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "请说明《中华人民共和国海事诉讼特别程序法》第八十六条规定了什么。",
+        "input": "",
+        "output": "船舶检验、估价应当由国家授权或者其他具有专业资格的机构或者个人承担。非经国家授权或者未取得专业资格的机构或者个人所作的检验或者估价结论,海事法院不予采纳。",
+        "references": [],
+        "refs_question": [
+          "《中华人民共和国海事诉讼特别程序法》"
+        ],
+        "refs_answer": [],
+        "ask": "请说明《中华人民共和国海事诉讼特别程序法》第八十六条规定了什么。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "pandalla__chinese_law_examples__law_item:108#第八十六条",
+        "derived_from_law_title": "《中华人民共和国海事诉讼特别程序法》",
+        "derived_from_source_dataset": "pandalla/chinese_law_examples",
+        "char_len": {
+          "instruction": 32,
+          "input": 0,
+          "output": 77
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "《中华人民共和国海事诉讼特别程序法》",
+          "source_uid": "pandalla__chinese_law_examples__law_item:108#第八十六条"
+        },
+        "uid": "derived__statute-items__statute_tasks:4",
+        "content_sha1": "0ec734bc8702ea4fc9c5b04cd74cfcf95cabf524",
+        "case_sha1": ""
+      },
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 6,
+        "source_id": "pandalla__chinese_law_examples__law_item:138#第二十条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_recall",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "请说明《中华人民共和国刑事诉讼法(2018修正)》第二十条规定了什么。",
+        "input": "",
+        "output": "基层人民法院管辖第一审普通刑事案件,但是依照本法由上级人民法院管辖的除外。",
+        "references": [],
+        "refs_question": [
+          "《中华人民共和国刑事诉讼法(2018修正)》"
+        ],
+        "refs_answer": [],
+        "ask": "请说明《中华人民共和国刑事诉讼法(2018修正)》第二十条规定了什么。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "pandalla__chinese_law_examples__law_item:138#第二十条",
+        "derived_from_law_title": "《中华人民共和国刑事诉讼法(2018修正)》",
+        "derived_from_source_dataset": "pandalla/chinese_law_examples",
+        "char_len": {
+          "instruction": 35,
+          "input": 0,
+          "output": 37
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "《中华人民共和国刑事诉讼法(2018修正)》",
+          "source_uid": "pandalla__chinese_law_examples__law_item:138#第二十条"
+        },
+        "uid": "derived__statute-items__statute_tasks:6",
+        "content_sha1": "c05fb1ebc0019aa49967a396d688b3d6e7c7aa4d",
+        "case_sha1": ""
+      }
+    ],
+    "statute_locate": [
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 1,
+        "source_id": "pandalla__chinese_law_examples__law_item:30#第四十八条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_locate",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "请判断下列规定出自哪一部法律、哪一条，并给出法律名称与条号。",
+        "input": "辩护律师对在执业活动中知悉的委托人的有关情况和信息,有权予以保密。但是,辩护律师在执业活动中知悉委托人或者其他人,准备或者正在实施危害国家安全、公共安全以及严重危害他人人身安全的犯罪的,应当及时告知司法机关。",
+        "output": "《中华人民共和国刑事诉讼法(2018修正)》第四十八条",
+        "references": [],
+        "refs_question": [],
+        "refs_answer": [
+          "《中华人民共和国刑事诉讼法(2018修正)》"
+        ],
+        "ask": "请判断下列规定出自哪一部法律、哪一条，并给出法律名称与条号。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "pandalla__chinese_law_examples__law_item:30#第四十八条",
+        "derived_from_law_title": "《中华人民共和国刑事诉讼法(2018修正)》",
+        "derived_from_source_dataset": "pandalla/chinese_law_examples",
+        "char_len": {
+          "instruction": 30,
+          "input": 104,
+          "output": 27
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "《中华人民共和国刑事诉讼法(2018修正)》",
+          "source_uid": "pandalla__chinese_law_examples__law_item:30#第四十八条"
+        },
+        "uid": "derived__statute-items__statute_tasks:1",
+        "content_sha1": "dc4882a8f13069dd308eec0e40f156da5f32e1aa",
+        "case_sha1": "6276b0b23456b19b1bc675c87fbcd40388a303ef"
+      },
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 3,
+        "source_id": "pandalla__chinese_law_examples__law_item:64#第三十条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_locate",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "请判断下列规定出自哪一部法律、哪一条，并给出法律名称与条号。",
+        "input": "对于外国正式提出引渡请求前,因紧急情况申请对将被请求引渡的人采取羁押措施的,公安机关可以根据外国的申请采取引渡拘留措施。前款所指的申请应当通过外交途径或者向公安部书面提出,并应当载明:(一)本法第十一条、第十四条规定的内容;(二)已经具有本法第十二条第一项所指材料的说明;(三)即将正式提出引渡请求的说明。对于通过外交途径提出申请的,外交部应当及时将该申请转送公安部。对于向公安部提出申请的,公安部应当将申请的有关情况通知外交部。",
+        "output": "《中华人民共和国引渡法》第三十条",
+        "references": [],
+        "refs_question": [],
+        "refs_answer": [
+          "《中华人民共和国引渡法》"
+        ],
+        "ask": "请判断下列规定出自哪一部法律、哪一条，并给出法律名称与条号。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "pandalla__chinese_law_examples__law_item:64#第三十条",
+        "derived_from_law_title": "《中华人民共和国引渡法》",
+        "derived_from_source_dataset": "pandalla/chinese_law_examples",
+        "char_len": {
+          "instruction": 30,
+          "input": 215,
+          "output": 16
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "《中华人民共和国引渡法》",
+          "source_uid": "pandalla__chinese_law_examples__law_item:64#第三十条"
+        },
+        "uid": "derived__statute-items__statute_tasks:3",
+        "content_sha1": "1b4853e58716293486c1546b775f57f289447c06",
+        "case_sha1": "52b7efd12e9a6cbcf765bab02de0372187d360a8"
+      },
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 5,
+        "source_id": "pandalla__chinese_law_examples__law_item:108#第八十六条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_locate",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "请判断下列规定出自哪一部法律、哪一条，并给出法律名称与条号。",
+        "input": "船舶检验、估价应当由国家授权或者其他具有专业资格的机构或者个人承担。非经国家授权或者未取得专业资格的机构或者个人所作的检验或者估价结论,海事法院不予采纳。",
+        "output": "《中华人民共和国海事诉讼特别程序法》第八十六条",
+        "references": [],
+        "refs_question": [],
+        "refs_answer": [
+          "《中华人民共和国海事诉讼特别程序法》"
+        ],
+        "ask": "请判断下列规定出自哪一部法律、哪一条，并给出法律名称与条号。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "pandalla__chinese_law_examples__law_item:108#第八十六条",
+        "derived_from_law_title": "《中华人民共和国海事诉讼特别程序法》",
+        "derived_from_source_dataset": "pandalla/chinese_law_examples",
+        "char_len": {
+          "instruction": 30,
+          "input": 77,
+          "output": 23
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "《中华人民共和国海事诉讼特别程序法》",
+          "source_uid": "pandalla__chinese_law_examples__law_item:108#第八十六条"
+        },
+        "uid": "derived__statute-items__statute_tasks:5",
+        "content_sha1": "3538c858a7816c9133e46880e58207074538dcc0",
+        "case_sha1": "e6c866ab8e8cbd9b4f51028a5a4fe12dce22c037"
+      },
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 7,
+        "source_id": "pandalla__chinese_law_examples__law_item:138#第二十条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_locate",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "请判断下列规定出自哪一部法律、哪一条，并给出法律名称与条号。",
+        "input": "基层人民法院管辖第一审普通刑事案件,但是依照本法由上级人民法院管辖的除外。",
+        "output": "《中华人民共和国刑事诉讼法(2018修正)》第二十条",
+        "references": [],
+        "refs_question": [],
+        "refs_answer": [
+          "《中华人民共和国刑事诉讼法(2018修正)》"
+        ],
+        "ask": "请判断下列规定出自哪一部法律、哪一条，并给出法律名称与条号。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "pandalla__chinese_law_examples__law_item:138#第二十条",
+        "derived_from_law_title": "《中华人民共和国刑事诉讼法(2018修正)》",
+        "derived_from_source_dataset": "pandalla/chinese_law_examples",
+        "char_len": {
+          "instruction": 30,
+          "input": 37,
+          "output": 26
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "《中华人民共和国刑事诉讼法(2018修正)》",
+          "source_uid": "pandalla__chinese_law_examples__law_item:138#第二十条"
+        },
+        "uid": "derived__statute-items__statute_tasks:7",
+        "content_sha1": "a7bcd1eb21aeb4673aa52d0c1511399bed4a3266",
+        "case_sha1": "4f9529af37101a64958f15fa44efc6082496b9b1"
+      }
+    ],
+    "statute_structure": [
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 120,
+        "source_id": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第一条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_structure",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "《中华人民共和国公证法》第一条位于该法的哪一编、哪一章、哪一节？请给出完整的层级名称。",
+        "input": "",
+        "output": "第一章 总则",
+        "references": [],
+        "refs_question": [
+          "《中华人民共和国公证法》"
+        ],
+        "refs_answer": [],
+        "ask": "《中华人民共和国公证法》第一条位于该法的哪一编、哪一章、哪一节？请给出完整的层级名称。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第一条",
+        "derived_from_law_title": "中华人民共和国公证法",
+        "derived_from_source_dataset": "twang2218/chinese-law-and-regulations",
+        "char_len": {
+          "instruction": 43,
+          "input": 0,
+          "output": 6
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "中华人民共和国公证法",
+          "source_uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第一条"
+        },
+        "uid": "derived__statute-items__statute_tasks:120",
+        "content_sha1": "3a9d9725710a2b85f70ace3636c778144e47cdda",
+        "case_sha1": ""
+      },
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 123,
+        "source_id": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第二条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_structure",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "《中华人民共和国公证法》第二条位于该法的哪一编、哪一章、哪一节？请给出完整的层级名称。",
+        "input": "",
+        "output": "第一章 总则",
+        "references": [],
+        "refs_question": [
+          "《中华人民共和国公证法》"
+        ],
+        "refs_answer": [],
+        "ask": "《中华人民共和国公证法》第二条位于该法的哪一编、哪一章、哪一节？请给出完整的层级名称。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第二条",
+        "derived_from_law_title": "中华人民共和国公证法",
+        "derived_from_source_dataset": "twang2218/chinese-law-and-regulations",
+        "char_len": {
+          "instruction": 43,
+          "input": 0,
+          "output": 6
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "中华人民共和国公证法",
+          "source_uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第二条"
+        },
+        "uid": "derived__statute-items__statute_tasks:123",
+        "content_sha1": "16e21ce5bb0c708783e884b00b36371c6a8f7c9d",
+        "case_sha1": ""
+      },
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 126,
+        "source_id": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第三条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_structure",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "《中华人民共和国公证法》第三条位于该法的哪一编、哪一章、哪一节？请给出完整的层级名称。",
+        "input": "",
+        "output": "第一章 总则",
+        "references": [],
+        "refs_question": [
+          "《中华人民共和国公证法》"
+        ],
+        "refs_answer": [],
+        "ask": "《中华人民共和国公证法》第三条位于该法的哪一编、哪一章、哪一节？请给出完整的层级名称。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第三条",
+        "derived_from_law_title": "中华人民共和国公证法",
+        "derived_from_source_dataset": "twang2218/chinese-law-and-regulations",
+        "char_len": {
+          "instruction": 43,
+          "input": 0,
+          "output": 6
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "中华人民共和国公证法",
+          "source_uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第三条"
+        },
+        "uid": "derived__statute-items__statute_tasks:126",
+        "content_sha1": "039806bc0986c5d7f113fe8e4e329310610b67ca",
+        "case_sha1": ""
+      },
+      {
+        "source_dataset": "derived/statute-items",
+        "source_file": "statute_tasks.jsonl",
+        "source_index": 129,
+        "source_id": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第四条",
+        "source_license": "apache-2.0",
+        "source_grade": "A",
+        "task": "statute_structure",
+        "task_kind": "qa",
+        "system": "",
+        "instruction": "《中华人民共和国公证法》第四条位于该法的哪一编、哪一章、哪一节？请给出完整的层级名称。",
+        "input": "",
+        "output": "第一章 总则",
+        "references": [],
+        "refs_question": [
+          "《中华人民共和国公证法》"
+        ],
+        "refs_answer": [],
+        "ask": "《中华人民共和国公证法》第四条位于该法的哪一编、哪一章、哪一节？请给出完整的层级名称。",
+        "task_domain_hint": null,
+        "lang": "zh",
+        "synthetic": true,
+        "replay": false,
+        "derived": true,
+        "derivation": "statute_item_procedural:v1",
+        "derived_from_uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第四条",
+        "derived_from_law_title": "中华人民共和国公证法",
+        "derived_from_source_dataset": "twang2218/chinese-law-and-regulations",
+        "char_len": {
+          "instruction": 43,
+          "input": 0,
+          "output": 6
+        },
+        "normalized_at": "2026-09-18T19:27:41",
+        "domain": "procedural",
+        "domains": [
+          "procedural"
+        ],
+        "domain_source": "derived_from_statute_item",
+        "domain_evidence": {
+          "rule": "source item domain==procedural",
+          "law_title": "中华人民共和国公证法",
+          "source_uid": "twang2218__chinese-law-and-regulations__train-00000-of-00001-8329bce6db03c820:179#第四条"
+        },
+        "uid": "derived__statute-items__statute_tasks:129",
+        "content_sha1": "edb66b688c85b670a876150b775993024f086f89",
+        "case_sha1": ""
+      }
+    ]
+  },
+  "verdict": "PASS"
+}

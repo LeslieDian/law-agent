@@ -1,0 +1,345 @@
+{
+  "generated_at": "2026-09-18T15:54:52",
+  "root": "/mnt/data/lidian/law-agent",
+  "src_dir": "/mnt/data/lidian/law-agent/data/corpus/decontaminated/statutes",
+  "out_dir": "/mnt/data/lidian/law-agent/data/corpus/statute_items",
+  "keep_types": [
+    "司法解释",
+    "法律",
+    "法律解释",
+    "行政法规"
+  ],
+  "min_body_chars": 4,
+  "docs": {
+    "twang2218__chinese-law-and-regulations": {
+      "records_scanned": 21787,
+      "type_all": {
+        "地方性法规": 19152,
+        "司法解释": 740,
+        "行政法规": 663,
+        "修改、废止的决定": 649,
+        "法律": 382,
+        "有关法律问题和重大问题的决定": 169,
+        "法律解释": 25,
+        "宪法": 6,
+        "监察法规": 1
+      },
+      "type_kept": {
+        "司法解释": 740,
+        "行政法规": 663,
+        "法律": 382,
+        "法律解释": 25
+      },
+      "type_dropped": {
+        "地方性法规": 19152,
+        "修改、废止的决定": 649,
+        "有关法律问题和重大问题的决定": 169,
+        "宪法": 6,
+        "监察法规": 1
+      },
+      "items_out": 64055,
+      "doc_level_fallback": {
+        "docs": 337,
+        "by_type_reason": {
+          "司法解释|FORMAT_UNRECOGNIZED": 279,
+          "行政法规|FORMAT_UNRECOGNIZED": 24,
+          "法律解释|FORMAT_UNRECOGNIZED": 11,
+          "司法解释|DECISION_OR_RATIFICATION": 10,
+          "法律|DECISION_OR_RATIFICATION": 5,
+          "法律|ANNEX_DOC": 2,
+          "法律解释|ANNEX_DOC": 2,
+          "司法解释|TOO_SHORT_TO_CONTAIN_ARTICLE": 2,
+          "法律|FORMAT_UNRECOGNIZED": 1,
+          "行政法规|DECISION_OR_RATIFICATION": 1
+        },
+        "header_chars_stripped_total": 12849,
+        "samples": [
+          {
+            "title": "中华人民共和国香港特别行政区基本法附件二香港特别行政区立法会的产生办法和表决程序",
+            "type": "法律",
+            "reason": "ANNEX_DOC",
+            "chars": 1613,
+            "skipped_header": 146,
+            "head": "一、香港特别行政区立法会议员每届90人,组成如下:  选举委员会选举的议员 40人  功能团体选举的议员 30人  分区直接选举的议员 20人  上述选举委员会即本法附件一规定的选举委员会。  二、选举委员会选举的议员候选人须获得不少于10"
+          },
+          {
+            "title": "中华人民共和国香港特别行政区基本法附件一香港特别行政区行政长官的产生办法",
+            "type": "法律",
+            "reason": "ANNEX_DOC",
+            "chars": 2793,
+            "skipped_header": 142,
+            "head": "一、行政长官由一个具有广泛代表性、符合香港特别行政区实际情况、体现社会整体利益的选举委员会根据本法选出,由中央人民政府任命。  二、选举委员会委员共1500人,由下列各界人士组成:  第一界别:工商、金融界 300人  第二界别:专业界 3"
+          },
+          {
+            "title": "全国人民代表大会常务委员会关于批准中央军事委员会《关于授予军队离休干部中国人民解放军功勋荣誉章的规定》的决定",
+            "type": "法律",
+            "reason": "DECISION_OR_RATIFICATION",
+            "chars": 74,
+            "skipped_header": 67,
+            "head": "第七届全国人民代表大会常务委员会第二次会议决定:批准中央军事委员会《关于授予军队离休干部中国人民解放军功勋荣誉章的规定》,由中央军事委员会公布施行。"
+          },
+          {
+            "title": "全国人民代表大会常务委员会关于县级以下人民代表大会代表直接选举的若干规定",
+            "type": "法律",
+            "reason": "FORMAT_UNRECOGNIZED",
+            "chars": 1277,
+            "skipped_header": 74,
+            "head": "为了便于实施《中华人民共和国全国人民代表大会和地方各级人民代表大会选举法》,对县级以下人民代表大会代表直接选举中的若干问题作如下规定:   一、县、自治县、不设区的市、市辖区、乡、民族乡、镇设立选举委员会。县、自治县、不设区的市、市辖区的选"
+          },
+          {
+            "title": "全国人民代表大会常务委员会关于中国人民解放军现役士兵衔级制度的决定",
+            "type": "法律",
+            "reason": "DECISION_OR_RATIFICATION",
+            "chars": 537,
+            "skipped_header": 73,
+            "head": "为了深化国防和军队改革,加强军队的指挥和管理,推进国防和军队现代化,根据宪法,现就中国人民解放军现役士兵衔级制度作如下决定:  一、士兵军衔是表明士兵身份、区分士兵等级的称号和标志,是党和国家给予士兵的地位和荣誉。  士兵军衔分为军士军衔、"
+          },
+          {
+            "title": "全国人民代表大会常务委员会关于外商投资企业和外国企业适用增值税、消费税、营业税等税收暂行条例的决定",
+            "type": "法律",
+            "reason": "DECISION_OR_RATIFICATION",
+            "chars": 734,
+            "skipped_header": 49,
+            "head": "(1993年12月29日第八届全国人民代表大会常务委员会  第五次会议通过)   第八届全国人民代表大会常务委员会第五次会议审议了国务院关于提请审议外商投资企业和外国企业适用增值税、消费税、营业税等税收暂行条例的议案,为了统一税制,公平税负"
+          },
+          {
+            "title": "全国人民代表大会常务委员会关于惩治骗购外汇、逃汇和非法买卖外汇犯罪的决定",
+            "type": "法律",
+            "reason": "DECISION_OR_RATIFICATION",
+            "chars": 1241,
+            "skipped_header": 74,
+            "head": "为了惩治骗购外汇、逃汇和非法买卖外汇的犯罪行为,维护国家外汇管理秩序,对刑法作如下补充修改:   一、有下列情形之一,骗购外汇,数额较大的,处五年以下有期徒刑或者拘役,并处骗购外汇数额百分之五以上百分之三十以下罚金;数额巨大或者有其他严重情"
+          },
+          {
+            "title": "全国人民代表大会常务委员会关于《中华人民共和国刑法》第三十条的解释",
+            "type": "法律解释",
+            "reason": "FORMAT_UNRECOGNIZED",
+            "chars": 203,
+            "skipped_header": 71,
+            "head": "全国人民代表大会常务委员会根据司法实践中遇到的情况,讨论了刑法第三十条的含义及公司、企业、事业单位、机关、团体等单位实施刑法规定的危害社会的行为,法律未规定追究单位的刑事责任的,如何适用刑法有关规定的问题,解释如下:   公司、企业、事业单"
+          },
+          {
+            "title": "全国人民代表大会常务委员会关于对中华人民共和国缔结或者参加的国际条约所规定的罪行行使刑事管辖权的决定",
+            "type": "法律",
+            "reason": "DECISION_OR_RATIFICATION",
+            "chars": 81,
+            "skipped_header": 64,
+            "head": "第六届全国人民代表大会常务委员会第二十一次会议决定:对于中华人民共和国缔结或者参加的国际条约所规定的罪行,中华人民共和国在所承担条约义务的范围内,行使刑事管辖权。"
+          },
+          {
+            "title": "全国人民代表大会常务委员会关于《中华人民共和国刑法》有关出口退税、抵扣税款的其他发票规定的解释",
+            "type": "法律解释",
+            "reason": "FORMAT_UNRECOGNIZED",
+            "chars": 134,
+            "skipped_header": 86,
+            "head": "全国人民代表大会常务委员会根据司法实践中遇到的情况,讨论了刑法规定的\"出口退税、抵扣税款的其他发票\"的含义问题,解释如下:   刑法规定的\"出口退税、抵扣税款的其他发票\",是指除增值税专用发票以外的,具有出口退税、抵扣税款功能的收付款凭证或"
+          }
+        ]
+      },
+      "diagnostics": {
+        "blank_in_article": 136189,
+        "article_anchors": 63793,
+        "lines_before_first_article": 32103,
+        "toc_lines_skipped": 6265,
+        "chapter_lines": 3214,
+        "section_lines": 841,
+        "doc_no_item": 363,
+        "toc_blocks": 318,
+        "toc_body_restart": 307,
+        "part_lines": 13,
+        "body_title_lines": 9
+      }
+    },
+    "pandalla__chinese_law_examples": {
+      "records_scanned": 984,
+      "items_out": 982,
+      "title_missing_fallback_from_source_id": 2,
+      "title_unrecoverable_dropped": 2,
+      "note": "正文自带条号已剥离，与文档级源的 text（不含条号）对齐"
+    }
+  },
+  "items": {
+    "total": 65037,
+    "char_stats": {
+      "min": 8,
+      "p10": 39,
+      "p50": 92,
+      "p90": 223,
+      "max": 61387
+    },
+    "domain_items": {
+      "general": 42834,
+      "civil": 12356,
+      "procedural": 6601,
+      "criminal": 3246
+    },
+    "domain_fallback": {
+      "general": 42834
+    },
+    "domain_fallback_share": 0.6586,
+    "status_raw_dist": {
+      "有效": 14784,
+      "已修改": 4568,
+      "已废止": 1622,
+      "7": 812,
+      "尚未生效": 1
+    },
+    "status_after_norm": {
+      "有效": 1385,
+      "已修改": 256,
+      "已废止": 168,
+      "尚未生效": 1
+    },
+    "status_dirty_dist": {},
+    "status_dirty_samples": [],
+    "status_dirty_in_source": {
+      "total": 812,
+      "dist": {
+        "7": 812
+      },
+      "cross_type": {
+        "7|修改、废止的决定": 635,
+        "7|有关法律问题和重大问题的决定": 169,
+        "7|地方性法规": 8
+      },
+      "inside_whitelist": 0
+    },
+    "no_item_classification": {
+      "法律|AMENDMENT_INSTRUCTION": 9,
+      "法律|DECISION_OR_RATIFICATION": 4
+    },
+    "no_item_unrecognized_samples": [],
+    "top_laws_by_items": {
+      "最高人民法院关于适用《中华人民共和国民事诉讼法》的解释": 1654,
+      "最高人民法院关于适用《中华人民共和国刑事诉讼法》的解释": 1200,
+      "人民检察院刑事诉讼规则(试行)": 692,
+      "人民检察院刑事诉讼规则": 684,
+      "中华人民共和国民用航空法": 644,
+      "中华人民共和国民事诉讼法": 575,
+      "中华人民共和国证券法": 466,
+      "中华人民共和国食品安全法": 462,
+      "中华人民共和国公司法": 436,
+      "中华人民共和国合同法": 428,
+      "中华人民共和国海商法": 278,
+      "中华人民共和国药品管理法": 259,
+      "中华人民共和国大气污染防治法": 258,
+      "中华人民共和国道路交通安全法": 248,
+      "中华人民共和国物权法": 247,
+      "中华人民共和国安全生产法": 233,
+      "中华人民共和国立法法": 225,
+      "中华人民共和国广告法": 224,
+      "中华人民共和国旅游法": 224,
+      "中华人民共和国消防法": 222,
+      "中华人民共和国公务员法": 220,
+      "中华人民共和国固体废物污染环境防治法": 217,
+      "中华人民共和国劳动法": 214,
+      "中华人民共和国妇女权益保障法": 208,
+      "中华人民共和国海关法": 204
+    },
+    "unique_laws": 1807,
+    "duplicate_uids": 75,
+    "duplicate_uid_samples": [
+      {
+        "uid": "法律-211#第四十五条",
+        "law": "中华人民共和国兵役法",
+        "label": "第四十五条",
+        "text_head": "第二款规定的培养预备役军官的短期集中训练,由军事部门派出现役军官与普通高等学校军事训练机构共同组织实施。"
+      },
+      {
+        "uid": "行政法规-1214#第一条",
+        "law": "重新组建仲裁机构方案",
+        "label": "第一条",
+        "text_head": "为了保证公正、及时地仲裁经济纠纷,保护当事人的合法权益,根据《中华人民共和国仲裁法》(以下简称仲裁法)和《中华人民共和国民事诉讼法》(以下简称民事诉讼法)的有关"
+      },
+      {
+        "uid": "行政法规-1214#第二条",
+        "law": "重新组建仲裁机构方案",
+        "label": "第二条",
+        "text_head": "平等主体的公民、法人和其他组织之间发生合同纠纷和其他财产权益纠纷,可以依法向本仲裁委员会申请仲裁。\n本仲裁委员会不受理因劳动争议和农业集体经济组织内部的农业承包"
+      },
+      {
+        "uid": "行政法规-1214#第三条",
+        "law": "重新组建仲裁机构方案",
+        "label": "第三条",
+        "text_head": "当事人采用仲裁方式解决纠纷,应当双方自愿,达成仲裁协议。没有仲裁协议,一方申请仲裁的,本仲裁委员会不予受理。"
+      },
+      {
+        "uid": "行政法规-1214#第四条",
+        "law": "重新组建仲裁机构方案",
+        "label": "第四条",
+        "text_head": "仲裁协议包括合同中订立的仲裁条款和以其他书面方式在纠纷发生前或者纠纷发生后达成的请求仲裁的协议。\n仲裁协议应当具有下列内容:\n(一)请求仲裁的意思表示;\n(二)"
+      }
+    ],
+    "duplicate_uid_note": "uid = source_id#条号，重复说明该文档内同一条号出现两次（修正案体例/附则重排），保留首次出现",
+    "version_duplicates_note": "同条号多版本内容重复由 uid 区分，未删；只统计 uid 完全重复",
+    "skipped_law_samples": [
+      {
+        "title": "中华人民共和国宪法修正案(2018年)",
+        "type": "宪法",
+        "reason": "TYPE_NOT_IN_WHITELIST"
+      },
+      {
+        "title": "中华人民共和国宪法(2018年修正文本)",
+        "type": "宪法",
+        "reason": "TYPE_NOT_IN_WHITELIST"
+      },
+      {
+        "title": "中华人民共和国宪法修正案(1999年)",
+        "type": "宪法",
+        "reason": "TYPE_NOT_IN_WHITELIST"
+      },
+      {
+        "title": "中华人民共和国宪法修正案(1993年)",
+        "type": "宪法",
+        "reason": "TYPE_NOT_IN_WHITELIST"
+      },
+      {
+        "title": "中华人民共和国宪法修正案(1988年)",
+        "type": "宪法",
+        "reason": "TYPE_NOT_IN_WHITELIST"
+      },
+      {
+        "title": "中华人民共和国宪法(1982年)",
+        "type": "宪法",
+        "reason": "TYPE_NOT_IN_WHITELIST"
+      },
+      {
+        "title": "第五届全国人民代表大会常务委员会关于批准《国务院关于老干部离职休养的暂行规定》的决议",
+        "type": "法律",
+        "reason": "DECISION_OR_RATIFICATION"
+      },
+      {
+        "title": "全国人民代表大会常务委员会关于批准《国务院关于安置老弱病残干部的暂行办法》的决议",
+        "type": "法律",
+        "reason": "DECISION_OR_RATIFICATION"
+      },
+      {
+        "title": "中华人民共和国刑法修正案(十)",
+        "type": "法律",
+        "reason": "AMENDMENT_INSTRUCTION"
+      },
+      {
+        "title": "中华人民共和国刑法修正案(九)",
+        "type": "法律",
+        "reason": "AMENDMENT_INSTRUCTION"
+      },
+      {
+        "title": "第五届全国人民代表大会常务委员会关于批准《国务院关于职工探亲待遇的规定》的决议",
+        "type": "法律",
+        "reason": "DECISION_OR_RATIFICATION"
+      },
+      {
+        "title": "全国人民代表大会常务委员会关于批准《国务院关于工人退休、退职的暂行办法》的决议",
+        "type": "法律",
+        "reason": "DECISION_OR_RATIFICATION"
+      }
+    ]
+  },
+  "outputs": {
+    "items_jsonl": [
+      "/mnt/data/lidian/law-agent/data/corpus/statute_items/twang2218__chinese-law-and-regulations.items.jsonl",
+      "/mnt/data/lidian/law-agent/data/corpus/statute_items/pandalla__chinese_law_examples.items.jsonl"
+    ],
+    "note": "统一条级 schema；text=条文正文（不含条号），text_full=『法规名+条号+正文』（用于 embedding）"
+  }
+}

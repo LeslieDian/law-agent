@@ -26,6 +26,7 @@
 | `STATUTE_SPLIT_REPORT.md` / `statute_items_STATS.json` / `statute_items_VERIFY.md` / `.json` | 阶段 2b 切条报告 + 质检 **PASS** |
 | `DERIVE_REPORT.md` / `DERIVE_STATS.json` | 阶段 2c 程序法条文任务派生报告 + 自检 |
 | `SPLIT_REPORT.md` / `SPLIT_STATS.json` / `SPLIT_VERIFY.md` / `.json` | 阶段 4 切分报告 + 质检门禁 **PASS** |
+| `VECTOR_DB_PROBE.json` | 阶段 4b 前置探查：向量库 / 知识图谱设计的**可行性实测**（节点可派生性、时间字段覆盖、交叉引用规模、文本长度分布） |
 
 ---
 

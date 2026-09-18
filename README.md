@@ -736,7 +736,11 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
 - ✅ **决策项 C｜阶段 2/3 缺陷根治 —— 已完成**（2026-09-18）：`normalize_corpus.py` 的 `uid` 已加入 `source_file`
   词干、合并流只并本轮正式产出、`*.sample.jsonl` 残留已剔除，阶段 2/3/2b/4 **全链路已重跑一遍**。
   详见 [`docs/corpus/README.md`](docs/corpus/README.md) 第十节「已修复缺陷与前后对照」。
-- ⬜ 阶段 4b（可选）：法条条目 **65,037 条向量化入库**（`indexes/` 目前为空）。
+- ⬜ 阶段 4b：法条条目 **65,037 条向量化入库 + 建图**（`indexes/` 目前为空）。
+  **设计已定稿并做过可行性实测** → [`docs/retrieval_design.md`](docs/retrieval_design.md)（节点 7→5、关系 8→5，
+  实测证据 [`docs/corpus/VECTOR_DB_PROBE.json`](docs/corpus/VECTOR_DB_PROBE.json)）。
+  ⚠️ 三个硬伤需先拍板：① 时间版本过滤无字段可依（A2 消融失效）；② 款/项粒度为 0（评测表两列填不了）；
+  ③ 图谱 `CITES` 只覆盖 6.3% 条文 → 扩展主力须改 `NEXT`。
   ⚠️ 入库前必须先跑 `src/prepare/check_leakage.py` 四级查重。
 - ⬜ 阶段 5–9：LoRA 训练 → 路由 → MoE 消融 → 内部验证集选 checkpoint → 终评
 - ⬜ （可选）配置 `HF_TOKEN` 后补采 `Aiiluo/Chinese-Law-SFT-Dataset`（2.6 MB，gated）

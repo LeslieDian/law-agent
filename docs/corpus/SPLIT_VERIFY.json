@@ -1,0 +1,195 @@
+{
+  "verdict": "PASS",
+  "failures": [],
+  "warnings": [
+    "C5 域 procedural 单任务份额 49.4% > 上限 35%，已在 SPLIT_STATS 留痕（cap_relaxed=true，原因是池可用量不足）"
+  ],
+  "checks": {
+    "C1_counts": {
+      "declared": {
+        "train": 100000,
+        "val": 1000,
+        "test": 1000,
+        "router": 20000
+      },
+      "actual": {
+        "train": 100000,
+        "val": 1000,
+        "test": 1000,
+        "router": 20000
+      },
+      "match": true
+    },
+    "C2_uid_g_unique": {
+      "train": 0,
+      "val": 0,
+      "test": 0,
+      "router": 0
+    },
+    "C3_disjoint": {
+      "train∩val": {
+        "uid_g": 0,
+        "content_sha1": 0,
+        "samples": []
+      },
+      "train∩test": {
+        "uid_g": 0,
+        "content_sha1": 0,
+        "samples": []
+      },
+      "train∩router": {
+        "uid_g": 0,
+        "content_sha1": 0,
+        "samples": []
+      },
+      "val∩test": {
+        "uid_g": 0,
+        "content_sha1": 0,
+        "samples": []
+      },
+      "val∩router": {
+        "uid_g": 0,
+        "content_sha1": 0,
+        "samples": []
+      },
+      "test∩router": {
+        "uid_g": 0,
+        "content_sha1": 0,
+        "samples": []
+      }
+    },
+    "C4_train_mix": {
+      "target": {
+        "criminal": 30000,
+        "civil": 40000,
+        "procedural": 20000,
+        "general": 10000
+      },
+      "actual": {
+        "criminal": 30000,
+        "civil": 40000,
+        "procedural": 20000,
+        "general": 10000
+      },
+      "match": true,
+      "total": 100000
+    },
+    "C5_task_coverage": {
+      "missing_tasks": [],
+      "weak_tasks": [],
+      "over_cap": [
+        {
+          "domain": "procedural",
+          "task": "legal_question_answering",
+          "share": 0.4935,
+          "cap": 0.35,
+          "cap_relaxed_documented": true
+        }
+      ],
+      "cap": 0.35
+    },
+    "C6_no_synthetic_in_dev": {
+      "val": 0,
+      "test": 0
+    },
+    "C7_messages": {},
+    "C8_fields": {},
+    "C9_domain_views": {
+      "train/criminal": {
+        "lines": 30000,
+        "expected": 30000,
+        "match": true,
+        "domain_consistent": true
+      },
+      "train/civil": {
+        "lines": 40000,
+        "expected": 40000,
+        "match": true,
+        "domain_consistent": true
+      },
+      "train/procedure": {
+        "lines": 20000,
+        "expected": 20000,
+        "match": true,
+        "domain_consistent": true
+      },
+      "train/general": {
+        "lines": 10000,
+        "expected": 10000,
+        "match": true,
+        "domain_consistent": true
+      },
+      "val/criminal": {
+        "lines": 300,
+        "expected": 300,
+        "match": true,
+        "domain_consistent": true
+      },
+      "val/civil": {
+        "lines": 400,
+        "expected": 400,
+        "match": true,
+        "domain_consistent": true
+      },
+      "val/procedure": {
+        "lines": 200,
+        "expected": 200,
+        "match": true,
+        "domain_consistent": true
+      },
+      "val/general": {
+        "lines": 100,
+        "expected": 100,
+        "match": true,
+        "domain_consistent": true
+      },
+      "test/criminal": {
+        "lines": 300,
+        "expected": 300,
+        "match": true,
+        "domain_consistent": true
+      },
+      "test/civil": {
+        "lines": 400,
+        "expected": 400,
+        "match": true,
+        "domain_consistent": true
+      },
+      "test/procedure": {
+        "lines": 200,
+        "expected": 200,
+        "match": true,
+        "domain_consistent": true
+      },
+      "test/general": {
+        "lines": 100,
+        "expected": 100,
+        "match": true,
+        "domain_consistent": true
+      }
+    },
+    "C10_router": {},
+    "C11_sha256": {
+      "mismatch": [],
+      "checked": 16
+    }
+  },
+  "summary": {
+    "files": {
+      "train": 100000,
+      "val": 1000,
+      "test": 1000,
+      "router": 20000
+    },
+    "splits_total": 122000,
+    "train_mix": {
+      "criminal": 30000,
+      "civil": 40000,
+      "procedural": 20000,
+      "general": 10000
+    },
+    "router_multilabel_pct": 5.46,
+    "leftover_pool": 146768,
+    "task_strata": 64
+  }
+}

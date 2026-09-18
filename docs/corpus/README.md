@@ -323,3 +323,119 @@ raw **349,665 条** → qa 流 **285,257 条** + 法条库 **23,510 条**。
 **历史版本链**（同一条号的多版本各自保留，靠 uid 区分，不删）。
 
 **下一步（阶段 4）**：qc 268,768 + 法条 65,037 一起做分层下采样与 val/test、路由集切分。
+→ **已完成，见第八节。**
+
+---
+
+## 八、阶段 4：分层下采样 + 切分（✅ 已完成，质检 verdict = PASS，2026-09-18）
+
+脚本 `scripts/corpus/downsample_split.py`（确定性、幂等、输入只读），质检门禁 `scripts/corpus/verify_split.py`，
+包装 `scripts/corpus/prepare_downsample_split.sh`。
+报告：`SPLIT_REPORT.md` + `SPLIT_STATS.json`（切分）+ `SPLIT_VERIFY.md/.json`（质检）。
+
+### 8.1 规模（唯一的数字口径）
+
+| split | 文件 | 条数 |
+|---|---|---|
+| 训练集（A0 全域） | `data/train/train.jsonl` | **100,000** |
+| 训练集（分域视图） | `data/train/{civil,criminal,procedure,general}.jsonl` | 40,000 / 30,000 / 20,000 / 10,000 |
+| 验证集 | `data/dev/dev.jsonl`（+ 逐域视图） | **1,000** |
+| 测试集 | `data/test/test.jsonl`（+ 逐域视图） | **1,000** |
+| 路由集 | `data/router/router_train.jsonl` | **20,000** |
+| **合计占用** | | **122,000**（池剩余 146,768，可回溯） |
+
+逐域达成率 **100%**（30,000 / 40,000 / 20,000 / 10,000 **精确命中，不是「接近」**）；
+val/test 按目标配比分层（每域 300/400/200/100），保证程序法有足够评测样本。
+
+**产物直接落在 `configs/` 写死的路径上，配置零改动**：
+`qlora_unified.yaml` 的 `data/train/train.jsonl` + `data/dev/dev.jsonl`、
+`adapters_router.yaml` 的 `data/train/{civil,criminal,procedural→procedure}.jsonl`。
+
+### 8.2 切分口径（写死）
+1. 样本唯一键 = `content_sha1`（实测 268,768 条**全局唯一**，0 重复）
+2. 四份 split 全部用 **sha1 排序确定性抽取，不使用随机数** → 重跑逐字节一致
+3. 顺序：先切 router（20,000）→ 再切 val/test（按域分层）→ 余下才是训练池 → 下采样到 100,000
+4. **硬卡口**：四份两两不相交，`uid_g` 与 `content_sha1` 双口径断言 = 0（质检 C3）
+
+**为什么锚点是「先切 router 再下采样」而不是「从 10 万里抽 20%」**：
+后者会把训练集从 10 万削到 8 万，与论文声称的 10 万训练量不符。池子有 26.8 万，
+「保证 10 万训练集」和「路由集与训练集 disjoint」两件事不必二选一 —— 所以先预留再下采样。
+
+### 8.3 分层下采样口径
+- 三层：`domain × task × source_dataset`
+- 域内任务配额：`weight = count^alpha`（默认 alpha=1，标准等比分层）+ 地板（每任务 ≥100 条）
+- **任务份额软上限 35%**，防单一任务型垄断某个专家
+- 软上限**不可行时自动放宽并留痕**：程序法训练池 21,635 vs 目标 20,000（**1.08 倍**），
+  头号任务 `legal_question_answering` 独占池 45.6% 且其余任务可用量合计不足 →
+  强制 35% 会让 20% 配额**数学上不可达** → 实测 49.4%，`cap_relaxed=true` 写进报告。
+  **不静默改口径，也不静默丢数据。**
+- 训练集来源分布：DISC-Law-SFT 88.06% / Skepsun 6.07% / Dusker 5.87%
+
+### 8.4 路由集
+- 20,000 条，每条带 `router_label`（多标签 `domains`）与 `router_query`（user 侧问题文本）
+- 域分布 civil 7,383 / criminal 6,828 / general 4,089 / procedural 1,700；跨域多标签 **5.46%**
+- ⚠️ 阶段 7 所需的「贴近 CLaw 254 案分布的 **200–500 条人工标注**路由评测集」**必须新建**，
+  不在本阶段产物内，也不能从任何已有数据集借。
+
+### 8.5 法条流的去向（明确不进 SFT）
+65,037 条法条条目**不做下采样、不进 SFT 训练集** —— 它是**检索语料（向量库主料）**，
+检索侧语料越多越好，砍它没有收益只会掉召回。
+跨流检查：QA 四份 split 的 `content_sha1` ∩ 法条条目 `content_sha1` = **0**。
+若将来要「法条任务」样本（README 3.1 的程序法来源之一），须**另派生**并保持与 val/test disjoint。
+
+### 8.6 三个实测坑（已写进 legal-corpus-curation skill）
+1. **`uid` 不是全局唯一键**：20,947 条 uid 撞号（阶段 2 uid 构造漏了 `source_file`）
+   → 阶段 4 新增 `uid_g` 止血。详见第九节。
+2. **任务池可用量必须按「训练池」算**，不能按全池算 —— 否则会把「池子本来就不够」误报成
+   「分配不足」（实测误报程序法 9 个尾任务「样本偏少」）。
+3. **程序法是唯一无法满足份额上限的域**（池 = 目标的 1.08 倍），要压份额只能扩源
+   —— 见 8.7。
+
+### 8.7 两个待决策项（不属阶段 4 范围，避免静默处理）
+| 项 | 现状 | 建议 |
+|---|---|---|
+| **程序法任务多样性** | `legal_question_answering` 占 49.4%（上限 35%，已留痕放宽） | 用阶段 2b 已切出的 **6,601 条程序法条文**派生「程序法条文任务」补量（README 3.1 已把「诉讼法条文任务」列为程序法来源）；属扩采/派生动作 |
+| **通用回放（10%）** | `general` 桶 10,000 条**实质是「法律领域但域不明确的样本」**（宪法/行政法/法治理论），不等于「非法律通用指令数据」；实测 `replay=false` **全部 0 条** —— DISC-Law-SFT 内置的 Alpaca-GPT4/Firefly 通用回放**并不在已下载的 4 个文件里**（raw 目录只有 Pair / Pair-QA / Triplet / Triplet-QA） | 要真正满足「防灾难性遗忘」的设计意图，须**另采一份非法律中文通用指令数据**（阶段 0/1 动作，需先过 license A 级审查）；或保持现状并在论文如实说明「回放桶为法律领域内的通用样本」 |
+
+---
+
+## 九、阶段 2 遗留缺陷登记（阶段 4 发现，**未修**，需重跑阶段 2/3 才能修）
+
+### 9.1 `uid` 撞号
+`scripts/corpus/normalize_corpus.py:519`：
+
+```python
+rec["uid"] = "%s:%s" % (raw["source_dataset"].replace("/", "__"), raw["source_id"])
+```
+
+`source_id` 是**文件内**行号（如 `legal_question_answering_1`），**不含 `source_file`** →
+`DISC-Law-SFT-Pair-QA-released.jsonl` 与 `DISC-Law-SFT-Triplet-QA-released.jsonl` 撞号。
+实测：`normalized/qa` 285,257 条里 **23,218 组撞号**（每组 2 条；内容不同，`content_sha1` 全局唯一），
+清洗镜像里则是 20,947 组。
+
+**后果（已量化）**：阶段 3 按 uid 剔除 → 恒等式成立
+`records_under_removed_uids = actual_removed_records = 16,489`，即**整组删**。
+本应删 14,218 组，实际删 **16,489 条 → 连带多删 2,271 条**
+（全是 `legal_question_answering`，来自 DISC-Law-SFT Pair/Triplet QA）。
+
+**方向是「多删」（保守），不可能漏删 → 无污染风险**，阶段 3 的 PASS 结论依然成立；
+2,271 条对本阶段配比**零影响**（LQA 本就超额 262%）。
+
+**修复方案（需重跑阶段 2/3，未执行）**：`uid` 加入 `source_file` 词干，例如
+
+```python
+rec["uid"] = "%s__%s:%s" % (ds_slug, file_stem, raw["source_id"])
+```
+
+**为什么不擅自修**：改了 uid 生成，已登记的阶段 2/3 报告、`DECONTAM_REMOVED_UIDS*.txt`
+与代码就不一致了，必须连阶段 2/3 一起重跑 —— 属用户决策项。
+阶段 4 已用 **`uid_g`**（`<dataset>__<file_stem>:<index>`，实测唯一）作为下游唯一键止血。
+
+### 9.2 `normalized/qa` 残留抽样文件
+`normalized/qa/Dusker__lawyer-llama.sample.jsonl`（3,598 条）是阶段 2 的抽样冒烟产物，
+混在正式目录里；`_all.jsonl`（288,855 行）= 正式 3 文件（**285,257**）+ 该抽样文件。
+阶段 3 首扫 312,365 行 = 288,855 + 法条 23,510，即**抽样文件也被扫了**；
+清洗镜像 `decontaminated/` 只写了正式 3 文件 → 数字对得上（285,257 − 268,768 = 16,489）。
+
+**建议**：把抽样产物移出正式目录，或改名以 `_` 开头（`_` 前缀已被所有脚本自动排除）。
+

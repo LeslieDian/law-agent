@@ -168,6 +168,35 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
    下采样必须**按 `task` × `source` 分层**，否则某个任务型（如 `legal_question_answering` 92,381 条）
    可能垄断某个专家，让该专家只学会一种题型。
 
+#### 3.1.3 阶段 4 实测结果（2026-09-18，配比 100% 命中）
+
+> 完整报告：[`docs/corpus/SPLIT_REPORT.md`](docs/corpus/SPLIT_REPORT.md) +
+> [`docs/corpus/SPLIT_VERIFY.md`](docs/corpus/SPLIT_VERIFY.md)。
+
+| split | 落点 | 条数 |
+|---|---|---|
+| 训练集（A0 全域） | `data/train/train.jsonl` | **100,000** |
+| 训练集（分域视图） | `data/train/{civil,criminal,procedure,general}.jsonl` | 40,000 / 30,000 / 20,000 / 10,000 |
+| 验证集 | `data/dev/dev.jsonl`（+ 逐域） | **1,000**（每域 400/300/200/100） |
+| 测试集 | `data/test/test.jsonl`（+ 逐域） | **1,000**（同配比） |
+| 路由集 | `data/router/router_train.jsonl` | **20,000**（query → domain 多标签） |
+| 合计占用 | | **122,000**（池剩余 146,768 可回溯） |
+
+- 逐域达成率 **100%**（30,000 / 40,000 / 20,000 / 10,000 精确命中）；
+  质检 verdict = **PASS**，四份 split 两两不相交（uid_g 与 content_sha1 双口径交集均 0）。
+- **路由集口径澄清**：不是「从 10 万里抽 20%」（那会把训练集削到 8 万），
+  而是**先从 26.8 万池子里预留路由集与 val/test，再对余下训练池下采样到 10 万** ——
+  「训练集 10 万」与「路由集 disjoint」两件事因此不必二选一。
+- **留痕的一处放宽**：程序法池 21,635 条 vs 目标 20,000（仅 1.08 倍），头号任务
+  `legal_question_answering` 独占池 45.6% → 强制 35% 单任务份额上限会让 20% 配额
+  **数学上不可达**，故实测 49.4%（`cap_relaxed=true`，已写进报告，不静默改口径）。
+  要真正压下来只能扩源（用阶段 2b 的 6,601 条程序法条文派生条文任务），**待决策**。
+- **通用回放仍是缺口**：池里 `replay` 标记 **全部为 0** —— DISC-Law-SFT 内置的
+  Alpaca-GPT4 / Firefly 通用回放**不在已下载的 4 个文件内**，故「通用回放 10%」目前
+  由 `general` 桶（法律领域内域不明确的样本）代充。**待决策**：是否另采非法律中文通用指令数据。
+- **法条流不进 SFT**：65,037 条法条条目是检索语料（向量库主料），不下采样、不参与配比；
+  跨流检查 QA ∩ 法条 `content_sha1` = **0**。
+
 #### 3.1.2 法条流（statutes）实测结构 —— 一处必须纠正的表述 + 一处必须补的工序
 
 > ⚠️ 此前 README 与方案里写的「法条库 **23,510 条**」是**不准确**的表述，实测后必须纠正。
@@ -273,9 +302,9 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 阶段 0  源合规审查        → configs/corpus_sources.yaml（A/B 级分级，A 级才可进论文实验集）✅
 阶段 1  分批采集          → data/corpus/raw/<dataset>/ + data/corpus/MANIFEST.json（逐文件 SHA-256）✅
 阶段 2  归一化 + 域打标   → data/corpus/normalized/{qa,statutes}/*.jsonl + STATS.json + DEDUP_REPORT.json ✅
-阶段 2b 法条切条 + 法条域打标 → data/corpus/normalized/articles/*.jsonl（整部法 → 逐条法条）⬜
+阶段 2b 法条切条 + 法条域打标 → data/corpus/statute_items/*.jsonl（整部法 → 65,037 条）✅
 阶段 3  去污              → DECONTAMINATION_REPORT_PASS.json（复扫 verdict = PASS）★硬门禁 ✅
-阶段 4  切分 + 分层下采样  → train / val / test + 路由集（与专家训练集 disjoint）⬜
+阶段 4  切分 + 分层下采样  → data/{train,dev,test,router}/（122,000 条，四份两两不相交）✅
 ───────────────────────────────  以下才动 GPU ───────────────────────────────
 阶段 5  基线：单 LoRA 全域训练                 → A0
 阶段 6  专家 LoRA ×3（刑法 / 民法 / 程序法）    → A1/A2/A3/A4 的组件
@@ -291,9 +320,9 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 | 0 | 每个源都有 `license` + `license_grade`；B 级源明确标注「仅内部探索」 |
 | 1 | 每批落盘后立即算 SHA-256；`data/corpus/MANIFEST.json` 与磁盘实测一致 |
 | 2 | ✅ **每域实得量 ≥ 目标量**（本次总缺口 0）；`domain_source` = `fallback` 占比 **< 15%**；人工抽检 50 条准确率 ≥ 95% |
-| 2b | 切条后**三大诉讼法条文数**各不少于法定条数（民诉 ≈284 / 刑诉 ≈308 / 行诉 ≈103）；法条域**按法名判定**，抽查 50 条准确率 ≥ 95% |
+| 2b | ✅ 三大诉讼法条文齐备；法条域按法名判定；切条质检 C1–C7 全过、verdict PASS（残留条号 0 / 目录块 0） |
 | 3 | **去污 verdict = PASS**，且报告里能看到近重复命中明细 |
-| 4 | 路由集与专家训练集 uid 交集 = **0**（脚本断言） |
+| 4 | ✅ 路由集 ∩ 专家训练集 = **0**（`uid_g` 与 `content_sha1` **双口径**断言）；训练集逐域配比 = 目标（**精确相等，不是「接近」**）；val/test 与训练集也 disjoint |
 | 5–8 | 每档消融都有独立 config + 独立输出目录，**不许共用目录覆盖** |
 | 9 | ★ checkpoint 只能由内部验证集选定；CLaw 只跑一次终评 |
 
@@ -391,8 +420,11 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 
 **三条硬约束**：
 
-1. **路由集与专家集必须切分** —— 从 10 万条里**按 uid 哈希抽取 20%** 作为路由集，
-   这 20% **从专家训练集中移除**。否则路由器学到的是「专家见过的样本」，实际查询上泛化崩塌。
+1. **路由集与专家集必须切分** —— 按 uid 哈希抽取 **20,000 条**作为路由集（= 训练目标的 20%），
+   **从专家训练集中移除**。否则路由器学到的是「专家见过的样本」，实际查询上泛化崩塌。
+   **实施口径（2026-09-18 定）**：先从 26.8 万池子里预留路由集与 val/test，**再**对余下训练池
+   下采样到 10 万 —— 这样「训练集 10 万」与「路由集 disjoint」同时成立。
+   ⚠️ 若按字面「从 10 万里抽 20%」，训练集会被削到 8 万，与论文的 10 万训练量不符。
 2. **必须支持跨域查询** —— 例如「合同诈骗」同时涉民法（合同）+ 刑法（诈骗罪）。
    单标签路由器必然错 → 用**多标签 + top-2 路由**，并做成消融项。
 3. **路由评测集必须贴近 CLaw 254 案的分布** —— 人工标 **200–500 条**「案件咨询形态」的
@@ -470,11 +502,16 @@ law-agent/
 │  ├─ corpus/
 │  │  ├─ raw/<dataset>/    # 阶段 1：原始语料，只读，落盘即算 SHA-256
 │  │  ├─ normalized/
-│  │  │  ├─ qa/*.jsonl         # 阶段 2：问答/判决类统一 schema（主角，285,257 条）
-│  │  │  ├─ qa/_all.jsonl      # 阶段 2：合并流（288,855 行），下游直接读这一个
-│  │  │  ├─ statutes/*.jsonl   # 阶段 2：法条流（整部法规全文，待阶段 2b 切条）
-│  │  │  └─ articles/          # 阶段 2b：切条后的逐条法条（待生成）
+│  │  │  ├─ qa/*.jsonl         # 阶段 2：问答/判决类统一 schema（285,257 条）
+│  │  │  ├─ qa/_all.jsonl      # 阶段 2：合并流（288,855 行）
+│  │  │  └─ statutes/*.jsonl   # 阶段 2：法条流（整部法规全文，22,771 部）
+│  │  ├─ decontaminated/   # 阶段 3：去污清洗镜像（只读基线；qa 268,768 + statutes 22,771）
+│  │  ├─ statute_items/    # 阶段 2b：切条后的逐条法条（65,037 条 = 向量库主料）
 │  │  └─ MANIFEST.json     # 逐文件 SHA-256 清单
+│  ├─ train/               # 阶段 4：train.jsonl(100,000) + {civil,criminal,procedure,general}.jsonl
+│  ├─ dev/                 # 阶段 4：dev.jsonl(1,000) + 逐域视图
+│  ├─ test/                # 阶段 4：test.jsonl(1,000) + 逐域视图
+│  ├─ router/              # 阶段 4：router_train.jsonl(20,000，query → domain 多标签)
 │  ├─ benchmark/           # 评测基准（LexRubric / LexEval），严禁进入训练
 │  └─ _obsolete_*/         # 早期残留，保留可回溯
 ├─ configs/                # qlora_unified / adapters_router / retrieval / inference / judge
@@ -610,15 +647,43 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   **清洗后分域（唯一记录）**：qa —— 刑法 **91,145** / 民法 **98,513** / 程序法 **23,735** / 通用 **55,375**
   （合计 268,768）+ 法条 22,771；**每域仍超额，10 万配比不受影响**。
 
+- ✅ **阶段 2b：法条切条（整部法规 → 逐条法条）**（2026-09-18，质检 verdict = PASS）。
+  22,771 部 → **65,037 条检索单元**（item 64,055 / doc 兜底 337 / pandalla 982）；
+  只留国家级规范（法律 382 / 司法解释 740 / 行政法规 663 / 法律解释 25 = 1,810 部），
+  地方性法规 19,152 部（占源 87%）丢弃；`status="7"` 脏值 812 部**全落在被过滤类型上**
+  → 白名单内脏值 = 0。质检 C1–C7 全过（残留条号 0 / 目录块 0 / 碎片 0.07%）。
+  脚本 `split_statutes.py` + 门禁 `verify_statute_items.py`，报告
+  [`docs/corpus/STATUTE_SPLIT_REPORT.md`](docs/corpus/STATUTE_SPLIT_REPORT.md)。
+  三个实测坑：锚点必须盯**行首**（交叉引用虚高 9.8 万）、目录后正文重启会吞首章、
+  无条号批复需整篇入库但修正案必须排除。
+
+- ✅ **阶段 4：分层下采样 + 切分（★ 硬卡口）**（2026-09-18，质检 verdict = PASS）。
+  **122,000 条四份 split，两两不相交（uid_g 与 content_sha1 双口径交集均 0）**：
+  训练集 **100,000**（刑法 30,000 / 民法 40,000 / 程序法 20,000 / 通用 10,000，**精确命中**）
+  + 验证集 1,000 + 测试集 1,000 + 路由集 20,000；池剩余 146,768 可回溯。
+  产物直接落在 `configs/` 写死的路径上（`data/train/train.jsonl`、`data/train/{civil,criminal,procedure,general}.jsonl`、
+  `data/dev/dev.jsonl`、`data/test/test.jsonl`、`data/router/router_train.jsonl`），**配置零改动**。
+  切分口径：样本键 = `content_sha1`（实测全局唯一）、全 sha1 排序确定性抽取（**无随机数**，重跑逐字节一致）、
+  先预留 router/val/test 再对训练池下采样。报告
+  [`docs/corpus/SPLIT_REPORT.md`](docs/corpus/SPLIT_REPORT.md) + [`SPLIT_VERIFY.md`](docs/corpus/SPLIT_VERIFY.md)。
+  ⚠️ **发现并登记阶段 2 的一个遗留缺陷**：`uid` 构造漏了 `source_file` → 20,947 条撞号，
+  导致阶段 3 按 uid 剔除时**连带多删 2,271 条**（方向是多删＝保守，**无污染风险**，对配比零影响）。
+  阶段 4 已用 `uid_g` 止血；根治需重跑阶段 2/3 —— 见 [`docs/corpus/README.md`](docs/corpus/README.md) 第九节。
+
 ### 待办
 
-- ⬜ 阶段 2b：法条切条 —— 22,510 部整部法规 → 数万条逐条法条（只留法律/司法解释/行政法规，
-  顺带清洗 `status="7"` 脏值 829 条）；产物即向量库主料
-- ⬜ 阶段 4：切分 train/val/test + 路由集，并**分层下采样 268,768 → 100,000**
-  （按 `task` × `source` 分层，避免单一任务型垄断某个专家）
-- ⬜ 阶段 4 附带决定：`general` 桶（55,375 条）能否充当「通用回放」，还是另采非法律通用指令数据
+- ⬜ **决策项 A｜程序法任务多样性**：`legal_question_answering` 占程序法 49.4%（软上限 35% 已留痕放宽）。
+  程序法池 21,635 仅目标的 1.08 倍，要压份额只能扩源 → 建议用阶段 2b 已切出的
+  **6,601 条程序法条文**派生「程序法条文任务」（README 3.1 已列为程序法来源之一）。
+- ⬜ **决策项 B｜通用回放**：池里 `replay` 标记**全为 0** —— DISC-Law-SFT 内置的 Alpaca-GPT4/Firefly
+  通用回放**不在已下载的 4 个文件内**，现由 `general` 桶（法律领域内样本）代充 10%。
+  建议另采一份**非法律中文通用指令数据**（阶段 0/1 动作，须先过 license A 级审查），或实测「general 代充」
+  与「真通用回放」的防遗忘差异并做消融。
+- ⬜ **决策项 C｜阶段 2 缺陷根治**：`normalize_corpus.py:519` 的 `uid` 加入 `source_file` 词干，
+  并清理 `normalized/qa/*.sample.jsonl` 残留 → 需**重跑阶段 2/3**（会改动已登记数字）。
+- ⬜ 阶段 4b（可选）：法条条目 **65,037 条向量化入库**（`indexes/` 目前为空）。
+  ⚠️ 入库前必须先跑 `src/prepare/check_leakage.py` 四级查重。
 - ⬜ 阶段 5–9：LoRA 训练 → 路由 → MoE 消融 → 内部验证集选 checkpoint → 终评
-- ⬜ `indexes/` 为空，尚无任何向量索引（阶段 2b 切条后即可开始向量化入库）
 - ⬜ （可选）配置 `HF_TOKEN` 后补采 `Aiiluo/Chinese-Law-SFT-Dataset`（2.6 MB，gated）
 
 ---
@@ -690,8 +755,12 @@ bash scripts/corpus/prepare_normalize.sh        # 幂等：先语法+YAML 自检
 > 必须先按「第X条」切条，并把法条域**按法名判定**（不能靠全文关键词）。
 
 ```bash
-bash scripts/corpus/prepare_articles.sh        # 待实现
+bash scripts/corpus/prepare_split_statutes.sh   # ✅ 已实现（阶段 2b）
 ```
+
+> 产物落点更正：不是 `data/corpus/normalized/articles/`，而是 **`data/corpus/statute_items/`**
+> （`twang2218__chinese-law-and-regulations.items.jsonl` 64,055 + `pandalla__chinese_law_examples.items.jsonl` 982）。
+> 质检：`python scripts/corpus/verify_statute_items.py --root $PWD`
 
 **切条规则（写死，不许绕过）**：
 

@@ -1,0 +1,57 @@
+{
+  "generated_at": "2026-09-18T13:18:37",
+  "method": {
+    "exact": "sha1(normalize(instruction+input)) 与 sha1(normalize(instruction+input+output))",
+    "near": "simhash64(char-3gram, crc32), 汉明距离 <= 3",
+    "lsh": "4 x 16bit 分段索引取候选，再算精确汉明距离",
+    "normalize": "NFKC + 去所有空白",
+    "max_chars_for_fingerprint": 800
+  },
+  "blacklist": {
+    "total": 14799,
+    "by_tag": {
+      "lexrubric_zixun": 473,
+      "lexrubric_sikao": 176,
+      "lexeval": 14150
+    },
+    "claw_loaded": false,
+    "claw_path_expected": "/mnt/data/lidian/law-agent/data/benchmark/claw/repo/data/claw254.json"
+  },
+  "checked": {
+    "total_rows": 294937,
+    "by_domain": {
+      "criminal": 92827,
+      "civil": 102798,
+      "procedural": 24528,
+      "general": 74784
+    },
+    "by_file": {
+      "_all.jsonl": 272166,
+      "pandalla__chinese_law_examples.jsonl": 984,
+      "twang2218__chinese-law-and-regulations.jsonl": 21787
+    }
+  },
+  "exact_hits": {
+    "count": 0,
+    "by_bench_tag": {},
+    "items": []
+  },
+  "near_hits": {
+    "count": 0,
+    "unique_train_uids": 0,
+    "by_bench_tag": {},
+    "by_train_file": {},
+    "by_train_domain": {},
+    "by_hamming": {},
+    "items": []
+  },
+  "same_source_check": {
+    "checked_skepsun_rows": 13914,
+    "exact": 0,
+    "near": 0,
+    "samples": []
+  },
+  "verdict": "PASS",
+  "blockers": [],
+  "elapsed_sec": 5748.1
+}

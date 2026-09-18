@@ -85,9 +85,17 @@
 | A2 | 3 专家 + **学习式路由（R1）** | **主方法** |
 | A3 | 3 专家 + 无路由（权重平均融合） | 证明「路由有用」而非「多专家有用」 |
 | A4 | 3 专家 + **随机路由** | **下界** |
+| A5 | **token 级 MoE-LoRA**（MixLoRA 式：FFN 旁挂 LoRA 专家 + 层内可学习门控，token 级路由 + 负载均衡损失） | **可选扩展**：与 A2 对比两种路由粒度（请求级 vs token 级）。预期单域样本打平、混合域样本 token 级占优——对比本身就是论文贡献 |
 
 > A1 与 A2 的差值 = 路由器质量损失；A2 与 A3/A4 的差值 = 路由机制本身的增益。
 > **没有 A1 和 A4，审稿人一定会问「你怎么知道不是多专家本身带来的增益」。**
+
+**★ MoE 表述红线（2026-09-18 与用户确认）**：本方案的专家路由是**请求级的 MoLE
+（Mixture-of-LoRA-Experts）**——LoRA 专家挂在冻结底座外、请求级路由、路由器独立训练；
+**不是**模型内 token 级的原生 MoE。论文必须写「借鉴混合专家思想构建 LoRA 专家混合架构」，
+**禁止**写「训练了混合专家模型」。主方法选请求级而非 token 级的理由：
+与 LangGraph 跨域聚合架构契合、专家语义（三法域）可解释、训练无路由坍缩风险；
+token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**。
 
 检索侧消融：去重排序器 / 去时间版本过滤 / 去知识图谱 / 去领域适配器路由 / 换向量模型（四路）。
 
@@ -113,7 +121,7 @@
 |---|---|---|---|
 | **刑法** | **30,000** | 30% | 刑事判决（罪名 + 法条 + 刑期）+ 犯罪知识图谱转问答 + 刑法典法条任务 |
 | **民法** | **40,000** | 40% | 民事判决（信息抽取/预测/摘要）+ 民事问答 + 民法典法条任务 |
-| **程序法** | **20,000**（**含合成 8,000**） | 20% | 三诉讼法司考题 + 诉讼法原文任务 + 合成补量 |
+| **程序法** | **20,000**（合成 8,000 **已降为可选**，见 3.1.1） | 20% | 三大诉讼法司考题 + 诉讼法**条文任务**（切条后）+ 合成补量（可选） |
 | **通用回放** | **10,000** | 10% | 通用指令数据抽样，**防灾难性遗忘**，不是凑数 |
 | **合计** | **100,000** | 100% | |
 
@@ -121,12 +129,15 @@
 
 1. **为什么要有 10% 通用回放**：纯法律数据微调会打崩底座通用能力。CLaw 254 案里有相当比例
    需要常识推理与语言组织，只喂法律数据会让这部分指标**不升反降**。
-2. **为什么程序法要合成 40%**：程序法是三域里公开语料**最稀薄**的（公开 SFT 集里占比普遍 <10%），
-   而目标占 20%，缺口只能自建。合成规范（写死，不许绕过）：
+2. **为什么曾计划程序法合成 40%（现已降为可选）**：程序法曾是三域里公开语料**最稀薄**的
+   （公开 SFT 集里占比普遍 <10%），而目标占 20%，故原计划自建补量。
+   **但阶段 2 实测证明程序法真实数据已够（25,445 > 20,000），合成不再是必需项** ——
+   能不用就不用，因为合成数据在论文里必须如实披露，**程序法合成占比 0% 比 40% 好写得多**。
+   若最终仍启用，合成规范写死、不许绕过：
    - 必须以**三大诉讼法原文条文**为唯一事实来源，禁止模型自由发挥
    - 每条登记 `synthetic: true` / `generator_model` / `prompt_sha256` / `source_articles[]`
    - **合成数据一律不进验证集与测试集**
-   - 合成占比在论文里如实披露（程序法域 8000/20000 = 40%）
+   - 合成占比在论文里如实披露（若启用：程序法域 8000/20000 = 40%）
 
 ### 3.1.1 配比可得性核算（★ 阶段 2 实测结果：**每域都超额，总缺口 = 0**）
 
@@ -156,6 +167,49 @@
 3. **真正的工作量是"下采样"而不是"补数据"** —— 285,257 → 100,000，需砍掉约 65%。
    下采样必须**按 `task` × `source` 分层**，否则某个任务型（如 `legal_question_answering` 92,381 条）
    可能垄断某个专家，让该专家只学会一种题型。
+
+#### 3.1.2 法条流（statutes）实测结构 —— 一处必须纠正的表述 + 一处必须补的工序
+
+> ⚠️ 此前 README 与方案里写的「法条库 **23,510 条**」是**不准确**的表述，实测后必须纠正。
+> 阶段 3 前置探测（2026-09-17）的实测结构如下。
+
+| 来源 | 条数 | 实际粒度 | `task` | 证据 |
+|---|---|---|---|---|
+| `twang2218/chinese-law-and-regulations` | **22,510** | **整部法律法规全文** | `statute_doc` | output 以「第X条」开头 = **0%**；行数 > 8 的整部文本 = **99.5%** |
+| `pandalla/chinese_law_examples` | **1,000** | **逐条法条** | `statute_item` | output 以「第X条」开头 = **100%**；`statute.article_no` 有值 |
+
+→ 所以「23,510 条」= **22,510 部法规全文 + 1,000 条法条**，**不是 23,510 条法条**。
+
+**按域分布（当前打标，仅供参考 —— 整部法全文会让打标失真）**：
+`general` 20,199 / `civil` 3,132 / `procedural` **568** / `criminal` **411**。
+
+**twang2218 的 `statute.type` 分布（22,510 条）**：
+地方性法规 19,733（87.7%）/ 司法解释 788 / 行政法规 693 / 修改、废止的决定 661 /
+法律 429 / 有关法律问题和重大问题的决定 172 / 法律解释 26 / 宪法 7 / 监察法规 1。
+
+**三大诉讼法 + 两大法典的全文都在（已按 `statute.title` 核实）**：
+
+| 法律 | 字符数 | 备注 |
+|---|---|---|
+| 中华人民共和国民事诉讼法 | 33,309 / 32,664 | **两个版本 → 历史版本已在库** |
+| 中华人民共和国刑事诉讼法 | 40,914 / 37,477 | 同上 |
+| 中华人民共和国行政诉讼法 | 12,520 | — |
+| 最高人民法院关于适用《民事诉讼法》的解释 | 61,667 / 62,006 | 程序法条文大户 |
+| 最高人民法院关于适用《行政诉讼法》的解释 | 26,018 | — |
+| 中华人民共和国民法典 | 113,346 | 民法条文大户 |
+| 中华人民共和国刑法（+ 13 个修正案） | 60,936 | 刑法条文大户 |
+
+**结论：程序法的法条「不是少，而是还没切条」。**
+切条后可得：民诉 ≈ 284 条 + 刑诉 ≈ 308 条 + 行政诉讼 ≈ 103 条
++ 三大司法解释（民诉解释 ≈ 552 / 刑诉解释 ≈ 655 / 行诉解释 ≈ 163）≈ **2,000+ 条程序法条文**，
+足以支撑程序法域的「法条任务」。
+
+**⇒ 必须补的工序（阶段 2b：法条切条）**：
+1. 把 `statute_doc` 按「第X条」**切分为逐条法条**（保留 `title` / `article_no` / `status` / `effective_from`）；
+2. 法条域打标**改为按 `statute.title` 判定**（不再靠全文关键词 —— 否则整部法律里出现
+   「执行 / 管辖 / 上诉」就会被误判成程序法，这正是上面 procedural 568 条不可信的原因）；
+3. 地方性法规（19,733 部）量极大且与三域弱相关，**切条后可只保留「法律 / 司法解释 / 行政法规」
+   三类**（≈ 2,000 部），其余留档不参与 10 万条配比。
 
 ### 3.2 数据集来源
 
@@ -216,11 +270,12 @@
 `──────────────── 以下才动 GPU ────────────────` 是硬边界：
 
 ```
-阶段 0  源合规审查        → configs/corpus_sources.yaml（A/B 级分级，A 级才可进论文实验集）
-阶段 1  分批采集          → data/corpus/raw/<dataset>/ + data/corpus/MANIFEST.json（逐文件 SHA-256）
-阶段 2  归一化 + 域打标   → data/corpus/normalized/{qa,statutes}/*.jsonl + STATS.json + DEDUP_REPORT.json ✅已完成
-阶段 3  去污              → DECONTAMINATION_REPORT.json（verdict 必须 PASS）★硬门禁
-阶段 4  切分 + 分层下采样  → train / val / test + 路由集（与专家训练集 disjoint）
+阶段 0  源合规审查        → configs/corpus_sources.yaml（A/B 级分级，A 级才可进论文实验集）✅
+阶段 1  分批采集          → data/corpus/raw/<dataset>/ + data/corpus/MANIFEST.json（逐文件 SHA-256）✅
+阶段 2  归一化 + 域打标   → data/corpus/normalized/{qa,statutes}/*.jsonl + STATS.json + DEDUP_REPORT.json ✅
+阶段 2b 法条切条 + 法条域打标 → data/corpus/normalized/articles/*.jsonl（整部法 → 逐条法条）⬜
+阶段 3  去污              → DECONTAMINATION_REPORT_PASS.json（复扫 verdict = PASS）★硬门禁 ✅
+阶段 4  切分 + 分层下采样  → train / val / test + 路由集（与专家训练集 disjoint）⬜
 ───────────────────────────────  以下才动 GPU ───────────────────────────────
 阶段 5  基线：单 LoRA 全域训练                 → A0
 阶段 6  专家 LoRA ×3（刑法 / 民法 / 程序法）    → A1/A2/A3/A4 的组件
@@ -236,6 +291,7 @@
 | 0 | 每个源都有 `license` + `license_grade`；B 级源明确标注「仅内部探索」 |
 | 1 | 每批落盘后立即算 SHA-256；`data/corpus/MANIFEST.json` 与磁盘实测一致 |
 | 2 | ✅ **每域实得量 ≥ 目标量**（本次总缺口 0）；`domain_source` = `fallback` 占比 **< 15%**；人工抽检 50 条准确率 ≥ 95% |
+| 2b | 切条后**三大诉讼法条文数**各不少于法定条数（民诉 ≈284 / 刑诉 ≈308 / 行诉 ≈103）；法条域**按法名判定**，抽查 50 条准确率 ≥ 95% |
 | 3 | **去污 verdict = PASS**，且报告里能看到近重复命中明细 |
 | 4 | 路由集与专家训练集 uid 交集 = **0**（脚本断言） |
 | 5–8 | 每档消融都有独立 config + 独立输出目录，**不许共用目录覆盖** |
@@ -317,9 +373,11 @@
 > 否则消融实验无法拆解是域的作用还是任务的作用。
 >
 > **注意 2**：法条库（`statutes/`）单独一条流，**保留 `effective_from` / `effective_period` /
-> `status`**（来自 `twang2218/chinese-law-and-regulations`，实测含「有效 15,317 / 已修改 4,723 /
-> 已废止 1,682」），直接支撑「法条必须保留历史版本」这条硬约定。
-> ⚠️ 该源的 `status` 字段混有脏值 `"7"`（829 条），阶段 4 需清洗。
+> `status`**，直接支撑「法条必须保留历史版本」这条硬约定。
+> 实测（22,510 条）`status` 分布：**有效 15,282 / 已修改 4,719 / 已废止 1,681 /
+> 尚未生效 1 / 脏值 `"7"` 827**。
+> ⚠️ 该源的 `status` 混有脏值 `"7"`，**阶段 2b 切条时一并清洗**（把 `"7"` 归为未知并标注）。
+> ⚠️ 该流的粒度是**整部法规全文**（不是逐条法条），必须先切条 —— 见 [3.1.2](#312-法条流statutes实测结构--一处必须纠正的表述--一处必须补的工序)。
 
 ### 3.5 MoE 路由对数据的额外要求
 
@@ -411,7 +469,11 @@ law-agent/
 ├─ data/
 │  ├─ corpus/
 │  │  ├─ raw/<dataset>/    # 阶段 1：原始语料，只读，落盘即算 SHA-256
-│  │  ├─ normalized/       # 阶段 2：归一化 + 域打标后的统一 schema
+│  │  ├─ normalized/
+│  │  │  ├─ qa/*.jsonl         # 阶段 2：问答/判决类统一 schema（主角，285,257 条）
+│  │  │  ├─ qa/_all.jsonl      # 阶段 2：合并流（288,855 行），下游直接读这一个
+│  │  │  ├─ statutes/*.jsonl   # 阶段 2：法条流（整部法规全文，待阶段 2b 切条）
+│  │  │  └─ articles/          # 阶段 2b：切条后的逐条法条（待生成）
 │  │  └─ MANIFEST.json     # 逐文件 SHA-256 清单
 │  ├─ benchmark/           # 评测基准（LexRubric / LexEval），严禁进入训练
 │  └─ _obsolete_*/         # 早期残留，保留可回溯
@@ -432,7 +494,7 @@ law-agent/
 │  ├─ selfcheck.py         # 环境自检
 │  ├─ smoke_test.py        # 端到端冒烟（加载模型 + LoRA 反向传播）
 │  ├─ verify_env.sh        # 实测版全量自检（真跑 CUDA + 真分配显存 + 连 Neo4j）
-│  ├─ corpus/              # 训练语料：采集（阶段 1）→ 归一化+域打标（阶段 2）
+│  ├─ corpus/              # 训练语料：采集(0/1) → 归一化+域打标(2) → 法条切条(2b) → 去污(3) → 切分(4)
 │  └─ benchmarks/          # 评测基准「拉取 → 验完整性 → 登记 SHA-256」
 ├─ outputs/                # 闭卷 / RAG / judge 输出
 └─ docs/
@@ -538,17 +600,26 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   跨源判重完成（`Dusker/.../DISC-Law-SFT-Pair.json` 100% 重复已丢弃，`-Triplet.json` 仅 20.5% 重复故保留）；
   幂等链路 `bash scripts/corpus/prepare_normalize.sh`（[`docs/corpus/`](docs/corpus/)）
 
+- ✅ **阶段 3：双向去污（★ 硬门禁，两遍式）—— 复扫 verdict = PASS**（2026-09-18）。
+  首扫 312,365 行：精确命中 0 / 近似命中 18,778 处 → **剔除 14,957 个 uid**（主要是
+  `DISC-Law-SFT` −14,819 与 LexEval 案件类同案近文样本）；生成清洗镜像 `decontaminated/`
+  （normalized 保持只读）后复扫 **0 命中 = PASS**，二次剔除清单为空。
+  同源风险专项：Skepsun 司考 13,914 条 vs LexRubric `sifakaoshi` **精确 0 / 近似 0，风险排除**。
+  黑名单 = LexEval 14,150 + LexRubric 649（**CLaw 已退出论文，不在黑名单**）。
+  报告：[`docs/corpus/DECONTAMINATION_REPORT_PASS.md`](docs/corpus/DECONTAMINATION_REPORT_PASS.md)。
+  **清洗后分域（唯一记录）**：qa —— 刑法 **91,145** / 民法 **98,513** / 程序法 **23,735** / 通用 **55,375**
+  （合计 268,768）+ 法条 22,771；**每域仍超额，10 万配比不受影响**。
+
 ### 待办
 
-- ⬜ 阶段 3：去污（硬门禁，`verdict` 必须 PASS）—— 重点核查
-  `Skepsun` 司考题与 LexRubric `sifakaoshi` 的同源风险
-- ⬜ 阶段 4：切分 train/val/test + 路由集，并**分层下采样 285,257 → 100,000**
+- ⬜ 阶段 2b：法条切条 —— 22,510 部整部法规 → 数万条逐条法条（只留法律/司法解释/行政法规，
+  顺带清洗 `status="7"` 脏值 829 条）；产物即向量库主料
+- ⬜ 阶段 4：切分 train/val/test + 路由集，并**分层下采样 268,768 → 100,000**
   （按 `task` × `source` 分层，避免单一任务型垄断某个专家）
-- ⬜ 阶段 4 附带决定：`general` 桶（57,707 条）能否充当「通用回放」，还是另采非法律通用指令数据
-- ⬜ 阶段 5–9：LoRA 训练 → 路由 → MoE 消融 → 内部验证集选 checkpoint → CLaw 终评
-- ⬜ `indexes/` 为空，尚无任何向量索引
+- ⬜ 阶段 4 附带决定：`general` 桶（55,375 条）能否充当「通用回放」，还是另采非法律通用指令数据
+- ⬜ 阶段 5–9：LoRA 训练 → 路由 → MoE 消融 → 内部验证集选 checkpoint → 终评
+- ⬜ `indexes/` 为空，尚无任何向量索引（阶段 2b 切条后即可开始向量化入库）
 - ⬜ （可选）配置 `HF_TOKEN` 后补采 `Aiiluo/Chinese-Law-SFT-Dataset`（2.6 MB，gated）
-- ⬜ 法条库清洗：`twang2218` 的 `status` 字段混有脏值 `"7"`（829 条）
 
 ---
 
@@ -560,7 +631,156 @@ token 数、延迟），否则无法区分错误来源（未检索到 / 检索�
 
 ---
 
-## 10. 文档维护约定
+## 10. 操作手册：从头到尾每一步怎么跑
+
+> 本节写给「隔几周回来还要复现」的场景（也方便写论文的「实验设置」章节）。
+> 全部命令在实验服务器 `/mnt/data/lidian/law-agent` 下执行；先 `source scripts/activate.sh`。
+> 本机（Windows）只做开发与文档，**跑数据一律在服务器**，用 `_remote/ssh_run.py` 上传+远程执行。
+
+### 10.1 本机 → 服务器的两条链路
+
+```powershell
+# 远程执行（本机 PowerShell；注意本机 PowerShell 的 stdout 不回显，务必用 --out 落到文件再读）
+python C:\...\_remote\ssh_run.py --cmd "ls /mnt/data/lidian/law-agent"
+
+# 上传 + 后台跑长任务 + 轮询（长任务不要一次等到超时，SSH 通道约 2 分钟会断）
+python C:\...\_remote\ssh_run.py `
+  --upload "D:\vs project\law\scripts\corpus\xxx.py:/mnt/data/lidian/law-agent/scripts/corpus/xxx.py" `
+  --script "D:\vs project\law\scripts\corpus\prepare_xxx.sh" `
+  --remote "/mnt/data/lidian/law-agent/scripts/corpus/prepare_xxx.sh" `
+  --log "/tmp/xxx.log" --out "C:\...\_remote\_xxx_start.txt"
+# 之后单独轮询：  --cmd "tail -n 30 /tmp/xxx.log"
+```
+
+### 10.2 阶段 0 — 源合规审查
+
+**手动**，产物是 [`configs/corpus_sources.yaml`](configs/corpus_sources.yaml)。
+逐源登记 `license` / `license_grade`（A 可进论文，B 仅内部）/ 体积 / 文件数。
+**卡口**：没有 `license_grade` 的源不许进采集。
+
+### 10.3 阶段 1 — 分批采集
+
+```bash
+bash scripts/corpus/prepare_corpus.sh --list   # 干跑：看要采什么、多大
+bash scripts/corpus/prepare_corpus.sh          # 实采（默认 --max-gb 3 体积护栏）
+```
+
+- 脚本**直读 `configs/corpus_sources.yaml`，零硬编码**；按 `license_grade` 选源。
+- 产物：`data/corpus/raw/<dataset>/`（`/` 换成 `__`）+ `data/corpus/MANIFEST.json`（逐文件 SHA-256）。
+- **卡口**：清单与磁盘**逐文件比对**一致（大小 + SHA-256，LFS 大文件对齐 HF `lfs.oid`）。
+
+### 10.4 阶段 2 — 归一化 + 域打标
+
+```bash
+bash scripts/corpus/prepare_normalize.sh        # 幂等：先语法+YAML 自检，再跑归一化
+/mnt/data/lidian/law-agent/envs/main/bin/python scripts/corpus/inspect_normalized.py   # 只读复核
+```
+
+- 读两份 YAML：`corpus_sources.yaml`（合规层）+ [`corpus_adapters.yaml`](configs/corpus_adapters.yaml)（解析层：
+  `drop_files` / `keep_files` / 适配器 / 过滤阈值 / 打标权重）。
+- 产物：`data/corpus/normalized/{qa,statutes}/*.jsonl`、`qa/_all.jsonl`（下游只读这个）、
+  `normalized_STATS.json`、`normalized_DEDUP_REPORT.json`。
+- **判重必须三指纹交叉**（严格 / 宽松 / 案件正文）—— 详见 [`docs/corpus/DEDUP_REPORT.md`](docs/corpus/DEDUP_REPORT.md)。
+  本次即靠三指纹发现「同名同条数却是 100% 重复」。
+- **卡口**：每域实得量 ≥ 目标量；`domain_source = fallback` 占比 < 15%。
+
+### 10.5 阶段 2b — 法条切条（整部法规 → 逐条法条）
+
+> 见 [3.1.2](#312-法条流statutes实测结构--一处必须纠正的表述--一处必须补的工序)。当前 `statutes/` 是**整部法规全文**，
+> 必须先按「第X条」切条，并把法条域**按法名判定**（不能靠全文关键词）。
+
+```bash
+bash scripts/corpus/prepare_articles.sh        # 待实现
+```
+
+**切条规则（写死，不许绕过）**：
+
+1. **按「第X条」正则切分**：一部法规 → N 条记录，每条 = 一个条文；序号无法解析的碎片并入上一条。
+2. **类别过滤**：只保留「法律 / 司法解释 / 行政法规」三类（≈1,910 部 → 数万条法条）；
+   **地方性法规 19,733 部留档不进配比、不进主向量库**（各省规定互相冲突，会污染检索 top-k；
+   将来若需要，单独建子 collection 带省份元数据）。
+3. **法条域按法名判定**：`民法典/合同编... → civil`、`刑法/刑法修正案 → criminal`、
+   `民事诉讼法/刑事诉讼法/行政诉讼法 + 三大诉讼法司法解释 → procedural`，其余国家法按内容归 civil/criminal，
+   归不了的标 `general`；**禁止用全文关键词判断**（整部法规里什么词都有，必然错标）。
+4. **历史版本硬约定**：每条保留 `title` / `article_no` / `status` / `effective_from` / `effective_period`；
+   同名法规多版本（已修改/已废止）**全部保留**，不得只存最新版。
+5. **顺带清洗**：`status` 脏值 `"7"`（829 条）归为 `unknown` 并标注，不静默丢弃。
+
+- 产物：`data/corpus/normalized/articles/*.jsonl`，每条 = 一部法的一个条文
+  （同时就是**向量库主料**：入库粒度从「整部法规」细化到「条文」）。
+- **卡口**：民诉 ≈284 / 刑诉 ≈308 / 行诉 ≈103 条不得缺少；抽查 50 条域标签准确率 ≥ 95%。
+
+### 10.6 阶段 3 — 双向去污（★ 硬门禁，两遍式）
+
+> **✅ 已于 2026-09-18 跑完并 PASS**：首扫剔除 14,957 uid → 复扫 0 命中 = PASS。
+> 实测结果与本节流程一致，以下操作说明保留供复现。
+
+**实测证明必须跑两遍**：第一遍在全量语料上找出所有命中并生成剔除清单；应用剔除后**第二遍必须复扫出 PASS**，
+这个复扫 PASS 才是论文里能引用的门禁证据。
+
+```bash
+# 第一遍：全量扫描，产出 DECONTAMINATION_REPORT.json + DECONTAM_REMOVED_UIDS.txt
+bash scripts/corpus/prepare_decontaminate.sh
+
+# 第二遍 a：应用剔除清单，生成清洗镜像（normalized 保持只读，硬约定）
+python scripts/corpus/apply_decontam.py \
+  --uids docs/corpus/DECONTAM_REMOVED_UIDS.txt
+
+# 第二遍 b：对清洗镜像复扫，verdict 必须 = PASS
+python scripts/corpus/decontaminate.py \
+  --norm-dir data/corpus/decontaminated \
+  --out-json docs/corpus/DECONTAMINATION_REPORT_PASS.json \
+  --out-md   docs/corpus/DECONTAMINATION_REPORT_PASS.md \
+  --out-uids docs/corpus/DECONTAM_REMOVED_UIDS_PASS.txt   # 应为空文件
+```
+
+- 脚本：`scripts/corpus/decontaminate.py`（扫描 + 出报告）、`scripts/corpus/apply_decontam.py`（按 uid 剔除并逐文件登记 SHA-256）。**双向**比对：
+  - 正向 = 训练集里有没有混入评测题（含改写）
+  - 反向 = 评测集里有没有混入训练语料**来源**（同源风险，如 Skepsun 司考 vs LexRubric `sifakaoshi`）
+- 黑名单：LexRubric 649（473 咨询 + 176 司考）+ LexEval 14,150（**23 个任务文件全部自动扫描**）
+  + CLaw 254 案（放 `data/benchmark/claw/repo/data/claw254.json` 即自动纳入）。
+- 两种指纹缺一不可：**精确** `sha1(normalize(text))`；**近似** `simhash64(char-3gram, crc32)`，
+  汉明距离 ≤ 3 判近重。近似比对用 **4×16bit 分段索引**先取候选，把 O(N×M) 降成线性。
+- 产物：`docs/corpus/DECONTAMINATION_REPORT.json`（含 `verdict`）+ 同名 `.md`（人读）
+  + `DECONTAM_REMOVED_UIDS.txt`（剔除清单，一行一个 uid）。
+- **卡口**：复扫 `verdict = PASS`（且 `DECONTAM_REMOVED_UIDS_PASS.txt` 为空）。
+  首扫命中不是失败，是流程的一部分 —— 剔除后复扫 PASS 才算过关。
+- ✅ CLaw 已退出论文（2026-09-18 用户决策），黑名单 = LexEval + LexRubric，复扫可直接出**纯 PASS**；
+  论文中不再出现 CLaw，评测基准以内部验证集 + LexEval/LexRubric 闭卷线为准。
+- 经验教训（2026-09-18 实测）：首版报告的 `near_hits.by_bench_tag` 是从**被截断的样例列表**
+  算出来的，导致「总数 18,778 vs 按基准 300」的自相矛盾 —— 统计口径必须**永远对全量命中集合**算，
+  样例列表只用于人读展示。
+
+### 10.7 阶段 4 — 切分 + 分层下采样
+
+```bash
+bash scripts/corpus/prepare_split.sh           # 待实现
+```
+
+- 分层下采样 285,257 → 100,000，**按 `task` × `source` 分层**（防单一任务型垄断某专家）。
+- 切 train / val / test；**路由集按 uid 哈希抽 20%，与专家训练集 disjoint**（脚本断言交集 = 0）。
+- **卡口**：路由集 ∩ 专家集 = 0。
+
+### 10.8 阶段 5–9 — GPU 阶段（见 [docs/run_order.md](docs/run_order.md)）
+
+A0 单 LoRA → A1/A2/A3/A4 三专家 + 路由（A5 token 级 MoE-LoRA 可选扩展）→ 路由器 R0→R1 → MoE 组合与消融 → **内部验证集选 checkpoint**
+（选完才允许跑 CLaw 终评，★红线）。
+
+### 10.9 常用复核命令（只读，随时可重跑）
+
+| 目的 | 命令 |
+|---|---|
+| 语料清点 | `bash scripts/corpus/prepare_corpus.sh --list` |
+| 法条/域分布 | `python scripts/corpus/probe_statutes{,2,3}.py` |
+| 打标质量抽检 | `python scripts/corpus/inspect_normalized.py` |
+| 判重证据 | `docs/corpus/DEDUP_REPORT.md` |
+| 去污结论 | `python -c "import json;print(json.load(open('docs/corpus/DECONTAMINATION_REPORT.json'))['verdict'])"` |
+| 基准完整性 | `python scripts/benchmarks/verify_benchmarks.py` |
+| 环境自检 | `bash scripts/verify_env.sh` |
+
+---
+
+## 11. 文档维护约定
 
 > **本 README 必须随每一次实质变更同步更新，这是长期约定。**
 

@@ -214,13 +214,31 @@ raw **349,665 条** → qa 流 **285,257 条** + 法条库 **23,510 条**。
 
 ---
 
-## 六、下一步（阶段 3）：双向去污（硬门禁）
+## 六、阶段 3：双向去污（✅ 已完成，复扫 verdict = PASS，2026-09-18）
 
-- 方法：精确哈希 + simhash(64bit, 汉明距离 ≤ 3)
-- **`verdict` 必须 PASS 才允许进入训练**
-- **特别注意同源风险**：`Skepsun/lawyer_llama_data` 的司考题（7,000 条）与
-  LexRubric 的 `sifakaoshi` split（176 条）**可能取自同一批公开真题**，必须核查
-- 黑名单：CLaw 254 案、LexRubric 649 题 + 12,335 rubric、LexEval 23 任务 / 14,150 题
+**两遍式流程与结果**：
+
+1. **首扫**（312,365 行 / 耗时 ~96 min）：黑名单 = LexEval 14,150 + LexRubric 649
+   （CLaw 已退出论文，不在黑名单）→ **精确命中 0 / 近似命中 18,778 处 → 剔除 14,957 个唯一 uid**。
+   命中集中在 `DISC-Law-SFT`（−14,819 行）与 LexEval 案件类任务的**同案近文**样本。
+2. **应用剔除**：生成清洗镜像 `data/corpus/decontaminated/`（原 `normalized/` 保持只读，
+   逐文件 SHA-256 已登记，见镜像内 `APPLY_SUMMARY.json`）。
+3. **复扫**（耗时 ~96 min）：**精确 0 / 近似 0 → verdict = PASS**，二次剔除清单为空。
+
+**同源风险专项**：Skepsun 司考 13,914 条 vs LexRubric `sifakaoshi` 176 条 ——
+**精确 0 / 近似 0，风险排除**（两者虽都源自公开司考真题，但题目集不相交）。
+
+**清洗后分域（唯一记录，排除 `_all.jsonl` 合并副本双计）**：
+
+| 流 | 刑法 | 民法 | 程序法 | 通用 | 合计 |
+|---|---|---|---|---|---|
+| qa | **91,145** | **98,513** | **23,735** | **55,375** | **268,768** |
+| statutes | 382 | 2,921 | 522 | 18,946 | 22,771 |
+
+每域仍超额（目标 3万/4万/2万/1万），10 万配比不受去污影响。
+
+报告：`DECONTAMINATION_REPORT.md`（首扫 FAIL 证据）+ `DECONTAMINATION_REPORT_PASS.md/.json`（复扫 PASS）
++ `DECONTAM_REMOVED_UIDS.txt`（14,957 uid 剔除清单）+ `DECONTAM_REMOVED_UIDS_PASS.txt`（空，门禁证据）。
 
 之后阶段 4 需在**已有超额数据上做分层下采样**（按 `task` × `domain` × `source` 分层，
 避免某一任务型垄断某个专家），并在此之前先切出 val/test 与路由集（与专家训练集 disjoint）。

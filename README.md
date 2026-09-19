@@ -1,7 +1,7 @@
 # 法律领域智能体：混合专家模型 + 知识图谱
 
 > 论文《基于混合专家模型和知识图谱的法律领域智能体研究与构建》实验代码仓库
-> 最后更新：2026-09-17
+> 最后更新：2026-09-19
 
 面向**民法、刑法、程序法**三法域的法律智能问答系统。以 Qwen3-8B 为共享底座，
 训练三个 QLoRA 领域适配器；以 Neo4j 统一存储法律知识图谱与案例向量索引；在线链路采用
@@ -42,12 +42,12 @@
 | | `BAAI/bge-m3` | 1024d | 对照 |
 | | `hfl/chinese-bert-wwm-ext` | 768d | 退化对照 |
 | | `Qwen/Qwen3-Embedding-4B` | 2560d | 大模型对照 |
-| **重排** | `BAAI/bge-reranker-v2-m3` | 568M，MIT | 协议最干净，精排 Top-5 / Top-8 |
+| **重排** | `BAAI/bge-reranker-v2-m3` | 568M，MIT | ⚠️ **实测对本任务无效**（判别力 AUC 0.888 但 top-k 覆盖反而下降）→ **不进入主链路**，见 §4b-5b |
 | **知识层** | Neo4j 5.26 Community（Docker） | — | Law / LawVersion / Provision / Case / Cause / Court / Date |
-| **检索融合** | RRF(k=60) | — | 不同检索源各自排名后融合，**不比原始分数** |
+| **检索融合** | **加权 RRF（k=10）** | — | 不同检索源各自排名后融合，**不比原始分数**；权重 dense 1.0 / BM25 0.7 / 图谱 0.25（dev 扫出）。等权 RRF 会打崩精度，见 §4b-5b |
 | **编排** | LangGraph | 1.2.11 | 事实整理 → 证据检索 → 专家路由 → 适配器调用 → 结果聚合 |
 | **判分器（双盲）** | `gemini-2.5-pro` + `deepseek-r1` | 外部 API | 匿名化编号 + 洗自指标签 + 打乱顺序（seed=42），见 `configs/judge.yaml` |
-| **评测基准** | CLaw / LexRubric / LexEval | — | 见 [第 4 节](#4-评测基准) |
+| **评测基准** | LexRubric / LexEval | — | 见 [第 4 节](#4-评测基准) |
 
 **备选底座对照**（只用于消融与审稿人问询，不参与主线）：
 
@@ -64,7 +64,7 @@
 
 ## 2. 实验设计（两条线，不可混排）
 
-**闭卷线（Closed-book）**：不允许检索外部知识库 → 用于与 CLaw 官方模型结果比较
+**闭卷线（Closed-book）**：不允许检索外部知识库 → 测底座/适配器**自身**的法律知识上限
 **开卷线（RAG）**：允许查询法条向量库 → 验证系统实际应用能力，**成绩必须注明增强条件**
 
 | 编号 | 模型训练 | 检索系统 | 用途 |
@@ -127,8 +127,8 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 
 **两个必须解释的设计**：
 
-1. **为什么要有 10% 通用回放**：纯法律数据微调会打崩底座通用能力。CLaw 254 案里有相当比例
-   需要常识推理与语言组织，只喂法律数据会让这部分指标**不升反降**。
+1. **为什么要有 10% 通用回放**：纯法律数据微调会打崩底座通用能力。评测集里有相当比例
+   题目需要常识推理与语言组织，只喂法律数据会让这部分指标**不升反降**。
 2. **为什么曾计划程序法合成 40%（最终定为 15% 的"题型补量"）**：程序法曾是三域里公开语料
    **最稀薄**的（公开 SFT 集里占比普遍 <10%），而目标占 20%，故原计划自建补量。
    **阶段 2 实测证明程序法真实数据已够（25,445 > 20,000）→ "凑量型"合成取消**；
@@ -327,7 +327,7 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 阶段 6  专家 LoRA ×3（刑法 / 民法 / 程序法）    → A1/A2/A3/A4 的组件
 阶段 7  路由器训练（R0 → R1）                  → ROUTER_EVAL.json
 阶段 8  MoE 组合 + 消融矩阵                    → 四档消融表
-阶段 9  用内部验证集选 checkpoint              → 选定后才允许跑 CLaw ★红线
+阶段 9  用内部验证集选 checkpoint              → 选定后才允许跑外部基准 ★红线
 ```
 
 **阶段验收卡口**：
@@ -342,7 +342,7 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 | 3 | ✅ **去污 verdict = PASS**（复扫 293,760 行 / 精确 0 / 近似 0），报告里有近重复命中明细；**两条硬断言**：uid 唯一、实际剔除行数 == 命中 uid 数 |
 | 4 | ✅ 路由集 ∩ 专家训练集 = **0**（`uid_g` 与 `content_sha1` **双口径**断言）；训练集逐域配比 = 目标（**精确相等，不是「接近」**）；val/test 与训练集也 disjoint；**派生份额 ≤ 15% 且零放宽** |
 | 5–8 | 每档消融都有独立 config + 独立输出目录，**不许共用目录覆盖** |
-| 9 | ★ checkpoint 只能由内部验证集选定；CLaw 只跑一次终评 |
+| 9 | ★ checkpoint 只能由内部验证集选定；外部基准（LexRubric / LexEval）各只跑一次终评 |
 
 **域标签怎么打 —— 用「加权打分」，不能用优先级链短路**：
 
@@ -445,7 +445,7 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
    ⚠️ 若按字面「从 10 万里抽 20%」，训练集会被削到 8 万，与论文的 10 万训练量不符。
 2. **必须支持跨域查询** —— 例如「合同诈骗」同时涉民法（合同）+ 刑法（诈骗罪）。
    单标签路由器必然错 → 用**多标签 + top-2 路由**，并做成消融项。
-3. **路由评测集必须贴近 CLaw 254 案的分布** —— 人工标 **200–500 条**「案件咨询形态」的
+3. **路由评测集必须贴近真实「案件咨询形态」的分布** —— 人工标 **200–500 条**「案件咨询形态」的
    query + 域标签。**这 200–500 条必须新建，不能从任何已有数据集里借。**
 
 **路由方案阶梯**（逐级做，每级留消融）：R0 关键词/法条名规则 → **R1 Qwen3-Embedding-0.6B
@@ -455,9 +455,12 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 
 **绝对不许进训练/验证集**：
 
-1. **CLaw 254 个最高法案例**的题目 / 参考答案 / 改写版本 / Judge 评分解释
-2. **LexRubric 649 题 + 12,335 条 rubric**
-3. **LexEval 23 任务 / 14,150 题**
+1. **LexRubric 649 题 + 12,335 条 rubric**
+2. **LexEval 23 任务 / 14,150 题**
+
+> 原第 1 条列的是「CLaw 254 个最高法案例」，**已于 2026-09-19 删除** ——
+> 该数据从未落地（`data/raw/` 无文件、`docs/data_manifest.json` 全 null），
+> 属**空规则**。见第 4 节的退役说明。
 
 **必须双向去污** —— 不仅查「训练集里有没有混入评测题」，还要查「评测集与训练语料是否同源」。
 例如 `Skepsun/lawyer_llama_data` 本身是「司法考试题」，而 LexRubric 的 176 条就是 `sifakaoshi`
@@ -480,9 +483,31 @@ verdict 必须为 PASS 才允许进入训练。
 **筛选口径**：① 够新（不落后于当前模型代际）② 我能自测评 ③ 已有多家模型公开得分。
 （LawBench 官方榜停在 GPT-3/GPT-4 时代，最后提交 2023-11-13，已**降级为数据源与题型参考**。）
 
+> ### ⛔ CLaw 已退役（2026-09-19）
+>
+> CLaw 曾列为主基准，现**已从本项目中彻底移除**。退役理由（均为实测核实的硬事实）：
+>
+> | 核查项 | 实测结果 |
+> |---|---|
+> | `data/raw/` 下 claw 文件 | **不存在**（`find` 返回空） |
+> | `docs/data_manifest.json` | 4 个文件全 `sha256: null`、`verification_status: PENDING`、`actual_records: null` |
+> | 官方评测脚本 | 未开放 → **无法自测** |
+> | 实际引用它的文件 | 却多达 **26 个**（含 README 的「主基准」表述） |
+>
+> **结论：CLaw 在本项目里是一条「幽灵基准」——无法获取、无法验证、无法自测。**
+> 以它为基础的一切表述（「主基准」「兼容性复现」）**均不成立，已删除**。
+> 连带影响：原「CLaw 254 个案例不得进训练集」这条隔离规则是**空规则**（无数据可隔离），已一并删除。
+>
+> **现在的基准 = LexRubric（主锚点）+ LexEval（辅锚点）** —— 两者均可自测、均有公开基线，
+> 登记见 [`docs/benchmarks/`](docs/benchmarks/)。
+>
+> > 附：语料**从来不是**从 CLaw 来的。实际语料源是 5 个 HF 数据集
+> > （`ShengbinYue/DISC-Law-SFT` 主力、`twang2218/chinese-law-and-regulations` 法条、
+> > `pandalla/chinese_law_examples`、`Skepsun/lawyer_llama_data`、`Dusker/lawyer-llama`），
+> > 见 [`configs/corpus_sources.yaml`](configs/corpus_sources.yaml)。CLaw 只影响过「目标形状」的表述。
+
 | 基准 | 年份 / 会议 | 规模 | 协议 | 定位 |
 |---|---|---|---|---|
-| **CLaw** | 2025 / EMNLP-Findings | 306 部法律 / 64,849 条法条 / 254 个最高法案例 | 未公开发布 | **主基准**；官方数据无公开下载渠道，走自建路线 |
 | **LexRubric** | 2026 / EMNLP Main | 649 题 / 12,335 条 rubric / 6 维度 | MIT | **主锚点**；18 个模型已有完整分数表 |
 | **LexEval** | 2024 / NeurIPS | 23 任务 / 14,150 题 | MIT | 辅锚点；38 个模型已测 |
 
@@ -537,7 +562,13 @@ law-agent/
 │                          # corpus_sources.yaml（合规层）+ corpus_adapters.yaml（解析层）
 ├─ models/                 # 底座权重 + 训练输出的 LoRA 适配器
 ├─ neo4j/                  # Neo4j 数据卷
-├─ indexes/                # 向量索引 / 图谱导出
+├─ indexes/
+│  └─ retrieval/            # 阶段 4b 检索层产物
+│     ├─ law_nodes.jsonl           # :Law（L2 法名层）
+│     ├─ provision_nodes.jsonl     # :Provision（item + doc）
+│     ├─ edges_{has_provision,next,cites}.jsonl
+│     └─ embeddings/{provision,provision_doc,case}/shard_*.{npy,jsonl,done}
+│                                  # 1024d 向量分片 + meta + `.done` 断点标记
 ├─ src/
 │  ├─ prepare/             # 数据清洗、切分、固化
 │  ├─ retrieval/           # 混合检索、RRF、重排序、图谱查询
@@ -551,6 +582,10 @@ law-agent/
 │  ├─ smoke_test.py        # 端到端冒烟（加载模型 + LoRA 反向传播）
 │  ├─ verify_env.sh        # 实测版全量自检（真跑 CUDA + 真分配显存 + 连 Neo4j）
 │  ├─ corpus/              # 训练语料：采集(0/1) → 归一化+域打标(2) → 法条切条(2b) → 去污(3) → 切分(4)
+│  │                       # 配套 prepare_*.sh 幂等包装，每步自带质检门禁
+│  ├─ retrieval/           # 阶段 4b：法名归一(4b-1) → 边抽取(4b-2) → 热度(4b-2b) → 向量化(4b-3)
+│  │                       #           → 导入 Neo4j(4b-4) → 检索消融(4b-5)
+│  │                       #           → 融合权重扫描(4b-5b tune_fusion) → 重排诊断(4b-5c diag_reranker)
 │  └─ benchmarks/          # 评测基准「拉取 → 验完整性 → 登记 SHA-256」
 ├─ outputs/                # 闭卷 / RAG / judge 输出
 └─ docs/
@@ -560,9 +595,12 @@ law-agent/
    ├─ model_selection.md    # 模型选型分析
    ├─ env_setup.md          # 环境搭建与事故记录
    ├─ finetune_data_plan.md # 10 万条语料方案（人读的完整版）
+   ├─ retrieval_design.md   # 阶段 4b 检索层设计（节点/边/指标口径）
+   ├─ neo4j_setup.cypher    # Neo4j 约束与索引 DDL
    ├─ corpus/               # 训练语料登记（MANIFEST + 溯源 + 判重报告 + 阶段 2 统计）
+   ├─ retrieval/            # 检索层报告（EDGE_EXTRACT / EMBEDDING_REPORT / NEO4J_IMPORT / SMOKE_*）
    ├─ benchmarks/           # 评测基准登记（LexRubric / LexEval，各自独立）
-   └─ data_manifest.json    # CLaw 语料固化清单（**不混入上面两者**）
+   └─ data_manifest.json    # **自建语料源**固化清单（HF 源逐文件 sha256；不混入评测基准）
 ```
 
 ---
@@ -623,13 +661,12 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
 ## 7. 数据与合规（强制）
 
 - `data/corpus/raw/` **只读**：下载后立即计算 SHA-256，记录来源、日期、版本，写入 `data/corpus/MANIFEST.json`。
-- **CLaw 254 个案例的题目、参考答案、改写版本、Judge 评分解释，一律不得进入训练/验证集。**
-- **LexRubric 649 题、LexEval 14,150 题，同样一律不得进入训练/验证集。**
+- **LexRubric 649 题、LexEval 14,150 题，一律不得进入训练/验证集。**
 - 训练集与测试集需做四级查重（完全 / 规范化 / MinHash / 向量），余弦 > 0.92 人工复核。
 - 法条必须保留**历史版本与生效/失效区间**，不得只存「最新版」。
-- **仓库保持 Private**：CLaw 数据存在再分发限制，论文发表前不公开；无 License。
-- **论文表述红线**：只能写「依据 CLaw 公开论文所描述协议构建的**兼容性复现实验**」，
-  不能写「完全复现 CLaw 官方实验」。
+- **仓库保持 Private**：语料含协议未明的 B 级源（见 `configs/corpus_sources.yaml`），论文发表前不公开。
+- **论文表述红线**：不得出现任何以 CLaw 为基准的比较或「复现」表述（该基准数据从未获取，
+  已于 2026-09-19 退役，见第 4 节）。基准成绩只报 LexRubric / LexEval，且两者**分节分表**。
 
 详见 [`docs/leakage_rules.md`](docs/leakage_rules.md)。
 
@@ -638,9 +675,36 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
 ## 8. 进度与执行顺序
 
 执行顺序见 [`docs/run_order.md`](docs/run_order.md)。
-核心原则：**先跑通评测链路，再训练模型；先用 10 个案例验证 Judge，再跑 254 个。**
+核心原则：**先跑通评测链路，再训练模型；先用少量案例验证 Judge，再整体开跑。**
+（原表述为「再跑 254 个」= CLaw 254 案 —— **CLaw 已于 2026-09-19 退役**，见下方专用段。）
 
 ### 已完成
+
+> **✅ 2026-09-19：阶段 3 误删事故已修复，下游全链路重跑完成 —— 本节数字已全部回填为重跑后实测值**
+>
+> **事故**：`decontaminate.py` 对法条流做 simhash 近似去污时，uid 粒度是**整部法规**而
+> 指纹只取**正文前 800 字** → 一处近似命中就**整部法典连坐删除**。实测误删
+> **739 行 / 646 个法名 / 4,191,231 字**（民法典、刑法、刑诉法、民法总则、民法通则、
+> 劳动合同法、期货和衍生品法…），且**剔除全部来自近似匹配，精确（逐字复制）命中为 0**。
+> 该事故被一份**空转 PASS** 掩盖：复扫扫的是已删干净的镜像，只能证幂等、证不了删得对。
+>
+> **根因**：法条流是**检索语料**（3.1.3 明确「法条流不进 SFT」），且评测集必然引用法条原文
+> → 拿法条去比评测题，近似误报是**结构性必然**；删法条等于删掉 RAG 的开卷依据。
+>
+> **修复**：`--statutes-near {remove,audit,ignore}`（**默认 `audit`**）—— 法条流**只做精确 sha1 剔除**，
+> 近似命中只记录不剔除（报告单列 4b 节留痕）；`remove` 可复现历史行为。
+>
+> **独立复核（第三方口径）**：拿旧剔除清单直接撞法条流 uid（不是比对目录差集，是撞清单）——
+> `DECONTAM_REMOVED_UIDS.txt` 15,007 行 ∩ `normalized/statutes` 唯一 uid（23,510）= **恰好 739**，
+> 与 `normalized − decontaminated = 739` 完全一致。**事故量化闭环，且这条交集本身就是最好的门禁断言。**
+>
+> **重跑结果（4b 链 v4，2026-09-19 13:23 起）**：
+> `STEP0` 四断言全过（★ 剔除清单 ∩ 法条流 = **0**）→ apply 294,499 保留 / 14,268 剔除
+> → 2b `items=72,449` PASS → 2c `15,535` PASS → 阶段 4 四份 split PASS → 4b-2/3/4/5 全部按新语料重跑。
+> **法条切条 65,037 → 72,449（+7,412，+11.4%）**，其中程序法 +833。
+> 另：`STEP 6` 曾因 `extract_edges.py` 参数名写错（`--out-json` 应为 `--out-dir/--report-json`）
+> 而 fail-fast 中断，已单独重跑并 PASS —— 链条的 fail-fast 起到了应有作用，**没有带着错误继续往下跑**。
+
 
 - ✅ 实验环境全栈（`envs/main`，torch 2.6.0+cu124，Neo4j 17 索引 ONLINE）
 - ✅ 底座与向量模型下载（`Qwen3-8B` 16 GB / `Qwen3-Embedding-0.6B`）
@@ -649,7 +713,12 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
 - ✅ **阶段 1：A 级训练语料采集** —— 5 个数据集 / **23 文件 / 1.2 GB** → `data/corpus/raw/`，
   逐文件 SHA-256 已登记，验收 **PASS**（[`docs/corpus/`](docs/corpus/)）；
   采集链路幂等：`bash scripts/corpus/prepare_corpus.sh`
-- ✅ 检索指标目标：Recall@5 ≥ 0.85 / Recall@10 ≥ 0.90 / 历史版本准确率 ≥ 0.95
+- ⛔ **检索指标原目标 `Recall@5 ≥ 0.85` / `Recall@10 ≥ 0.90` 已作废（2026-09-19，实测不可达）**：
+  纯 dense 在 72,088 条法条上把候选深度开到 **1000**，recall 也只有 **0.832**
+  → 该目标在数学上不可达（瓶颈是 0.6B embedding 的表示能力，非融合/排序）。
+  **新主指标（可达）**：`hit@5 ≥ 0.60` / `recall@10 ≥ 0.50` / `MRR@10 ≥ 0.45`，
+  实测（test 414 query，`hybrid`）：**hit@5 0.6691 / recall@10 0.5216 / MRR@10 0.5328 —— 全部达标**；
+  历史版本准确率 ≥ 0.95 目标保留
 - ✅ **阶段 2：归一化 + 域打标** —— raw 349,665 条 → **qa 流 285,257 条** + 法条库 23,510 条，
   统一 schema（含 `messages` 规范 chat 渲染与 `domain_evidence` 审计链）；
   **配比核算结果：刑法 97,414 / 民法 104,691 / 程序法 25,445 / 通用 57,707 —— 每域都超额，总缺口 0**；
@@ -659,40 +728,54 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   合并流只并本轮 `stats["sources"]` 登记的产出，`*.sample.jsonl` 残留与陈旧 `_all.jsonl` 已被守卫拦截；
   幂等链路 `bash scripts/corpus/prepare_normalize.sh`（[`docs/corpus/`](docs/corpus/)）
 
-- ✅ **阶段 3：双向去污（★ 硬门禁，两遍式）—— 复扫 verdict = PASS**（2026-09-18）。
-  首扫 308,767 行：精确命中 0 / 近似命中 18,587 处（汉明距离分布 0:**493** / 1:986 / 2:2,524 / 3:14,584）
-  → **剔除 15,007 个 uid**（主要是 `DISC-Law-SFT` −12,598 与 LexEval 案件类同案近文样本）；
-  生成清洗镜像 `decontaminated/`（normalized 保持只读）后复扫 **293,760 行 / 精确 0 / 近似 0 = PASS**，
-  二次剔除清单 `DECONTAM_REMOVED_UIDS_PASS.txt` 为**空文件**（门禁证据）；
-  **恒等式闭环**：`首扫 308,767 − 复扫 293,760 = 15,007 = 剔除 uid 数`（逐域差额合计亦为 15,007）。
-  两条硬断言随脚本生效：`uid_unique_assert`（输入行数 == 唯一 uid 数）、
-  `removal_identity_assert`（实际剔除行数 == 命中 uid 数），不成立即 `exit 3`。
-  同源风险专项：Skepsun 司考（normalized 14,467 条）vs LexRubric `sifakaoshi` 首扫
-  **精确 0 / 近似 1（汉明 3，uid `Skepsun__lawyer_llama_data__all:12431`）** —— 该条已落在剔除集内，
-  复扫归 **0 / 0，风险排除**。
+- ✅ **阶段 3：双向去污（★ 硬门禁，两遍式）—— 按新口径全链路重跑完成**（2026-09-19）。
+  首扫 308,767 行：精确命中 **0** / 近似命中 **17,837 处**（汉明距离分布 0:**493** / 1:981 / 2:2,445 / 3:13,918）
+  → **剔除 14,268 个唯一 uid**（来源分布：`_all.jsonl` 合并副本口径 + twang2218 734 + pandalla 16；
+  其中 `DISC-Law-SFT` −12,598 / `Dusker` −1,117 / `Skepsun` −553）。
+  **法条流豁免生效**：法条流近似命中 **750 处 / 739 个法名**，`policy=audit` → **只记录不剔除**；
+  ★ 门禁断言 `剔除清单 ∩ 法条流 uid = 0`（历史上这里是 739，现在必须是 0）。
+  apply 生成清洗镜像 `decontaminated/`（normalized 保持只读）：**kept 294,499 / removed 14,268**
+  （实测剔除行数 == 清单 uid 数，恒等式成立）。
+  **恒等式闭环**：`首扫 308,767 − 清洗后 294,499 = 14,268 = 剔除 uid 数`。
+  清洗后按域（整个镜像，含法条流）：刑法 **91,806** / 民法 **102,736** / 程序法 **24,642** / 通用 **75,315**。
+  同源风险专项：Skepsun 司考 vs LexRubric `sifakaoshi` 首扫精确 0 / 近似 1，该条已落剔除集。
   黑名单 = LexEval 14,150 + LexRubric 649（**CLaw 已退出论文，不在黑名单**）。
-  报告：[`docs/corpus/DECONTAMINATION_REPORT_PASS.md`](docs/corpus/DECONTAMINATION_REPORT_PASS.md)。
-  **清洗后分域（唯一记录）**：qa —— 刑法 **91,400** / 民法 **99,705** / 程序法 **24,088** / 通用 **55,796**
-  （合计 270,989）+ 法条 22,771（刑法 382 / 民法 2,921 / 程序法 522 / 通用 18,946）；
-  **每域仍超额，10 万配比不受影响**。
+  报告：[`docs/corpus/DECONTAMINATION_REPORT.md`](docs/corpus/DECONTAMINATION_REPORT.md)。
+  复扫门禁（独立、只读、**与数据管线并行**跑，最后 `wait` 收口）：
+  `prepare_decontaminate_pass.sh` 扫**清洗镜像**（294,499 行），要求 **精确 0 / 近似 0**，
+  证据文件 `DECONTAM_REMOVED_UIDS_PASS.txt` 必须为**空文件**；
+  **✅ 已收口（2026-09-19）**：复扫报告 `verdict = PASS`，被查 **294,499** 行、
+  精确命中 **0** / 近似命中 **0**，证据文件实测 **0 字节**（空文件）；
+  黑名单 **14,799** 条（LexEval 14,150 + LexRubric `zixun` 473 + `sikao` 176）。
+  法条流在这一遍同样带 `--statutes-near audit`，其近似命中只进报告不改清单 ——
+  **实测 750 个近似命中事件、涉及 739 部法规，按硬约定「只记录不剔除」**
+  （法条流不进 SFT，不存在评测泄漏，拿法条正文去比评测题结构上必然假阳性）。
+  ⚠️ 注意：复扫只能证明**幂等**，**证明不了删得对** —— 上次的「空转 PASS」正是栽在这里；
+  删得对不对只能靠**首扫阶段清单 ∩ uid 的独立复核**（本次 = 0）来保证。
 
-- ✅ **阶段 2b：法条切条（整部法规 → 逐条法条）**（2026-09-18，质检 verdict = PASS）。
-  22,771 部 → **65,037 条检索单元**（twang2218 64,055 + pandalla 982；按 level：
-  `item` 64,700 / `doc` 兜底 337）；条目 uid = `<dataset>__<file_stem>:<source_index>#<条号>`，
+- ✅ **阶段 2b：法条切条（整部法规 → 逐条法条）**（2026-09-19 重跑，质检 verdict = PASS，6.6s）。
+  input 23,510 行 → **72,449 条检索单元**（twang2218 + pandalla 两源；
+  按 level：`item` 72,097 / `doc` 兜底 **352**）；条目 uid = `<dataset>__<file_stem>:<source_index>#<条号>`，
   与阶段 2/4 同口径，产物 uid 唯一（质检 C1 = 0）；文档内重复条号 75 处**被跳过不重复入库**。
-  只留国家级规范（法律 382 / 司法解释 740 / 行政法规 663 / 法律解释 25 = 1,810 部），
-  地方性法规 19,152 部（占源 87%）丢弃；`status="7"` 脏值 812 部**全落在被过滤类型上**
-  → 白名单内脏值 = 0。质检 C1–C7 全过（残留条号 0 / 目录块 0 / 碎片 0.07%）。
+  只留国家级规范（司法解释 788 / 行政法规 693 / 法律 429 / 法律解释 26 = **1,936 部文档**）；
+  地方性法规 **19,733 部**（占源 87%）丢弃，另丢「修改、废止的决定」661 /
+  「有关法律问题和重大问题的决定」172 / 宪法 7 / 监察法规 1。
+  `status` 落值 有效 1,471 / 已修改 284 / 已废止 180 / 尚未生效 1；脏值 **0**。
+  长度分布：p10 38 / p50 91 / p90 221 / **max 61,387**（最长者是国务院行政许可决定所附 500 项目录）。
+  质检 C1–C7 全过（残留条号 0 / 目录块 0 / 短文占比 0.08% / 章级占比 0.489）。
+  **法名去重口径**：切条产物里 distinct 法规标题 **1,904**；经 4b-1 的 L2 规范化（剥书名号 + 剥版本后缀）
+  后落到 `:Law` 节点 **1,647** —— 两个数不是缺口，是「原始标题 vs 规范化法名」两个口径。
   脚本 `split_statutes.py` + 门禁 `verify_statute_items.py`，报告
   [`docs/corpus/STATUTE_SPLIT_REPORT.md`](docs/corpus/STATUTE_SPLIT_REPORT.md)。
   三个实测坑：锚点必须盯**行首**（交叉引用虚高 9.8 万）、目录后正文重启会吞首章、
   无条号批复需整篇入库但修正案必须排除。
 
-- ✅ **阶段 2c：程序法条文任务派生（补题型多样性）**（2026-09-18，质检 verdict = PASS）。
-  用阶段 2b 切出的 **6,601 条程序法条文**（候选 6,529 条 item、覆盖 **116 部**程序法）
-  派生出 **13,484 条**题型样本：`statute_recall` 5,605 / `statute_locate` 5,605 /
-  `statute_structure` 2,274。**三条硬原则**：
-  ① 答案**逐字取自条文原文**（`verbatim_check` 13,484/13,484 通过、不符 0）；
+- ✅ **阶段 2c：程序法条文任务派生（补题型多样性）**（2026-09-19 重跑，质检 verdict = PASS）。
+  用阶段 2b 切出的 **7,355 条程序法条级 item**（覆盖 **121 部**程序法）
+  派生出 **15,535 条**题型样本：`statute_recall` 6,392 / `statute_locate` 6,392 /
+  `statute_structure` 2,751（丢弃 6,530 条：不适用 4,498 + 正文重复 2,032）。
+  **三条硬原则**：
+  ① 答案**逐字取自条文原文**（`verbatim_check` 15,535/15,535 通过、不符 0）；
   ② 只派生程序法（`domain=procedural` 100%，`domain_source=derived_from_statute_item`）；
   ③ 一律 `synthetic=true` + `derived=true`，**只进 train**，不进 val/test/router。
   脚本 `derive_statute_tasks.py` + 门禁 `prepare_derive_statute_tasks.sh`，报告
@@ -701,68 +784,226 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   加 `unwrap_title()` 剥壳 + `title_wrap_check` 硬断言（实测嵌套书名号 = **0**）。
   **确定性边界（必须说清）**：脚本无随机数，相同输入必得**相同的样本集合 / uid /
   `content_sha1` / 行序**；但每条记录写 `normalized_at`（运行时刻），这是**唯一的非确定性来源**
-  → 要逐字节复现产物必须 `--stamp 2026-09-18T19:27:41`（实测：带同一 `--stamp` 重跑，
-  产物 SHA-256 精确回到 `3b11ae6b…`）。`content_sha1` 不含时间戳，故**重跑 2c 不影响阶段 4**
-  （已实测：train 里 3,000 条派生记录与新 2c 产物逐字段一致，仅 `normalized_at` 与
-  阶段 4 追加的 `split`/`split_stage`/`uid_g` 不同）。
+  → 要逐字节复现产物必须带同一 `--stamp`。`content_sha1` 不含时间戳，故**重跑 2c 不影响阶段 4**。
 
-- ✅ **阶段 4：分层下采样 + 切分（★ 硬卡口）**（2026-09-18，质检 verdict = PASS）。
-  **122,000 条四份 split，两两不相交（uid_g 与 content_sha1 双口径交集均 0）**：
-  质检 C1–C14 全过（含 C14 `uid == uid_g` **122,000/122,000 行全覆盖比对、0 处不一致**，
-  覆盖不全同样判 FAIL）。
+- ✅ **阶段 4：分层下采样 + 切分（★ 硬卡口）**（2026-09-19 重跑，质检 verdict = PASS，38.8s）。
+  池 **286,524**（真实 QA 流 270,989 + 派生 15,535）→
+  **122,000 条四份 split，两两不相交（uid 口径交集全为 0）**：
   训练集 **100,000**（刑法 30,000 / 民法 40,000 / 程序法 20,000 / 通用 10,000，**精确命中**）
-  + 验证集 1,000 + 测试集 1,000 + 路由集 20,000；池剩余 162,473 可回溯。
-  训练来源分布：`DISC-Law-SFT` 85,095 / `Skepsun` 6,048 / `Dusker` 5,857 / 派生 3,000。
-  产物直接落在 `configs/` 写死的路径上（`data/train/train.jsonl`、`data/train/{civil,criminal,procedure,general}.jsonl`、
-  `data/dev/dev.jsonl`、`data/test/test.jsonl`、`data/router/router_train.jsonl`），**配置零改动**。
+  + 验证集 1,000 + 测试集 1,000 + 路由集 20,000；池剩余 **164,524** 可回溯。
+  质检 C1–C14 全过（含 C14 `uid == uid_g` **122,000/122,000 行全覆盖比对、0 处不一致**，
+  覆盖不全同样判 FAIL）；`failures = []`、`warnings = []`。
+  跨流隔离：法条流 72,449 与四份 split 交叠 **0**。
+  产物直接落在 `configs/` 写死的路径上（`data/train/train.jsonl`、`data/dev/dev.jsonl`、
+  `data/test/test.jsonl`、`data/router/router_train.jsonl`），**配置零改动**。
   切分口径：样本键 = `content_sha1`（实测全局唯一）、全 sha1 排序确定性抽取
-  （**无随机数、不写任何时间戳**）→ **2026-09-18 实测验证：同一份输入重跑阶段 4，
-  16 个产物文件 SHA-256 全部不变（逐字节一致）**，脚本也不写 `generated_at` 进记录。
+  （**无随机数、不写任何时间戳**）→ 同一份输入重跑阶段 4 逐字节一致。
   先预留 router/val/test 再对训练池下采样。报告
   [`docs/corpus/SPLIT_REPORT.md`](docs/corpus/SPLIT_REPORT.md) + [`SPLIT_VERIFY.md`](docs/corpus/SPLIT_VERIFY.md)。
-  **三层约束全部满足、零放宽**：单任务软上限 35% → 派生组上限 15%（按域内配额生效）
-  → 回填；四域 `cap_relaxed` **全为 false**（程序法派生实得 3,000 = 域内 15.0%，
-  `legal_question_answering` 由修复前的 49.3% 压到 **35.0%**）。
+  **三层约束全部满足、零放宽**：各域头号任务份额均 ≤ 35%（程序法 `legal_question_answering`
+  29.1% / 各域 `cap_relaxed` **全为 false**）；程序法派生实得 3,000 = 域内 **15.0%**，
+  `derived_relaxed` 亦为 false。
+
+### 决策项记录
+
+- ✅ **决策项 A｜程序法任务多样性 —— 已解决**：曾因 `legal_question_answering` 占程序法 49.3% 触发软上限放宽。
+  已按 README 3.1 规划用阶段 2b 的程序法条文派生「程序法条文任务」
+  （见上「阶段 2c」），阶段 4 实得 3,000 条派生进训练集后份额降到 35% 以下，**不再需要放宽**。
+- ⬜ **决策项 B｜通用回放**（唯一未决项）：池里 `replay` 标记**全为 0** —— DISC-Law-SFT 内置的 Alpaca-GPT4/Firefly
+  通用回放**不在已下载的文件内**，现由 `general` 桶（法律领域内样本）代充 10%。
+  **用户 2026-09-19 指示：暂不动**，留作论文局限性一节如实说明。
+- ✅ **决策项 C｜阶段 2/3 缺陷根治 —— 已完成**：`normalize_corpus.py` 的 `uid` 已加入 `source_file`
+  词干、合并流只并本轮正式产出、`*.sample.jsonl` 残留已剔除，阶段 2/3/2b/4 **全链路已重跑**。
+  详见 [`docs/corpus/README.md`](docs/corpus/README.md) 第十节「已修复缺陷与前后对照」。
+- ✅ **决策项 D｜`case_embedding_procedural` 仅 37 条 —— 已解决**（2026-09-19）：
+  **原记录的根因是错的**（曾写「`domain4_of()` 只看 `domain` 字段」）。实测交叉验证：
+  程序法 `case_analysis` 共 **3,333** 条，`domain` 字段**就是** `procedural`，
+  其中 **3,268 条（98.1%）被阶段 4 的分层切分吃进 train/router/dev/test**，
+  而索引侧为防泄漏把四份 split **全部**排除 → 案件池只剩 65 条（实入 37）。
+  被排除的 3,268 条在 split 里确实以 `case_analysis`/`procedural` 身份存在，
+  **不是 uid 撞号误伤**。**用户拍板**：改为**只排除评测集 dev/test**（`--case-scope eval`）
+  —— 检索库是知识库不是训练数据，IR 标准做法是「语料固定、只排除被查询项本身」。
+  **改后程序法案件库 65 → 3,268**（四库齐全），新案件池 145,339 条。
+
+### 已完成（续）：4b 检索层 + 阶段 5 训练
+
+- ✅ **阶段 4b：检索层（向量库 + 知识图谱）—— 已建成并按新语料全量重跑**（2026-09-19）。
+  设计定稿 → [`docs/retrieval_design.md`](docs/retrieval_design.md)；
+  **已拍板（D1–D5 全按「A」）**：① 时间版本过滤无字段可依 → A2 消融改用 `status`；
+  ② 款/项粒度为 0 → 评测表删「条+款/项」两列；③ 图谱扩展主力改 `NEXT`（`CITES` 仅覆盖少数条文）；
+  ④ 多版本语料不补，论文声明「2026-09 快照、单版本」；
+  ⑤ 论文区分「模式层设计（17 类全保留）」与「数据层实例化（实测 5 可建 + 2 弱 + 10 无料）」。
+  **长文本隐患已排除**：item 最长 26,980 字**不是切条遗漏**，而是条文自带的附表
+  （[`docs/corpus/LONG_TEXT_PROBE.md`](docs/corpus/LONG_TEXT_PROBE.md)），不需重跑阶段 2b。
+  **论文改写稿已备** → [`docs/paper_revision_notes.md`](docs/paper_revision_notes.md)。
+
+  #### 4b-0 泄漏门禁 —— PASS
+  四份 split 两两交集 **0**；实测**评测集 22,000 条 100% 落在 qa 流，其中案件分析类独占 11,811 条**
+  —— 不做集合差就直接向量化，近 1.2 万条评测样本会进检索库（模型对考题「开卷检索」）。
+  **检索库范围定案（2026-09-19 修订）**：案件 **145,339** + 法条 **72,449** = **217,788** 条。
+  ⚠️ **排除口径已改**：原先把 train/dev/test/router **四份全排除**，导致程序法案件几乎归零
+  （3,333 条里 3,268 条被切分吃掉 → 索引只剩 65 条，实入 37 条）。
+  现改为**只排除评测集 dev/test**（`--case-scope eval`）——检索库是**知识库**不是训练数据，
+  IR 的标准做法是「语料固定、只排除被查询项本身」；train/router 不参与评测，入库零泄漏。
+  改后程序法案件库 **65 → 3,268**，四库齐全（general 22,263 / civil 45,638 / criminal 74,170 /
+  procedural 3,268）。证据 → [`docs/corpus/RETRIEVAL_SCOPE.md`](docs/corpus/RETRIEVAL_SCOPE.md)。
+
+  #### 4b-1 法名两级规范化 —— PASS
+  `raw 1,807 → L1(剥书名号) 1,727 → L2(再剥版本后缀)`；跨源交集 `0 → 80 → 228` ——
+  不归一化两源在字符串层面**一个法都连不上**，图谱会被撕成两半。
+  ⚠️ 原 H4 记「228 个书名号重复」**归因有误**，实为 **80 书名号 + 148 版本后缀**。
+  新语料下落到 `:Law` 节点 **1,647**。
+
+  #### 4b-2 图谱边抽取 —— PASS（4.0s）
+  | 产出 | 实测 |
+  |---|---:|
+  | `:Law`（L2 法名） | **1,647** |
+  | `:Provision`（item 72,097 + doc 352） | **72,449** |
+  | `HAS_PROVISION` | 72,449 |
+  | `NEXT`（★ 扩展主力，覆盖率 100%） | **69,530** |
+  | `CITES`（辅助） | **7,224** |
+
+  三个关键实现判断（都是实测出来的，不是想当然）：
+  ① **`NEXT` 的分组键是「来源文档」而不是 `law_id`** —— 同一 L2 法名可对应多个源文档，
+     按 law_id 连会把不同版本的第 2 条接在一起；
+  ② **`CITES` 自指引用必须写成 `本(法|条例|规定|解释|规则|办法|细则|准则|意见|批复|通知|决定)第X条`**
+     （只写「本法」会漏一大半：自指引用 1,826 → 3,894，CITES 边 +78%）；
+  ③ **`provision_id` 必须消歧**（`-v{k}`）→ 论文表 3.2 的「唯一键 = 法律名称 + 条文编号」**不成立**，
+     须补消歧规则说明。
+  两个新发现：**`content_sha1` 不能用来判跨源重复**（它含法名+条号前缀，前缀写法不同必然不同 →
+  假阴性），须用**正文**指纹（精确 430 组 / 宽松 846 组跨源重复，暂定「检索时折叠、不删节点」）；
+  产物 → [`docs/retrieval/EDGE_EXTRACT.md`](docs/retrieval/EDGE_EXTRACT.md)。
+
+  #### 4b-3 向量化 —— PASS（Qwen3-Embedding-0.6B / 1024d / L2 归一化；**决策项 D 重建后的最终口径**）
+  **按用户拍板改为「case 4 库 + 法条 1 库」**（与论文主从关系一致：入口是裁判文书 Case）：
+  | 库 | 行数 |
+  |---|---:|
+  | `provision_embedding`（法条，item 72,088 + doc 352） | **72,440** |
+  | `case_embedding_general` | **22,263** |
+  | `case_embedding_civil` | **45,638** |
+  | `case_embedding_criminal` | **74,170** |
+  | `case_embedding_procedural` | **3,268** |
+  合计 **217,779** 条向量（法条 72,440 + 案件 145,339）。item 与 doc **同库不同语义**
+  （doc 最长 6 万字 vs item 中位 91 字）→
+  入库时分流到两个属性、两个向量索引。文档侧不加 instruction、查询侧加
+  `Instruct: …\nQuery: …`（Qwen3-Embedding 是 instruction-aware）。分片 5000/片 + `.done` 断点续跑。
+  ✅ **`case_embedding_procedural` 37 → 3,268（决策项 D 已闭环）**：根因**不是** `domain4_of()`
+  看错字段，而是**旧排除口径把 train/router 的案件样本也一并排掉** —— 程序法 `case_analysis`
+  共 3,333 条，其中 **3,268（98.1%）落在 train split**，索引侧只剩 65、实际入库 37。
+  改为「只排除评测集（dev/test）」后四库齐全（口径依据见 §4b-0）。
+  重建必须带 `--clean-cases`：池子条数一变，旧 `.done` 分片会**静默错位跳过**。
+
+  #### 4b-2b 热度权重（用户拍板新增）—— PASS
+  `Provision.hotness = 0.85·norm_log1p(in_cites) + 0.15·rank_norm(法源位阶)`；
+  `Case.hotness = norm_log1p(n_same_case 在**检索库内**的复现次数)`。
+  实测：CITES 入度 > 0 的条文 **4,027** 条（≥5 次 147 条 / ≥20 次 5 条）；
+  唯一 `case_sha1` **134,597** 个，同案最大复现 **82**。
+  **排序用法**：`final = rrf_score × (1 + W_HOT × hotness)`，`W_HOT = 0.05`
+  —— 热度只做 ≤5% 的先验微调，**不允许盖过相关性本身**。
+  🔒 **零泄漏**：案件复现次数**只在检索库内**统计，绝不把 train/val/test/router 的样本算进来。
+  报告 [`docs/retrieval/HOTNESS_REPORT.md`](docs/retrieval/HOTNESS_REPORT.md)。
+
+  #### 4b-4 导入 Neo4j —— PASS（539.3s，**决策项 D 重建后的最终入库**）
+  Law **1,647** / Provision **72,449**（item 72,088 + doc 352，无向量 0）/ Case **145,339**
+  （general 22,263 / civil 45,638 / criminal 74,170 / procedural 3,268）；关系
+  `HAS_PROVISION` 72,449、`IN_DOMAIN` 72,449、`OF_TYPE` 72,440、`FROM_SOURCE` 72,449、
+  `NEXT` 69,530、`CITES` 7,224、`SAME_CASE` **10,742**；
+  **7 个向量索引 + 2 个全文索引全部 ONLINE**；热度 provision 72,440 / case 145,339。
+  13 项断言全 True、`verdict = PASS`。报告
+  [`docs/retrieval/NEO4J_IMPORT.md`](docs/retrieval/NEO4J_IMPORT.md)。
+  （历史：重建前旧口径下 Case 82,820 / `SAME_CASE` 4,470 —— 那是因为旧口径把 train/router
+  的案件样本也一并排除，案件库被削到只剩 8.2 万；口径修正见 §4b-0 / §4b-3。）
+
+  #### 4b-5 检索链路 + 消融矩阵 —— 已跑通，**并推翻了「加料越多越好」的直觉**
+  一键命令见 [§10.8](#108-阶段-4b--检索层向量库--知识图谱)。test 414 query / union 口径：
+
+  | 配置 | recall@5 | recall@10 | hit@5 | MRR@10 |
+  |---|---:|---:|---:|---:|
+  | `vector`（纯向量） | 0.4040 | 0.4922 | 0.6739 | 0.5296 |
+  | `dense_hot`（+热度） | 0.4040 | 0.4922 | 0.6739 | 0.5296 |
+  | `dense_bm25`（+BM25） | 0.4242 | 0.5069 | **0.6836** | **0.5516** |
+  | `dense_graph`（+图谱注入） | 0.4059 | 0.5032 | 0.6473 | 0.4878 |
+  | **`hybrid`（加权 RRF：向量+BM25+图谱）★主链路** | **0.4298** | **0.5216** | 0.6691 | 0.5328 |
+  | `full`（hybrid + 热度 + bge-reranker 精排） | 0.3646 | 0.4683 | 0.6377 | 0.5165 |
+
+  **三条必须写进论文的结论**：
+  1. **等权 RRF + 图谱「注入式」扩展会把精度打崩**（首版 `dense_graph` recall@5 仅 0.2545
+     vs 纯向量 0.3961）。根因：`graph_expand` 把种子节点的全部邻居当**同权有序列表**丢进 RRF，
+     邻近条文与 dense rank-1 拿同样的 `1/(k+rank)` 质量 → top-5 被无关邻条占满。
+     修正：**加权 RRF + 图谱列表限长降权**（dense 1.0 / BM25 0.7 / KG 0.25，k 60→10）。
+  2. **图谱的真实作用是「候选扩展器」而非「排序信号」**：`w_graph` 从 0 → 0.5 时
+     recall@5 **掉**（0.3912→0.3383），但 recall@50 **涨**（0.6899→0.7128）。
+     即它把远离的正确答案拉进候选池、同时污染头部 —— 这正好论证了
+     「宽召回 + 精排」的两段式架构，是论文把知识图谱讲圆的关键机制。
+  3. **重排器对本任务无效（负结果，已用受控实验证伪「实现有 bug」）**：
+     `bge-reranker-v2-m3` 的判别力其实很好（gold vs 随机负例 **AUC 0.888**，
+     gold 平均分 0.575 vs 负例 0.116，反向打分对照直接崩到 0.0 → 实现无误），
+     但端到端重排 dense top-50 **从不优于纯 dense**（recall@5 0.3534 vs 0.3534，
+     recall@10 0.4297 vs **0.4418**），且池越深越差（pool 50 → 200 再掉 0.02）。
+     原因是 gold 是「参考答案里引用的一**组**法条」，重排锐化头部 → hit@5 略升但
+     多目标覆盖下降。**结论：重排不进入主链路**。
+
+  三个新工具：`scripts/retrieval/tune_fusion.py`（dev 上一次缓存扫 504 组融合权重，89s）、
+  `scripts/retrieval/diag_reranker.py`（重排器受控诊断 + 反向打分对照）、
+  `smoke_retrieval.py` 新增 `dense_ceiling`（天花板曲线）与 `--eval-split`（dev 调参 / test 报告分离）。
+  报告：[`SMOKE_RETRIEVAL.md`](docs/retrieval/SMOKE_RETRIEVAL.md) /
+  [`SMOKE_RETRIEVAL_DEV.md`](docs/retrieval/SMOKE_RETRIEVAL_DEV.md) /
+  [`FUSION_SWEEP.md`](docs/retrieval/FUSION_SWEEP.md) /
+  [`RERANKER_DIAG.json`](docs/retrieval/RERANKER_DIAG.json)。
+- 🟡 **阶段 5：A0 统一适配器 QLoRA 训练** —— 已开跑（2026-09-19）。
+  配置：Qwen3-8B 4bit（nf4 + double quant）/ LoRA r=16 α=32（7 个投影矩阵，
+  可训练 **43,646,976 / 4,761,498,624 = 0.9167%**）/ seq 2048 / lr 1e-4 / 2 epochs / cosine / paged_adamw_8bit。
+  **assistant-only loss 用「前缀边界」实现**（TRL 的 `assistant_only_loss=True` 要求模板带
+  `{% generation %}` 标记，而 Qwen3-8B 模板**没有**）→ 改成「渲染全文后定位
+  `<|im_start|>assistant\n` 前缀，前缀之前一律 mask 成 -100」，并强制 `enable_thinking=False`
+  （Qwen3 模板默认插空 think 块）。实测 assistant token 占比 **0.310**。
+
+  **★ 两个必须记住的训练工程坑（都实测踩过）**：
+  1. **长度分桶把 80GB 打爆**：`transformers 5.17` 删掉了 `group_by_length`（字段表只剩
+     `length_column_name`），Trainer 退回 RandomSampler → 一个 2000 token 的样本会把同批 15 个
+     短样本一起 padding。**自建分桶采样器后**同批长度一致、padding 消失，但又带来新问题：
+     同批 token 数可达 `16 × 2048 = 32,768`，光 LM head 的 logits 就是
+     `32768 × 151936 × 2B ≈ 9.9 GB`（再加梯度/上采样约 20 GB）→
+     **实测 `torch.OutOfMemoryError: Tried to allocate 18.55 GiB`（step 44）**。
+     **修法**：改成 **token 预算批采样器**（`LengthBucketedBatchSampler`）——
+     桶内累积到 `max_batch_tokens = 16384` 或 `batch_size = 16` 任一先到就封批
+     （短样本照样 16 条一批，长样本自动降到 8 条）。**必须是 `batch_sampler` 而不是 `sampler`**
+     —— DataLoader 在 `batch_size` 已给定时会无视 sampler 的分组、自行每 N 个切一批。
+     实测：批大小 1–16、均值 15.06、**每批 token 峰值 16,384 精确等于上限**，
+     显存峰值 44.05 GB，500 条冒烟 loss 0.94 → 0.62。
+  2. **`--max-seq-length` 别按 4096 配**：实测 token 长度 p50 368 / p90 907 / p99 2048（上限），
+     配 4096 只是白占显存。**改 2048，零截断**。
 
 ### 待办
 
-- ✅ **决策项 A｜程序法任务多样性 —— 已解决**：曾因 `legal_question_answering` 占程序法 49.3% 触发软上限放宽。
-  已按 README 3.1 规划用阶段 2b 的 6,601 条程序法条文派生「程序法条文任务」
-  （13,484 条，见上「阶段 2c」），阶段 4 实得 3,000 条派生进训练集后份额降到 35.0%，**不再需要放宽**。
-- ⬜ **决策项 B｜通用回放**（唯一未决项）：池里 `replay` 标记**全为 0** —— DISC-Law-SFT 内置的 Alpaca-GPT4/Firefly
-  通用回放**不在已下载的 4 个文件内**，现由 `general` 桶（法律领域内样本）代充 10%。
-  建议另采一份**非法律中文通用指令数据**（阶段 0/1 动作，须先过 license A 级审查），或实测「general 代充」
-  与「真通用回放」的防遗忘差异并做消融。
-- ✅ **决策项 C｜阶段 2/3 缺陷根治 —— 已完成**（2026-09-18）：`normalize_corpus.py` 的 `uid` 已加入 `source_file`
-  词干、合并流只并本轮正式产出、`*.sample.jsonl` 残留已剔除，阶段 2/3/2b/4 **全链路已重跑一遍**。
-  详见 [`docs/corpus/README.md`](docs/corpus/README.md) 第十节「已修复缺陷与前后对照」。
-- 🟡 阶段 4b：**检索层（向量库 + 知识图谱）构建**（`indexes/` 目前为空；**4b-0 / 4b-1 已完成**）。
-  设计已定稿并做过可行性实测 → [`docs/retrieval_design.md`](docs/retrieval_design.md)
-  （节点 7→5、关系 8→5；证据 [`docs/corpus/VECTOR_DB_PROBE.json`](docs/corpus/VECTOR_DB_PROBE.json)）。
-  **已拍板（D1–D5 全按「A」）**：
-  ① 时间版本过滤无字段可依 → A2 消融改用 `status`（现行/已废止）；
-  ② 款/项粒度为 0 → 评测表删「条+款/项」两列；
-  ③ 图谱 `CITES` 只覆盖 6.3% 条文 → 扩展主力改 `NEXT`（覆盖 100%）；
-  ④ 多版本语料不补，论文声明「2026-09 快照、单版本」；
-  ⑤ 论文区分「模式层设计（17 类全保留）」与「数据层实例化（实测 5 可建 + 2 弱 + 10 无料）」。
-  **长文本隐患已排除**（2026-09-19）：item 最长 26,980 字**不是切条遗漏**，
-  而是条文自带的附表（[`docs/corpus/LONG_TEXT_PROBE.md`](docs/corpus/LONG_TEXT_PROBE.md)）；
-  影响面仅 372/65,037 = 0.57%，不需重跑阶段 2b。
-  **论文改写稿已备** → [`docs/paper_revision_notes.md`](docs/paper_revision_notes.md)
-  （数据来源按实际改写、3.2.6 规模给口径、`Law` 节点语义对齐、评测表删列）。
-  ✅ **4b-0 泄漏门禁 —— 已完成（PASS，2026-09-19）**：四份 split 两两交集 **0**；
-  实测**评测集 22,000 条 100% 落在 qa 流，其中案件分析类独占 11,811 条** ——
-  不做集合差就直接向量化，近 1.2 万条评测样本会进检索库（模型对考题「开卷检索」）。
-  **检索库范围已定案**：案件文书 **82,821** + 法条条文 **65,037** = **147,858** 条，
-  与 train / dev / test / router **四份全部不相交**（最强隔离）。
-  证据与理由 → [`docs/corpus/RETRIEVAL_SCOPE.md`](docs/corpus/RETRIEVAL_SCOPE.md)。
-  ✅ **4b-1 法名两级规范化 —— 已完成**：`raw 1,807 → L1(剥书名号) 1,727 → L2(再剥版本后缀) 1,579`；
-  跨源交集 `0 → 80 → 228` —— 不归一化两源在字符串层面**一个法都连不上**，图谱会被撕成两半。
-  ⚠️ 原 H4 记「228 个书名号重复」**归因有误**，实为 **80 书名号 + 148 版本后缀**。
-  ⬜ **下一步 4b-2**：`NEXT` / `CITES` 边抽取（`NEXT` 覆盖 100%，`CITES` 6.3% 降辅助）。
-  ⚠️ 向量化之前仍须跑 `src/prepare/check_leakage.py` 四级查重。
-- ⬜ 阶段 5–9：LoRA 训练 → 路由 → MoE 消融 → 内部验证集选 checkpoint → 终评
+- 🟡 **阶段 5 收口**：A0 统一适配器训练（13,276 步 / 2 epochs）跑完后 → dev 评测 →
+  记录 loss 曲线与显存峰值 → `docs/train/A0_unified_report.md`。
+- ✅ **阶段 4b-4 / 4b-5 已跑完并回填数字**：Neo4j 导入报告
+  [`docs/retrieval/NEO4J_IMPORT.md`](docs/retrieval/NEO4J_IMPORT.md)、检索消融矩阵
+  [`docs/retrieval/SMOKE_RETRIEVAL.md`](docs/retrieval/SMOKE_RETRIEVAL.md)（test）/
+  [`SMOKE_RETRIEVAL_DEV.md`](docs/retrieval/SMOKE_RETRIEVAL_DEV.md)（dev）。
+  主链路 = 加权 RRF（dense 1.0 + BM25 0.7 + KG 0.25，k=10），**不带重排器**。
+- ✅ **决策项 D｜`case_embedding_procedural` 只有 37 条 —— 已定性并修复**（2026-09-19 闭环）：
+  **真正的根因不是 `domain4_of()`**（它没问题，程序法样本的 `domain` 字段就是 `procedural`），
+  而是**阶段 4 的分层切分把 3,333 条程序法 `case_analysis` 吃掉了 3,268 条（98.1%）**，
+  叠加「索引侧排除四份 split」的旧口径 → 池子只剩 65 条。
+  **处置（用户拍板）**：`load_split_uids(root, scope="eval")` → 只排除 dev/test；
+  新增 `--clean-cases` 强制清空旧案件库（案件池条数一变→分片错位，旧 `.done` 会**静默跳过**）。
+  顺带修掉 `build_embeddings.py` 里写死的合理带 `30000 ≤ cases ≤ 120000`
+  （新池 145,339 必然误判 FAIL）→ 改为从 `case_analysis` 总行数现算。
+- ⬜ **阶段 6–9**：路由训练 → MoE 消融 → 内部验证集选 checkpoint → 终评（LexEval / LexRubric 各只跑一次）。
 - ⬜ （可选）配置 `HF_TOKEN` 后补采 `Aiiluo/Chinese-Law-SFT-Dataset`（2.6 MB，gated）
+  与 `Brench/chinese_law_data_rag_ft`、`wormtooth/MNBVC-judgment`（按需抽样），扩充法条/案例侧。
+- ✅ **阶段 3 复扫门禁 —— 已收口**：`prepare_decontaminate_pass.sh` 跑完（与数据管线并行），
+  `verdict = PASS`，被查 **294,499** 行 / 精确 **0** / 近似 **0**；
+  证据文件 `DECONTAM_REMOVED_UIDS_PASS.txt` 实测 **0 字节**（空文件）。
+- ✅ **案件库按新口径重建（决策项 D）—— 已闭环**（2026-09-19 16:28）：
+  `build_embeddings.py --case-scope eval --clean-cases`（1662s）→ `build_hotness.py`（3.1s）
+  → `import_neo4j.py --step all`（539.3s，`verdict = PASS`，13 项断言全 True）。
+  案件池 **82,821 → 145,339**、程序法子库 **37 → 3,268**；
+  Neo4j 侧 `Case` **145,339** / `SAME_CASE` **10,742** / `hotness_case` 145,339 全部同步到位
+  （`docs/retrieval/NEO4J_IMPORT.md`）。
+
 
 ---
 
@@ -837,7 +1078,8 @@ bash scripts/corpus/prepare_split_statutes.sh   # ✅ 已实现（阶段 2b）
 ```
 
 > 产物落点更正：不是 `data/corpus/normalized/articles/`，而是 **`data/corpus/statute_items/`**
-> （`twang2218__chinese-law-and-regulations.items.jsonl` 64,055 + `pandalla__chinese_law_examples.items.jsonl` 982）。
+> （`twang2218__chinese-law-and-regulations.items.jsonl` + `pandalla__chinese_law_examples.items.jsonl`，
+> 合计 **72,449** 条；分文件条数随语料版本变化，以 `docs/corpus/STATUTE_SPLIT_REPORT.json` 为准）。
 > 质检：`python scripts/corpus/verify_statute_items.py --root $PWD`
 
 **切条规则（写死，不许绕过）**：
@@ -859,40 +1101,70 @@ bash scripts/corpus/prepare_split_statutes.sh   # ✅ 已实现（阶段 2b）
 
 ### 10.6 阶段 3 — 双向去污（★ 硬门禁，两遍式）
 
-> **✅ 已于 2026-09-18 跑完并 PASS**：首扫 308,767 行 / 近似命中 18,587 处 → 剔除 15,007 uid
-> → 复扫清洗镜像 **293,760 行 / 精确 0 / 近似 0 = PASS**（二次剔除清单为空文件；
-> `308,767 − 293,760 = 15,007` 恒等式闭环）。实测结果与本节流程一致，以下操作说明保留供复现。
+> **✅ 本节数字已于 2026-09-19 全链路重跑后更新**。2026-09-18 那轮复扫出的 PASS 是**空转证明**：
+> 它扫的是已经删干净的镜像，只能证明「剔除已生效」，**证明不了「剔除删得对」** ——
+> 而它恰好掩盖了一次误删：法条流 uid 粒度是**整部法规**、simhash 只看正文前 800 字，
+> 导致**一处近似命中就整部法典连坐**，实测**误删 739 部法规 / 646 个法名 / 419 万字**
+> （民法典 113,346 字、刑法 75,291+60,936 字、刑诉法 40,914+37,477 字都在内）。
+> 修复方式：法条流豁免近似去污（`--statutes-near audit`，见下方「法条流豁免」条目）。
+>
+> **重跑后实测（唯一权威口径）**：
+> 首扫 **308,767** 行 → 精确命中 **0** / 近似命中 **17,837 处** → 剔除 **14,268** 个唯一 uid；
+> 清洗镜像 **294,499** 行；**恒等式 `308,767 − 294,499 = 14,268`** 成立；
+> ★ 门禁断言 `剔除清单 ∩ 法条流 uid = 0`（历史口径下这里是 739）。
+> 下游全部按 294,499 重跑：2b → **72,449** 条、2c → **15,535** 条、阶段 4 → 122,000 条四份 split。
 
 **实测证明必须跑两遍**：第一遍在全量语料上找出所有命中并生成剔除清单；应用剔除后**第二遍必须复扫出 PASS**，
 这个复扫 PASS 才是论文里能引用的门禁证据。
 
 ```bash
 # 第一遍：全量扫描，产出 DECONTAMINATION_REPORT.json + DECONTAM_REMOVED_UIDS.txt
+# 注意带上 --statutes-near audit（默认值，包装脚本里已显式写出）：
+#   法条流只做精确 sha1 剔除，近似命中只记录不剔除 —— 见下面「法条流豁免」条目
 bash scripts/corpus/prepare_decontaminate.sh
 
 # 第二遍 a：应用剔除清单，生成清洗镜像（normalized 保持只读，硬约定）
 python scripts/corpus/apply_decontam.py \
   --uids docs/corpus/DECONTAM_REMOVED_UIDS.txt
 
-# 第二遍 b：对清洗镜像复扫，verdict 必须 = PASS
-python scripts/corpus/decontaminate.py \
-  --norm-dir data/corpus/decontaminated \
-  --out-json docs/corpus/DECONTAMINATION_REPORT_PASS.json \
-  --out-md   docs/corpus/DECONTAMINATION_REPORT_PASS.md \
-  --out-uids docs/corpus/DECONTAM_REMOVED_UIDS_PASS.txt   # 应为空文件
+# 第二遍 b：对清洗镜像复扫，verdict 必须 = PASS（★ 门禁，包装脚本自带三条数值断言）
+bash scripts/corpus/prepare_decontaminate_pass.sh
 ```
+
+> **第二遍 b 必须与第一遍带同一个 `--statutes-near`**（默认 `audit`）。复扫镜像里
+> **仍然存在**那 739 部法规的近似命中（按设计保留）；若复扫改用 `remove`，它们会被重新算成命中
+> → 复扫必然 FAIL（假故障）。
 
 - 脚本：`scripts/corpus/decontaminate.py`（扫描 + 出报告）、`scripts/corpus/apply_decontam.py`（按 uid 剔除并逐文件登记 SHA-256）。**双向**比对：
   - 正向 = 训练集里有没有混入评测题（含改写）
   - 反向 = 评测集里有没有混入训练语料**来源**（同源风险，如 Skepsun 司考 vs LexRubric `sifakaoshi`）
-- 黑名单：LexRubric 649（473 咨询 + 176 司考）+ LexEval 14,150（**23 个任务文件全部自动扫描**）
-  + CLaw 254 案（放 `data/benchmark/claw/repo/data/claw254.json` 即自动纳入）。
+- 黑名单：LexRubric 649（473 咨询 + 176 司考）+ LexEval 14,150（**23 个任务文件全部自动扫描**）。
+  **CLaw 已退役**（官方数据从未公开发布，无法获取也无法验证）→ 不在黑名单，也不是漏做去污；
+  理由与证据见第 8 节「⛔ CLaw 已退役」段与 `docs/data_manifest.json:retired_datasets`。
 - 两种指纹缺一不可：**精确** `sha1(normalize(text))`；**近似** `simhash64(char-3gram, crc32)`，
   汉明距离 ≤ 3 判近重。近似比对用 **4×16bit 分段索引**先取候选，把 O(N×M) 降成线性。
 - 产物：`docs/corpus/DECONTAMINATION_REPORT.json`（含 `verdict`）+ 同名 `.md`（人读）
   + `DECONTAM_REMOVED_UIDS.txt`（剔除清单，一行一个 uid）。
 - **卡口**：复扫 `verdict = PASS`（且 `DECONTAM_REMOVED_UIDS_PASS.txt` 为空）。
   首扫命中不是失败，是流程的一部分 —— 剔除后复扫 PASS 才算过关。
+  复扫包装脚本 `scripts/corpus/prepare_decontaminate_pass.sh` 自带**三条数值断言**
+  （verdict=PASS / 二次清单为空 / 恒等式 `首扫 checked − 复扫 checked == 首扫剔除 uid 数`），
+  只打结论不看数值不算过关。
+- ⚠️ **剔除清单里的数字只认 `removal_summary.unique_uids_to_remove`**：
+  历史字段 `near_hits.unique_train_uids` 名字有歧义，实际是**精确+近似合计**的唯一 uid 数
+  （`hit_uids` 由两条路径共同写入），数值等同但名字误导；新报告两者都给。
+- ⚠️ **上游语料一变，`indexes/retrieval/embeddings/` 必须先删**：4b-3 的断点续跑
+  **按分片序号**判完成（看 `.done`），**不看内容**。法条数从 65,037 变 72,449 后，
+  旧分片里的条目全部错位，但 `.done` 还在 → 会被**静默跳过**，向量库与新图谱对不上。
+- ★ **法条流豁免近似去污**（`--statutes-near audit`，2026-09-19 修复事故后新增）：
+  法条流的 uid 粒度是**整部法规**，而 simhash 只看正文前 800 字 → **开头几条近似命中就整部法典连坐**；
+  且法条流是**检索语料**（3.1.3：法条流不进 SFT），评测集必然引用法条原文 → 误报是结构性必然。
+  故法条流**只做精确 sha1 剔除**，近似命中在报告第 4b 节 `statutes_near_audit` 里**只记录不剔除**。
+  历史行为用 `--statutes-near remove` 可复现。
+- ⚠️ **「复扫 PASS」的适用边界**：复扫必须扫**应用剔除后的镜像**才有意义。
+  若拿它当「删除是否正确」的证据 —— **它做不到**，它只能证明「剔除已生效且无残留」。
+  2026-09-19 那次误删 739 部法规，就是被一份这样的空转 PASS 掩盖过去的
+  （镜像里 293,760 行 / 0 命中，因为它已经删干净了）。
 - ✅ CLaw 已退出论文（2026-09-18 用户决策），黑名单 = LexEval + LexRubric，复扫可直接出**纯 PASS**；
   论文中不再出现 CLaw，评测基准以内部验证集 + LexEval/LexRubric 闭卷线为准。
 - 经验教训（2026-09-18 实测）：首版报告的 `near_hits.by_bench_tag` 是从**被截断的样例列表**
@@ -902,19 +1174,126 @@ python scripts/corpus/decontaminate.py \
 ### 10.7 阶段 4 — 切分 + 分层下采样
 
 ```bash
-bash scripts/corpus/prepare_split.sh           # 待实现
+bash scripts/corpus/prepare_downsample_split.sh              # 切分 + 质检门禁（C1–C14）
+bash scripts/corpus/prepare_downsample_split.sh --dry-run    # 只算配额，不落盘
 ```
 
-- 分层下采样 285,257 → 100,000，**按 `task` × `source` 分层**（防单一任务型垄断某专家）。
+- 分层下采样 **286,524** → 100,000（真实 QA 270,989 + 阶段 2c 派生 15,535），
+  **按 `task` × `source` 分层**（防单一任务型垄断某专家）；派生样本只进 train，受 15% 组份额上限约束。
 - 切 train / val / test；**路由集按 uid 哈希抽 20%，与专家训练集 disjoint**（脚本断言交集 = 0）。
-- **卡口**：路由集 ∩ 专家集 = 0。
+- **卡口**：`verify_split.py` verdict = PASS（四份 split 两两不相交，C1–C14 全过）。
+  池剩余 **164,524** 可回溯。
 
-### 10.8 阶段 5–9 — GPU 阶段（见 [docs/run_order.md](docs/run_order.md)）
+### 10.8 阶段 4b — 检索层：向量库 + 知识图谱
 
-A0 单 LoRA → A1/A2/A3/A4 三专家 + 路由（A5 token 级 MoE-LoRA 可选扩展）→ 路由器 R0→R1 → MoE 组合与消融 → **内部验证集选 checkpoint**
-（选完才允许跑 CLaw 终评，★红线）。
+> 设计见 [`docs/retrieval_design.md`](docs/retrieval_design.md)；口径门禁见
+> [`docs/corpus/RETRIEVAL_SCOPE.md`](docs/corpus/RETRIEVAL_SCOPE.md)。
 
-### 10.9 常用复核命令（只读，随时可重跑）
+```bash
+# 4b-0 / 4b-1：检索池范围门禁（与四份 split 强隔离）+ 法名两级规范化
+python scripts/retrieval/probe_pool_scope.py --root <ROOT>
+python scripts/retrieval/normalize_law_title.py --root <ROOT>
+
+# 4b-2：知识图谱边抽取（只读语料 → indexes/retrieval/*.jsonl）
+#   ⚠️ 参数名是 --out-dir / --report-json / --report-md，**不是** --out-json / --out-md
+python scripts/retrieval/extract_edges.py --root <ROOT> \
+    --out-dir indexes/retrieval \
+    --report-json docs/retrieval/EDGE_EXTRACT.json --report-md docs/retrieval/EDGE_EXTRACT.md
+
+# 4b-2b：热度权重（读者拍板新增；只读检索库自身，零泄漏）
+python scripts/retrieval/build_hotness.py --root <ROOT>
+#   → indexes/retrieval/hotness.json + docs/retrieval/HOTNESS_REPORT.{json,md}
+
+# 4b-3：向量化（Qwen3-Embedding-0.6B / 1024d / L2 归一化；分片 5000 + .done 断点续跑）
+#   库布局 = **case 4 库（general/civil/criminal/procedural）+ 法条 1 库**
+#   ⚠️ 上游语料一换，**必须先 rm -rf indexes/retrieval/embeddings**：
+#      断点续跑只认 `shard_%05d.done` 文件名，不看内容 —— 条数变了会静默跳过导致库与图谱错位
+python scripts/retrieval/build_embeddings.py --root <ROOT> \
+    --out-dir indexes/retrieval/embeddings \
+    --report-json docs/retrieval/EMBEDDING_REPORT.json \
+    --report-md   docs/retrieval/EMBEDDING_REPORT.md
+# 只想重跑某一侧：--only provision / --only case
+
+# 4b-4：导入 Neo4j（约束 → 节点 → 边 → 热度 → 向量索引 → 计数验收；幂等 MERGE，可反复重跑）
+python scripts/retrieval/import_neo4j.py --step all \
+    --uri bolt://127.0.0.1:7687 --user neo4j --password <PWD> \
+    --report-md docs/retrieval/NEO4J_IMPORT.md
+#    干净重灌 = --step reset --drop-legacy → --step all
+#    `--drop-legacy` 顺带删掉旧实验遗留的向量索引（provision_embedding_4b/_bert768/_bge_m3）
+#      与旧约束（LawVersion/Cause/Court/LegalConcept），否则 schema 里会混着两套口径
+#    验收期望值**从输入产物现算**（不写死），所以语料一变不会误报 FAIL
+
+# 4b-5：检索链路 + **消融矩阵**（一次跑完多组配置，给出论文检索侧数字）
+#   ★ 调参与报告必须分离：dev 选型、test 出数字（--eval-split）
+python scripts/retrieval/smoke_retrieval.py --root <ROOT> \
+    --configs vector,dense_hot,dense_bm25,dense_graph,hybrid,full \
+    --eval-split test \
+    --report-md docs/retrieval/SMOKE_RETRIEVAL.md
+#    重排模型未就绪时可 --no-rerank（会明确标注「本次自动降级」）
+#    输出含 §1c「纯 dense 全量索引天花板曲线」—— 用来判断目标未达标是排序问题还是召回天花板
+
+# 4b-5b：**融合权重扫描**（只在 dev 上扫；一次缓存 dense/BM25/图谱候选，504 组组合约 90s）
+python scripts/retrieval/tune_fusion.py --root <ROOT> \
+    --split dev --top-k 500 --report-md docs/retrieval/FUSION_SWEEP.md
+
+# 4b-5c：**重排器受控诊断**（判别力 AUC + 反向打分对照 + 截断敏感性；用于证伪「实现有 bug」）
+python scripts/retrieval/diag_reranker.py --root <ROOT> \
+    --split dev --n-queries 100 --report-json docs/retrieval/RERANKER_DIAG.json
+```
+
+- **4b-2 三个边**：`HAS_PROVISION`（法→条）/ `NEXT`（同法上下条，图谱扩展主力）/
+  `CITES`（交叉引用）。`NEXT` 的分组键是**来源文档**而非 `law_id`（同一 L2 法名多版本会错连）。
+- **4b-3 库布局（用户 2026-09-19 拍板）**：**case 4 库 + 法条 1 库** ——
+  `provision_embedding`（法条 item + doc 同库，入库时按 `level` 分流到两个属性/两个向量索引）+
+  `case_embedding_{general,civil,criminal,procedural}`（一域一库一索引）。
+  Neo4j 侧对应 `Provision.embedding` / `.embedding_doc` 与
+  `Case.embedding_general` / `_civil` / `_criminal` / `_procedural`。
+  **泄漏排除口径（2026-09-19 修订）**：只排除**评测集 dev/test**（`--case-scope eval`），
+  不再排除 train/router —— 检索库是知识库，只有「评测 query 自身在库里」才算泄漏。
+  重建前须加 `--clean-cases`（案件池条数一变，旧 `.done` 会被静默跳过 → 库与图谱错位）。
+- **4b-2b 热度**：`final = rrf_score × (1 + W_HOT × hotness)`，`W_HOT = 0.05`；零泄漏（只在检索库内统计）。
+  ⚠️ **实测：在 top-50 上 reweight 对 recall@5/@10 完全无影响**（`dense_hot` 与 `vector` 数字逐位相同）
+  —— 它只在**已召回集合内部**微调次序，而 gold 的瓶颈是「有没有被召回」。论文按此如实说明。
+- **4b-5 完整混合链路（已定稿）**：dense（0.6B，instruction-aware）→ BM25（jieba 分词 +
+  **scipy 稀疏精确实现**，比 `rank_bm25` 逐条打分快两个数量级、结果逐位等价）→
+  图谱 1 跳扩展（NEXT 1.0 / CITES 0.5，**列表限长 60 且只给 0.25 权重**）→
+  **加权 RRF（k=10，dense 1.0 / BM25 0.7 / KG 0.25）** → 热度 reweight。
+  ⛔ **重排器不进主链路**（受控实验证明其净收益为负，见 §4b-5）。
+- **4b-5 gold 双口径**（必须分开报）：`system` = 数据集自带「相关法律条文」清单（最权威，
+  但只有 case_analysis 样本有）；`output` = 从**参考答案**解析（覆盖大，是**下界**）；
+  `union` = 两者并集（主口径）。法名是**简称**（《刑法》），必须先按「exact → 唯一后缀」解析成
+  `law_id`（后缀最小长度 **2 字**，卡 3 字会让刑法域全挂）。
+- **断言只认不变量，不认绝对数字**（2026-09-19 连续踩了 4 处）：上游语料一重跑，
+  写死的期望值就会把**正确结果判成 FAIL**。已全部改造为「从输入产物现算」或「账本恒等式」——
+  `extract_edges`（节点数 == 输入行数）、`build_embeddings`（条文项数 == `provision_nodes` 的 item 节点数；
+  案件池改用**划分账本** `kept + Σskip_* == qa_rows` + **相对**合理带
+  `0.3·n_case_analysis ≤ len(cases) ≤ n_case_analysis`，替代写死的 82,821）、
+  `import_neo4j`（Law/Provision/边/向量行数全部从输入 JSONL/npy 元信息现算）。
+- **卡口**：4b-0 池子与评测集交集 = 0；4b-4 计数与输入自洽；4b-5 三条主指标
+  （`hit@5`/`recall@10`/`MRR@10`，口径与作废说明见 §4b-5）全部达标才算 PASS。
+
+### 10.9 阶段 5–9 — GPU 阶段（见 [docs/run_order.md](docs/run_order.md)）
+
+A0 单 LoRA → A1/A2/A3/A4 三专家 + 路由（A5 token 级 MoE-LoRA 可选扩展）→ 路由器 R0→R1 →
+MoE 组合与消融 → **内部验证集选 checkpoint**（选完才允许跑终评，★红线）。
+**终评 = LexEval / LexRubric 各只跑一次**（CLaw 已退役，不再出现在任何终评环节）。
+
+```bash
+# 阶段 5：A0 统一适配器 QLoRA（assistant-only loss 用前缀边界实现；token 预算批采样器防 OOM）
+#   ⚠️ 不要加 --no-bucket：分桶是为了消除 padding（实测 9.79 → 2.2 s/step）
+#   ⚠️ --max-batch-tokens 是**显存闸门**：不设上限会被 16×2048 token 的批次打爆 80GB
+python scripts/train/train_qlora.py \
+    --micro-batch 16 --grad-accum 1 --max-batch-tokens 16384 \
+    --max-seq-length 2048 --num-epochs 2 --gpu 1 \
+    --output-dir models/adapters/A0_unified_qwen3_8b \
+    --report-json docs/train/A0_unified_report.json --report-md docs/train/A0_unified_report.md
+
+# 先冒烟再全量（512 条 / 25 步，验证模板、掩码、显存、loss 下降）
+python scripts/train/train_qlora.py --smoke 512 --max-steps 25 --no-eval \
+    --micro-batch 16 --max-batch-tokens 16384 --max-seq-length 2048 --gpu 1
+```
+
+### 10.10 常用复核命令（只读，随时可重跑）
 
 | 目的 | 命令 |
 |---|---|
@@ -923,6 +1302,11 @@ A0 单 LoRA → A1/A2/A3/A4 三专家 + 路由（A5 token 级 MoE-LoRA 可选扩
 | 打标质量抽检 | `python scripts/corpus/inspect_normalized.py` |
 | 判重证据 | `docs/corpus/DEDUP_REPORT.md` |
 | 去污结论 | `python -c "import json;print(json.load(open('docs/corpus/DECONTAMINATION_REPORT.json'))['verdict'])"` |
+| 检索层产物清点 | `ls -l indexes/retrieval/ indexes/retrieval/embeddings/*/ \| head -40` |
+| 检索消融矩阵 | `docs/retrieval/SMOKE_RETRIEVAL.md` |
+| 热度权重 | `docs/retrieval/HOTNESS_REPORT.md` |
+| 图谱计数（Neo4j） | `cypher-shell -u neo4j -p <PWD> "MATCH (n) RETURN labels(n), count(n)"` |
+| 训练进度 | `tail -f logs/train/A0_full.20260919.log` |
 | 基准完整性 | `python scripts/benchmarks/verify_benchmarks.py` |
 | 环境自检 | `bash scripts/verify_env.sh` |
 

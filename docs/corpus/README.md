@@ -32,6 +32,7 @@
 | [`RETRIEVAL_SCOPE.md`](RETRIEVAL_SCOPE.md) | **阶段 4b-0 / 4b-1 实测**：检索库范围门禁（PASS，评测集 22,000 条全在 qa 流、案件类独占 11,811）+ 法名**两级**规范化（1,807→1,727→**1,579**，跨源交集 0→80→**228**） |
 | `RETRIEVAL_POOL_PROBE.json` | 4b-0 证据：四份 split 交集复核、`task_kind` 分布、三种检索库范围的实得量 |
 | `LAW_TITLE_NORM.json` | 4b-1 证据：逐文件 `raw / L1 / L2` 法名数、跨源交集、合并明细 |
+| `docs/retrieval/`（另一目录） | **阶段 4b-2 ~ 4b-5 产物**：`EDGE_EXTRACT`（图谱边）/ `EMBEDDING_REPORT`（向量）/ `NEO4J_IMPORT`（图谱导入）/ `SMOKE_RETRIEVAL_{VECTOR,HYBRID}`（检索基线） |
 
 ---
 

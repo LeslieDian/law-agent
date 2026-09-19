@@ -42,6 +42,21 @@
 2. 分文件扫描一律排除 `_` 开头（合并副本）与 `*.sample.jsonl`（调试残留）。
 3. 命中以 `uid` 记入剔除清单；**前提是 uid 全局唯一**（阶段 2 已保证，
    `apply_decontam.py` 有恒等式断言兜底）。uid 撞号会导致「按 uid 剔除」整组连坐。
+   ⚠️ 字段命名陷阱：报告里 `near_hits.unique_train_uids` 是**精确+近似合计**的唯一 uid 数
+   （`hit_uids` 由两条路径共同写入）—— **它就是剔除清单行数**。新增的
+   `removal_summary.unique_uids_to_remove` 是它的显式别名，新代码请用后者。
+4. ★ **法条流（`statutes/`）默认豁免近似（simhash）剔除** —— `--statutes-near audit`。
+   理由（2026-09-19 实测事故，改动必须保留本节说明）：
+     a) **粒度错配**：法条流的 uid 是**整部法规**（民法典 113,346 字）。simhash 只取正文前
+        `MAX_CHARS=800` 字，**开头几条近似命中 → 整部法典连坐删除**。
+     b) **角色错配**：法条流是**检索语料（向量库主料）**，README 3.1.3 已明确「法条流不进 SFT」；
+        而评测集（LexEval/LexRubric）**必然引用法条原文** —— 用法条去比评测题，误报是结构性必然。
+        把法条从检索库里删掉，等于把 RAG 的开卷依据删掉。
+     c) **实际损失**：本次误删 **739 部**（含 民法典 / 刑法 / 刑事诉讼法 / 民法总则 / 民法通则 /
+        劳动合同法 等核心法典，合计 4,191,231 字），法条切条 65,037 条里净缺约 7,300 条。
+   ⇒ 法条流仍做**精确 sha1** 扫描（真·逐字复制**仍然剔除**），近似命中改为
+      `statutes_near_audit` **只记录不剔除**，报告里单列一节留痕。
+   需要恢复历史行为用 `--statutes-near remove`。
 """
 from __future__ import annotations
 
@@ -213,6 +228,11 @@ def main() -> int:
                     help="剔除清单输出路径（默认与 out-json 同目录 DECONTAM_REMOVED_UIDS.txt）")
     ap.add_argument("--require-claw", action="store_true",
                     help="把 CLaw 254 案缺失算作 blocker（默认否：2026-09-18 起CLaw 不进论文评测）")
+    ap.add_argument("--statutes-near", choices=("remove", "audit", "ignore"), default="audit",
+                    help="法条流（statutes/）的近似去污策略："
+                         "remove=与 qa 流同策略（历史行为，会整部法典连坐）；"
+                         "audit=保留但记录（**默认**，见文件顶部硬约定 4）；"
+                         "ignore=连 simhash 都不算")
     a = ap.parse_args()
 
     t0 = time.time()
@@ -300,6 +320,7 @@ def main() -> int:
     exact_hits = []          # 全量保存（精确命中通常极少）
     near_hits = []           # 全量保存（约 2 万条 dict，内存可忽略）
     near_count = 0           # 命中事件数（side 级：同一行 question/full 两侧各算一次）
+    statues_near_audit = []  # ★ 法条流近似命中：只记录、不剔除（硬约定 4）
     hit_uids = set()         # 需剔除的唯一训练样本 uid（精确+近似）
     per_domain = Counter()
     per_file = Counter()
@@ -346,6 +367,10 @@ def main() -> int:
                         hit_uids.add(r.get("uid"))
                         continue
 
+                    # 精确命中永远剔除；下面才可能走近似
+                    if kind == "statutes" and a.statutes_near == "ignore":
+                        continue
+
                     sh = simhash64(side)
                     cand = set()
                     for bi, bv in enumerate(bands_of(sh)):
@@ -358,17 +383,30 @@ def main() -> int:
                     if best is not None:
                         d, i = best
                         it = bl[i]
-                        near_count += 1
                         bl_hit_counter[it["tag"]] += 1
-                        hit_uids.add(r.get("uid"))
-                        near_hits.append({
-                            "train_uid": r.get("uid"), "train_domain": dom,
-                            "train_file": fname, "side": side_name,
-                            "hamming": d,
-                            "bench_tag": it["tag"], "bench_file": it["file"],
-                            "bench_idx": it["idx"], "method": "simhash_near",
-                            "train_head": str(r.get("instruction") or "")[:80],
-                        })
+                        # ★ 法条流按 --statutes-near 分流（硬约定 4）：
+                        #   audit  → 只记录不剔除（整部法规是检索语料，不是 SFT 训练数据）
+                        #   remove → 历史行为（整部法典连坐）
+                        if kind == "statutes" and a.statutes_near == "audit":
+                            statues_near_audit.append({
+                                "train_uid": r.get("uid"), "train_domain": dom,
+                                "train_file": fname, "side": side_name,
+                                "hamming": d,
+                                "bench_tag": it["tag"], "bench_file": it["file"],
+                                "bench_idx": it["idx"], "method": "simhash_near_audit",
+                                "train_head": str(r.get("instruction") or r.get("output") or "")[:80],
+                            })
+                        else:
+                            near_count += 1
+                            hit_uids.add(r.get("uid"))
+                            near_hits.append({
+                                "train_uid": r.get("uid"), "train_domain": dom,
+                                "train_file": fname, "side": side_name,
+                                "hamming": d,
+                                "bench_tag": it["tag"], "bench_file": it["file"],
+                                "bench_idx": it["idx"], "method": "simhash_near",
+                                "train_head": str(r.get("instruction") or "")[:80],
+                            })
 
                 now = time.time()
                 if now - last_beat >= a.progress_secs:
@@ -481,6 +519,31 @@ def main() -> int:
             "items": near_hits[:a.max_near],
         },
         "same_source_check": same_source,
+        "removal_summary": {
+            "unique_uids_to_remove": len(hit_uids),
+            "from_exact_only": len({h["train_uid"] for h in exact_hits}
+                                   - {h["train_uid"] for h in near_hits}),
+            "from_near_only": len({h["train_uid"] for h in near_hits}
+                                  - {h["train_uid"] for h in exact_hits}),
+            "from_both": len({h["train_uid"] for h in exact_hits}
+                             & {h["train_uid"] for h in near_hits}),
+            "note": ("`unique_uids_to_remove` 才是剔除清单的行数；"
+                     "历史字段 `near_hits.unique_train_uids` 是**精确+近似合计**，"
+                     "名字有歧义，保留只为兼容旧报告。"),
+        },
+        "statutes_near_audit": {
+            "policy": a.statutes_near,
+            "count": len(statues_near_audit),
+            "unique_train_uids": len({h["train_uid"] for h in statues_near_audit}),
+            "by_bench_tag": dict(Counter(h["bench_tag"] for h in statues_near_audit)),
+            "by_train_file": dict(Counter(h["train_file"] for h in statues_near_audit)),
+            "by_hamming": dict(sorted(Counter(h["hamming"] for h in statues_near_audit).items())),
+            "rationale": ("法条流是检索语料（向量库主料），README 3.1.3 明确「法条流不进 SFT」；"
+                          "其 uid 粒度为整部法规，simhash 只看正文前 800 字 → 一处近似即整部法典连坐。"
+                          "评测集必然引用法条原文，误报是结构性必然 ⇒ 近似命中只记录、不剔除。"
+                          "精确 sha1 命中仍照常剔除。"),
+            "items": statues_near_audit[:a.max_near],
+        },
         "verdict": verdict,
         "blockers": blockers,
         "elapsed_sec": round(time.time() - t0, 1),
@@ -504,7 +567,12 @@ def main() -> int:
     md.append(f"> **verdict = `{verdict}`**\n")
     md.append("## 0. 结论\n")
     if verdict == "PASS":
-        md.append("- 训练语料与已就位评测集之间**未发现精确复制或近似改写**。\n")
+        if a.statutes_near == "audit" and len(statues_near_audit) > 0:
+            md.append("- **SFT 面向的流（qa）与已就位评测集之间未发现精确复制或近似改写。**\n")
+            md.append(f"- ⚠️ 但法条流（检索语料）存在 **{len(statues_near_audit)}** 个近似命中，"
+                      "按硬约定 4 **只记录不剔除**（见第 4b 节）—— 这是设计选择，不是漏检。\n")
+        else:
+            md.append("- 训练语料与已就位评测集之间**未发现精确复制或近似改写**。\n")
     elif verdict == "FAIL":
         md.append(f"- ⚠️ 发现 **精确命中 {len(exact_hits)} 条 / 近似命中 {near_count} 条**，"
                   "必须剔除后才能进训练。\n")
@@ -536,6 +604,19 @@ def main() -> int:
         md.append(f"  - 汉明距离分布：{dict(sorted(Counter(h['hamming'] for h in near_hits).items()))}\n")
     md.append(f"- 剔除清单（唯一 uid）：`{os.path.basename(uids_path)}`"
               f"（{len(hit_uids)} 条）\n")
+    md.append("\n## 4b. 法条流近似命中（★ 只记录、不剔除）\n")
+    md.append(f"- 策略 `--statutes-near = {a.statutes_near}`"
+              f"（`audit` = 只记录不剔除，`remove` = 历史行为，`ignore` = 不算）\n")
+    md.append(f"- 法条流近似命中事件：**{len(statues_near_audit)}** 个，"
+              f"涉及整部法规 **{len({h['train_uid'] for h in statues_near_audit})}** 部\n")
+    if statues_near_audit:
+        md.append(f"  - 按基准：{dict(Counter(h['bench_tag'] for h in statues_near_audit))}\n")
+        md.append(f"  - 按文件：{dict(Counter(h['train_file'] for h in statues_near_audit))}\n")
+        md.append(f"  - 汉明距离分布："
+                  f"{dict(sorted(Counter(h['hamming'] for h in statues_near_audit).items()))}\n")
+    md.append(f"- **为什么不剔除**：{report['statutes_near_audit']['rationale']}\n")
+    md.append("- 影响：法条流的近似命中**不进入剔除清单**，"
+              "因此 `statutes/` 镜像保持完整（检索层需要完整法条库）。\n")
     md.append("\n## 5. 同源风险专项：Skepsun 司考 vs LexRubric sifakaoshi\n")
     md.append(f"- 检查 Skepsun 训练样本 **{same_source['checked_skepsun_rows']}** 条\n")
     md.append(f"- 精确命中 **{same_source['exact']}** 条 / 近似命中 **{same_source['near']}** 条\n")
@@ -547,6 +628,9 @@ def main() -> int:
     md.append("1. 命中的训练样本一律**从训练集剔除**（脚本按 `train_uid` 生成黑名单）。\n")
     md.append("2. 剔除后**重跑本脚本**，verdict 必须变为 `PASS` 才允许进入阶段 4。\n")
     md.append("3. CLaw 254 案自建完成后**必须再跑一次**，否则论文里不能声称已做完整去污。\n")
+    md.append("4. ★ 法条流近似命中不剔除（硬约定 4）—— 论文里如实披露："
+              "「法条向量库作为 RAG 开卷依据保留完整法条，不与评测集做近似去污；"
+              "仅做精确复制扫描」。\n")
 
     with open(a.out_md, "w", encoding="utf-8") as f:
         f.writelines(md)

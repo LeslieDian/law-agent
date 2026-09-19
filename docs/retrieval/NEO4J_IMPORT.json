@@ -1,0 +1,166 @@
+{
+  "generated_at": "2026-09-19T16:28:10",
+  "uri": "bolt://127.0.0.1:7687",
+  "step": "all",
+  "limit": 0,
+  "library_layout": {
+    "provision_library": "provision_embedding",
+    "case_libraries": {
+      "general": "case_embedding_general",
+      "civil": "case_embedding_civil",
+      "criminal": "case_embedding_criminal",
+      "procedural": "case_embedding_procedural"
+    },
+    "neo4j_case_embedding_prop": {
+      "general": "embedding_general",
+      "civil": "embedding_civil",
+      "criminal": "embedding_criminal",
+      "procedural": "embedding_procedural"
+    }
+  },
+  "counters": {
+    "Law": 1647,
+    "Provision_item_with_vec": 72088,
+    "Provision_doc_with_vec": 352,
+    "Provision_no_vector": 0,
+    "Provision": 72449,
+    "Case": 145339,
+    "case_rows_by_domain": {
+      "general": 22263,
+      "civil": 45638,
+      "criminal": 74170,
+      "procedural": 3268
+    },
+    "case_rows_without_text": 62519,
+    "HAS_PROVISION": 72449,
+    "IN_DOMAIN": 72449,
+    "OF_TYPE": 72440,
+    "FROM_SOURCE": 72449,
+    "NEXT": 69530,
+    "CITES": 7224,
+    "SAME_CASE": 10742,
+    "hotness_provision": 72440,
+    "hotness_case": 145339,
+    "hotness_formula": {
+      "norm_log1p": "log1p(x)/log1p(max_x)",
+      "provision_hotness": "0.85*norm_log1p(in_cites) + 0.15*rank_norm",
+      "case_hotness": "norm_log1p(n_same_case)",
+      "ranking": "final = rrf_score * (1 + W_HOT * hotness)   [W_HOT 默认 0.05]"
+    },
+    "W_HOT_default": 0.05,
+    "index_states": {
+      "case_embedding": "ONLINE",
+      "case_embedding_civil": "ONLINE",
+      "case_embedding_criminal": "ONLINE",
+      "case_embedding_general": "ONLINE",
+      "case_embedding_procedural": "ONLINE",
+      "case_fulltext": "ONLINE",
+      "provision_doc_embedding": "ONLINE",
+      "provision_embedding": "ONLINE",
+      "provision_fulltext": "ONLINE"
+    },
+    "Domain": 4,
+    "LawType": 4,
+    "SourceDataset": 2,
+    "provision_embedding_rows": 72088,
+    "provision_doc_embedding_rows": 352,
+    "case_embedding_rows": 145339,
+    "case_embedding_rows_by_domain": {
+      "general": 22263,
+      "civil": 45638,
+      "criminal": 74170,
+      "procedural": 3268
+    },
+    "case_hotness_rows": 145339,
+    "vector_indexes": [
+      {
+        "name": "case_embedding",
+        "state": "ONLINE"
+      },
+      {
+        "name": "case_embedding_civil",
+        "state": "ONLINE"
+      },
+      {
+        "name": "case_embedding_criminal",
+        "state": "ONLINE"
+      },
+      {
+        "name": "case_embedding_general",
+        "state": "ONLINE"
+      },
+      {
+        "name": "case_embedding_procedural",
+        "state": "ONLINE"
+      },
+      {
+        "name": "provision_doc_embedding",
+        "state": "ONLINE"
+      },
+      {
+        "name": "provision_embedding",
+        "state": "ONLINE"
+      }
+    ]
+  },
+  "checks": {
+    "Law_1647": true,
+    "Provision_72449": true,
+    "HAS_PROVISION_72449": true,
+    "NEXT_69530": true,
+    "CITES_7224": true,
+    "provision_embedding_rows_72088": true,
+    "provision_doc_embedding_rows_352": true,
+    "Case_145339": true,
+    "case_embedding_rows_145339": true,
+    "hotness_provision_72440": true,
+    "hotness_case_145339": true,
+    "vector_indexes_online": true,
+    "case_rows_by_domain_match": true
+  },
+  "expected_from_inputs": {
+    "Law": 1647,
+    "Provision": 72449,
+    "HAS_PROVISION": 72449,
+    "NEXT": 69530,
+    "CITES": 7224,
+    "provision_embedding_rows": 72088,
+    "provision_doc_embedding_rows": 352,
+    "Case": 145339,
+    "case_embedding_rows": 145339,
+    "_detail": {
+      "provision_by_level": {
+        "item": 72088,
+        "doc": 352
+      },
+      "case_rows_by_domain": {
+        "general": 22263,
+        "civil": 45638,
+        "criminal": 74170,
+        "procedural": 3268
+      },
+      "hotness_available": true
+    },
+    "hotness_provision": 72440,
+    "hotness_case": 145339
+  },
+  "verdict": "PASS",
+  "elapsed_sec": 539.3,
+  "log": [
+    "[   0.0s] 建约束与索引",
+    "[   0.1s] 导 Law / LawType / Domain / SourceDataset",
+    "[   0.3s] 导 Provision（item → p.embedding；doc → p.embedding_doc）",
+    "[ 165.0s] 补齐无向量的 Provision 节点（只入图谱）",
+    "[ 166.8s] 导 Case（4 库 → c.embedding_<domain4>）",
+    "[ 523.8s] 导 HAS_PROVISION",
+    "[ 524.6s] 回填 Provision.law_type ← Law.law_type_std（补 pandalla 的分类串）",
+    "[ 524.7s] 导 IN_DOMAIN / OF_TYPE / FROM_SOURCE",
+    "[ 526.4s] 导 NEXT",
+    "[ 529.0s] 导 CITES",
+    "[ 529.4s] 导 SAME_CASE（同案多视角，星形连接）",
+    "[ 529.7s] 导热度权重（hotness.json → 节点属性）",
+    "[ 537.5s] 建向量索引（数据就绪后建，更快）",
+    "[ 537.5s] 等待索引 ONLINE",
+    "[ 537.5s] 验收计数"
+  ]
+}

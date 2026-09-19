@@ -1,0 +1,307 @@
+{
+  "generated_at": "2026-09-19T13:26:52",
+  "root": "/mnt/data/lidian/law-agent",
+  "limit": 0,
+  "input": {
+    "files": [
+      "pandalla__chinese_law_examples.items.jsonl",
+      "twang2218__chinese-law-and-regulations.items.jsonl"
+    ],
+    "rows": 72449
+  },
+  "nodes": {
+    "Law": 1647,
+    "Provision": 72449,
+    "Provision_item": 72097,
+    "Provision_doc": 352
+  },
+  "edges": {
+    "HAS_PROVISION": 72449,
+    "NEXT": 69530,
+    "CITES": 7224
+  },
+  "next_detail": {
+    "chain_heads": 2567,
+    "avg_chain_len": 28.09,
+    "doc_size_hist_top": {
+      "1": 1013,
+      "16": 41,
+      "26": 36,
+      "20": 34,
+      "24": 33,
+      "23": 32,
+      "17": 32,
+      "22": 32,
+      "13": 31,
+      "18": 31
+    }
+  },
+  "cites_detail": {
+    "self_raw": 4361,
+    "self_resolved": 4355,
+    "named_raw": 491,
+    "named_exact": 295,
+    "named_alias": 173,
+    "named_resolved": 461,
+    "raw_total": 4852,
+    "resolved_total": 4816,
+    "resolve_rate": 0.9926,
+    "top_unresolved_named": [
+      {
+        "name": "中华人民共和国宪法",
+        "n": 5
+      },
+      {
+        "name": "中华人民共和国公民出境入境管理法",
+        "n": 3
+      },
+      {
+        "name": "基本法",
+        "n": 2
+      },
+      {
+        "name": "中华人民共和国企业法人登记管理条例施行细则",
+        "n": 2
+      },
+      {
+        "name": "人民法院工作人员处分条例",
+        "n": 2
+      },
+      {
+        "name": "人民法院审判纪律处分办法(试行)",
+        "n": 2
+      },
+      {
+        "name": "中华人民共和国企业法人登记管理条例实施细则",
+        "n": 2
+      },
+      {
+        "name": "商品房销售管理办法",
+        "n": 2
+      },
+      {
+        "name": "中华人民共和国治安管理处罚条例",
+        "n": 1
+      },
+      {
+        "name": "全国人民代表大会常务委员会关于根据\\<中华人民共和国香港特别行政区基本法\\>第一百六十条处理香港原有法律的决定",
+        "n": 1
+      },
+      {
+        "name": "关于人民法院执行工作若干问题的规定(试行)",
+        "n": 1
+      },
+      {
+        "name": "条例",
+        "n": 1
+      },
+      {
+        "name": "违反和解除劳动合同的经济补偿办法",
+        "n": 1
+      },
+      {
+        "name": "中华人民共和国保守国家秘密法实施办法",
+        "n": 1
+      },
+      {
+        "name": "中华人民共和国企业破产法(试行)",
+        "n": 1
+      },
+      {
+        "name": "规定",
+        "n": 1
+      },
+      {
+        "name": "最高人民法院关于人民法院执行工作若干问题的规定(试行)",
+        "n": 1
+      },
+      {
+        "name": "合同法",
+        "n": 1
+      }
+    ]
+  },
+  "provision_id_disambiguation": {
+    "count": 15488,
+    "groups": 13670,
+    "laws_with_multi_docs": 431,
+    "note": "同一 L2 法名下存在多个源文档（版本变体 / 跨源重号）时条号会撞",
+    "top_groups": [
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 1,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a1",
+          "中华人民共和国专利法-a1-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 2,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a2",
+          "中华人民共和国专利法-a2-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 3,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a3",
+          "中华人民共和国专利法-a3-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 4,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a4",
+          "中华人民共和国专利法-a4-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 5,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a5",
+          "中华人民共和国专利法-a5-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 6,
+        "count": 3,
+        "provision_ids": [
+          "中华人民共和国专利法-a6",
+          "中华人民共和国专利法-a6-v2",
+          "中华人民共和国专利法-a6-v3"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 7,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a7",
+          "中华人民共和国专利法-a7-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 8,
+        "count": 3,
+        "provision_ids": [
+          "中华人民共和国专利法-a8",
+          "中华人民共和国专利法-a8-v2",
+          "中华人民共和国专利法-a8-v3"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 9,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a9",
+          "中华人民共和国专利法-a9-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 10,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a10",
+          "中华人民共和国专利法-a10-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 11,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a11",
+          "中华人民共和国专利法-a11-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 12,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a12",
+          "中华人民共和国专利法-a12-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 13,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a13",
+          "中华人民共和国专利法-a13-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 14,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a14",
+          "中华人民共和国专利法-a14-v2"
+        ]
+      },
+      {
+        "law_id": "中华人民共和国专利法",
+        "article_no": 15,
+        "count": 2,
+        "provision_ids": [
+          "中华人民共和国专利法-a15",
+          "中华人民共和国专利法-a15-v2"
+        ]
+      }
+    ]
+  },
+  "duplicate_provision_text": {
+    "exact": {
+      "unique_texts": 62535,
+      "dup_groups": 8327,
+      "dup_rows": 9562,
+      "cross_source_groups": 484,
+      "same_source_groups": 7843
+    },
+    "loose": {
+      "unique_texts": 60348,
+      "dup_groups": 10228,
+      "dup_rows": 11749,
+      "cross_source_groups": 954,
+      "same_source_groups": 9274
+    },
+    "note": "只登记不改口径：Provision 节点仍按语料条数建。exact = 正文原文 sha1；loose = 去空白标点后 sha1（跨源同一条文常只差全半角标点）"
+  },
+  "law_type_dist": {
+    "行政法规": 636,
+    "法律": 310,
+    "未标注": 2,
+    "司法解释": 673,
+    "法律解释": 26
+  },
+  "rows_missing_title": 0,
+  "rows_bad_seq": 0,
+  "checks": {
+    "provision_nodes_matches_input": true,
+    "law_nodes_plausible_500_5000": true,
+    "provision_id_unique": true,
+    "has_provision_covers_all": true,
+    "next_edges_plausible": true,
+    "cites_edges_plausible": true,
+    "no_empty_provision_id": true,
+    "inputs_are_official_only": true
+  },
+  "verdict": "PASS",
+  "elapsed_sec": 4.7
+}

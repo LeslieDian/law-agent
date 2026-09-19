@@ -1,0 +1,954 @@
+{
+  "generated_at": "2026-09-19T15:08:39",
+  "pipeline": {
+    "dense": {
+      "model": "/mnt/data/lidian/law-agent/models/Qwen3-Embedding-0.6B",
+      "dim": 1024,
+      "index_rows": 72088,
+      "top_k": 50,
+      "instruction_aware": true
+    },
+    "bm25": {
+      "n_docs": 72088,
+      "vocab": 24172,
+      "nnz": 3008557,
+      "avg_len": 66.5,
+      "k1": 1.5,
+      "b": 0.75,
+      "min_df": 2,
+      "build_sec": 26.4,
+      "avg_query_terms_in_vocab": 83.32
+    },
+    "graph": {
+      "next_nodes": 69530,
+      "cites_nodes": 3973,
+      "hops": 1,
+      "seed": 10,
+      "cap": 60,
+      "w_next": 1.0,
+      "w_cites": 0.5
+    },
+    "rrf_k": 10,
+    "rrf_weights": {
+      "dense": 1.0,
+      "bm25": 0.7,
+      "graph": 0.25,
+      "note": "★ 由 4b-5b 在 dev 上扫出；等权 RRF 会打崩精度"
+    },
+    "eval_split": "dev",
+    "hotness": {
+      "rows": 72440,
+      "w_hot": 0.05,
+      "formula": {
+        "norm_log1p": "log1p(x)/log1p(max_x)",
+        "provision_hotness": "0.85*norm_log1p(in_cites) + 0.15*rank_norm",
+        "case_hotness": "norm_log1p(n_same_case)",
+        "ranking": "final = rrf_score * (1 + W_HOT * hotness)   [W_HOT 默认 0.05]"
+      }
+    },
+    "reranker": {
+      "enabled": true,
+      "model": "models/bge-reranker-v2-m3",
+      "pool": 50,
+      "n_calls": 1708
+    }
+  },
+  "library_layout": {
+    "provision_library": "provision_embedding",
+    "vector_level_filter": "item",
+    "excluded": "level=doc（文档级，语义粒度不同）"
+  },
+  "configs": {
+    "vector": "纯向量（Qwen3-Embedding-0.6B）",
+    "dense_hot": "纯向量 + 热度先验",
+    "dense_bm25": "向量 + BM25（等权 RRF）",
+    "dense_graph": "向量 + 图谱扩展（等权 RRF，注入式）",
+    "hybrid": "向量 + BM25 + 图谱，等权 RRF",
+    "full": "hybrid + 热度 + 精排（池 50）",
+    "wr_dense_bm25": "加权 RRF：dense 1.0 + BM25 w",
+    "wr_rerank50": "加权 RRF + 热度 + 精排（池 50）",
+    "wr_rerank200": "加权 RRF + 热度 + 精排（池 200）★",
+    "wr_kg_rerank200": "加权 RRF + 限长降权图谱 + 热度 + 精排（池 200）"
+  },
+  "gold_definition": {
+    "system(tierA)": "数据集自带 `system` 的相关法律条文清单 —— 权威口径",
+    "output(tierB)": "从**参考答案** `output` 解析法条引用 —— 覆盖大，但是**下界**",
+    "union": "tierA ∪ tierB（主口径）"
+  },
+  "law_name_resolution": {
+    "alias": 1964,
+    "exact": 128,
+    "ambiguous": 20,
+    "miss": 26
+  },
+  "queries": {
+    "rows": 2000,
+    "with_gold": 841,
+    "no_gold": 1147,
+    "empty_query": 12,
+    "tierA_rows": 104,
+    "tierB_rows": 840,
+    "refs_system": 315,
+    "refs_output": 2241,
+    "refs_system_missing_in_index": 0,
+    "refs_output_missing_in_index": 3
+  },
+  "item_texts": {
+    "n_missing_body": 0,
+    "n_ids": 72088
+  },
+  "metrics": {
+    "vector": {
+      "union": {
+        "n_queries": 427,
+        "n_gold_total": 1135,
+        "avg_gold_per_query": 2.658,
+        "recall@1": 0.1656,
+        "recall@5": 0.3885,
+        "recall@10": 0.5013,
+        "recall@20": 0.5833,
+        "recall@50": 0.6564,
+        "recall@100": 0.6564,
+        "hit@5": 0.637,
+        "hit@10": 0.7119,
+        "hit@20": 0.7799,
+        "hit@50": 0.829,
+        "mrr@10": 0.5222
+      },
+      "system": {
+        "n_queries": 49,
+        "n_gold_total": 148,
+        "avg_gold_per_query": 3.02,
+        "recall@1": 0.1081,
+        "recall@5": 0.3919,
+        "recall@10": 0.5068,
+        "recall@20": 0.6284,
+        "recall@50": 0.75,
+        "recall@100": 0.75,
+        "hit@5": 0.5918,
+        "hit@10": 0.6327,
+        "hit@20": 0.7755,
+        "hit@50": 0.8571,
+        "mrr@10": 0.4299
+      },
+      "output": {
+        "n_queries": 427,
+        "n_gold_total": 1131,
+        "avg_gold_per_query": 2.649,
+        "recall@1": 0.1662,
+        "recall@5": 0.389,
+        "recall@10": 0.5013,
+        "recall@20": 0.5836,
+        "recall@50": 0.6569,
+        "recall@100": 0.6569,
+        "hit@5": 0.637,
+        "hit@10": 0.7119,
+        "hit@20": 0.7799,
+        "hit@50": 0.829,
+        "mrr@10": 0.5222
+      }
+    },
+    "dense_hot": {
+      "union": {
+        "n_queries": 427,
+        "n_gold_total": 1135,
+        "avg_gold_per_query": 2.658,
+        "recall@1": 0.1656,
+        "recall@5": 0.3885,
+        "recall@10": 0.5013,
+        "recall@20": 0.5833,
+        "recall@50": 0.6564,
+        "recall@100": 0.6564,
+        "hit@5": 0.637,
+        "hit@10": 0.7119,
+        "hit@20": 0.7799,
+        "hit@50": 0.829,
+        "mrr@10": 0.5222
+      },
+      "system": {
+        "n_queries": 49,
+        "n_gold_total": 148,
+        "avg_gold_per_query": 3.02,
+        "recall@1": 0.1081,
+        "recall@5": 0.3919,
+        "recall@10": 0.5068,
+        "recall@20": 0.6284,
+        "recall@50": 0.75,
+        "recall@100": 0.75,
+        "hit@5": 0.5918,
+        "hit@10": 0.6327,
+        "hit@20": 0.7755,
+        "hit@50": 0.8571,
+        "mrr@10": 0.4299
+      },
+      "output": {
+        "n_queries": 427,
+        "n_gold_total": 1131,
+        "avg_gold_per_query": 2.649,
+        "recall@1": 0.1662,
+        "recall@5": 0.389,
+        "recall@10": 0.5013,
+        "recall@20": 0.5836,
+        "recall@50": 0.6569,
+        "recall@100": 0.6569,
+        "hit@5": 0.637,
+        "hit@10": 0.7119,
+        "hit@20": 0.7799,
+        "hit@50": 0.829,
+        "mrr@10": 0.5222
+      }
+    },
+    "dense_bm25": {
+      "union": {
+        "n_queries": 427,
+        "n_gold_total": 1135,
+        "avg_gold_per_query": 2.658,
+        "recall@1": 0.1551,
+        "recall@5": 0.4194,
+        "recall@10": 0.5031,
+        "recall@20": 0.5894,
+        "recall@50": 0.6793,
+        "recall@100": 0.7075,
+        "hit@5": 0.6651,
+        "hit@10": 0.726,
+        "hit@20": 0.7845,
+        "hit@50": 0.8431,
+        "mrr@10": 0.5147
+      },
+      "system": {
+        "n_queries": 49,
+        "n_gold_total": 148,
+        "avg_gold_per_query": 3.02,
+        "recall@1": 0.0811,
+        "recall@5": 0.3378,
+        "recall@10": 0.4595,
+        "recall@20": 0.5338,
+        "recall@50": 0.7162,
+        "recall@100": 0.75,
+        "hit@5": 0.5306,
+        "hit@10": 0.6327,
+        "hit@20": 0.6939,
+        "hit@50": 0.8367,
+        "mrr@10": 0.3623
+      },
+      "output": {
+        "n_queries": 427,
+        "n_gold_total": 1131,
+        "avg_gold_per_query": 2.649,
+        "recall@1": 0.1556,
+        "recall@5": 0.4209,
+        "recall@10": 0.5049,
+        "recall@20": 0.5897,
+        "recall@50": 0.6799,
+        "recall@100": 0.7082,
+        "hit@5": 0.6651,
+        "hit@10": 0.726,
+        "hit@20": 0.7845,
+        "hit@50": 0.8431,
+        "mrr@10": 0.5147
+      }
+    },
+    "dense_graph": {
+      "union": {
+        "n_queries": 427,
+        "n_gold_total": 1135,
+        "avg_gold_per_query": 2.658,
+        "recall@1": 0.1427,
+        "recall@5": 0.3885,
+        "recall@10": 0.4978,
+        "recall@20": 0.5947,
+        "recall@50": 0.6855,
+        "recall@100": 0.7084,
+        "hit@5": 0.6253,
+        "hit@10": 0.7002,
+        "hit@20": 0.7799,
+        "hit@50": 0.8314,
+        "mrr@10": 0.4819
+      },
+      "system": {
+        "n_queries": 49,
+        "n_gold_total": 148,
+        "avg_gold_per_query": 3.02,
+        "recall@1": 0.1149,
+        "recall@5": 0.3514,
+        "recall@10": 0.5135,
+        "recall@20": 0.6216,
+        "recall@50": 0.7568,
+        "recall@100": 0.777,
+        "hit@5": 0.551,
+        "hit@10": 0.6531,
+        "hit@20": 0.7755,
+        "hit@50": 0.8571,
+        "mrr@10": 0.4437
+      },
+      "output": {
+        "n_queries": 427,
+        "n_gold_total": 1131,
+        "avg_gold_per_query": 2.649,
+        "recall@1": 0.1432,
+        "recall@5": 0.389,
+        "recall@10": 0.4978,
+        "recall@20": 0.595,
+        "recall@50": 0.6861,
+        "recall@100": 0.7091,
+        "hit@5": 0.6253,
+        "hit@10": 0.7002,
+        "hit@20": 0.7799,
+        "hit@50": 0.8314,
+        "mrr@10": 0.4819
+      }
+    },
+    "hybrid": {
+      "union": {
+        "n_queries": 427,
+        "n_gold_total": 1135,
+        "avg_gold_per_query": 2.658,
+        "recall@1": 0.1515,
+        "recall@5": 0.4176,
+        "recall@10": 0.5216,
+        "recall@20": 0.5965,
+        "recall@50": 0.6916,
+        "recall@100": 0.741,
+        "hit@5": 0.6511,
+        "hit@10": 0.726,
+        "hit@20": 0.7799,
+        "hit@50": 0.8454,
+        "mrr@10": 0.5046
+      },
+      "system": {
+        "n_queries": 49,
+        "n_gold_total": 148,
+        "avg_gold_per_query": 3.02,
+        "recall@1": 0.0811,
+        "recall@5": 0.3378,
+        "recall@10": 0.4662,
+        "recall@20": 0.5405,
+        "recall@50": 0.7162,
+        "recall@100": 0.777,
+        "hit@5": 0.5306,
+        "hit@10": 0.6122,
+        "hit@20": 0.6939,
+        "hit@50": 0.8367,
+        "mrr@10": 0.3713
+      },
+      "output": {
+        "n_queries": 427,
+        "n_gold_total": 1131,
+        "avg_gold_per_query": 2.649,
+        "recall@1": 0.1521,
+        "recall@5": 0.4191,
+        "recall@10": 0.5225,
+        "recall@20": 0.5968,
+        "recall@50": 0.6923,
+        "recall@100": 0.7418,
+        "hit@5": 0.6511,
+        "hit@10": 0.726,
+        "hit@20": 0.7799,
+        "hit@50": 0.8454,
+        "mrr@10": 0.5046
+      }
+    },
+    "full": {
+      "union": {
+        "n_queries": 427,
+        "n_gold_total": 1135,
+        "avg_gold_per_query": 2.658,
+        "recall@1": 0.1348,
+        "recall@5": 0.3568,
+        "recall@10": 0.4564,
+        "recall@20": 0.5753,
+        "recall@50": 0.6916,
+        "recall@100": 0.6916,
+        "hit@5": 0.5995,
+        "hit@10": 0.6885,
+        "hit@20": 0.7822,
+        "hit@50": 0.8454,
+        "mrr@10": 0.4586
+      },
+      "system": {
+        "n_queries": 49,
+        "n_gold_total": 148,
+        "avg_gold_per_query": 3.02,
+        "recall@1": 0.0473,
+        "recall@5": 0.2297,
+        "recall@10": 0.3919,
+        "recall@20": 0.6351,
+        "recall@50": 0.7162,
+        "recall@100": 0.7162,
+        "hit@5": 0.4082,
+        "hit@10": 0.5918,
+        "hit@20": 0.7959,
+        "hit@50": 0.8367,
+        "mrr@10": 0.2551
+      },
+      "output": {
+        "n_queries": 427,
+        "n_gold_total": 1131,
+        "avg_gold_per_query": 2.649,
+        "recall@1": 0.1353,
+        "recall@5": 0.3581,
+        "recall@10": 0.458,
+        "recall@20": 0.5756,
+        "recall@50": 0.6923,
+        "recall@100": 0.6923,
+        "hit@5": 0.5995,
+        "hit@10": 0.6885,
+        "hit@20": 0.7822,
+        "hit@50": 0.8454,
+        "mrr@10": 0.4586
+      }
+    },
+    "wr_dense_bm25": {
+      "union": {
+        "n_queries": 427,
+        "n_gold_total": 1135,
+        "avg_gold_per_query": 2.658,
+        "recall@1": 0.1551,
+        "recall@5": 0.4194,
+        "recall@10": 0.5031,
+        "recall@20": 0.5894,
+        "recall@50": 0.6793,
+        "recall@100": 0.7075,
+        "hit@5": 0.6651,
+        "hit@10": 0.726,
+        "hit@20": 0.7845,
+        "hit@50": 0.8431,
+        "mrr@10": 0.5147
+      },
+      "system": {
+        "n_queries": 49,
+        "n_gold_total": 148,
+        "avg_gold_per_query": 3.02,
+        "recall@1": 0.0811,
+        "recall@5": 0.3378,
+        "recall@10": 0.4595,
+        "recall@20": 0.5338,
+        "recall@50": 0.7162,
+        "recall@100": 0.75,
+        "hit@5": 0.5306,
+        "hit@10": 0.6327,
+        "hit@20": 0.6939,
+        "hit@50": 0.8367,
+        "mrr@10": 0.3623
+      },
+      "output": {
+        "n_queries": 427,
+        "n_gold_total": 1131,
+        "avg_gold_per_query": 2.649,
+        "recall@1": 0.1556,
+        "recall@5": 0.4209,
+        "recall@10": 0.5049,
+        "recall@20": 0.5897,
+        "recall@50": 0.6799,
+        "recall@100": 0.7082,
+        "hit@5": 0.6651,
+        "hit@10": 0.726,
+        "hit@20": 0.7845,
+        "hit@50": 0.8431,
+        "mrr@10": 0.5147
+      }
+    },
+    "wr_rerank50": {
+      "union": {
+        "n_queries": 427,
+        "n_gold_total": 1135,
+        "avg_gold_per_query": 2.658,
+        "recall@1": 0.133,
+        "recall@5": 0.3542,
+        "recall@10": 0.4564,
+        "recall@20": 0.5709,
+        "recall@50": 0.6793,
+        "recall@100": 0.6793,
+        "hit@5": 0.5948,
+        "hit@10": 0.6862,
+        "hit@20": 0.7822,
+        "hit@50": 0.8431,
+        "mrr@10": 0.455
+      },
+      "system": {
+        "n_queries": 49,
+        "n_gold_total": 148,
+        "avg_gold_per_query": 3.02,
+        "recall@1": 0.0405,
+        "recall@5": 0.223,
+        "recall@10": 0.3919,
+        "recall@20": 0.6419,
+        "recall@50": 0.7162,
+        "recall@100": 0.7162,
+        "hit@5": 0.4082,
+        "hit@10": 0.5918,
+        "hit@20": 0.7959,
+        "hit@50": 0.8367,
+        "mrr@10": 0.2432
+      },
+      "output": {
+        "n_queries": 427,
+        "n_gold_total": 1131,
+        "avg_gold_per_query": 2.649,
+        "recall@1": 0.1335,
+        "recall@5": 0.3554,
+        "recall@10": 0.458,
+        "recall@20": 0.5712,
+        "recall@50": 0.6799,
+        "recall@100": 0.6799,
+        "hit@5": 0.5948,
+        "hit@10": 0.6862,
+        "hit@20": 0.7822,
+        "hit@50": 0.8431,
+        "mrr@10": 0.455
+      }
+    },
+    "wr_rerank200": {
+      "union": {
+        "n_queries": 427,
+        "n_gold_total": 1135,
+        "avg_gold_per_query": 2.658,
+        "recall@1": 0.1313,
+        "recall@5": 0.3295,
+        "recall@10": 0.4326,
+        "recall@20": 0.5295,
+        "recall@50": 0.6705,
+        "recall@100": 0.7075,
+        "hit@5": 0.5644,
+        "hit@10": 0.6628,
+        "hit@20": 0.7424,
+        "hit@50": 0.8314,
+        "mrr@10": 0.4424
+      },
+      "system": {
+        "n_queries": 49,
+        "n_gold_total": 148,
+        "avg_gold_per_query": 3.02,
+        "recall@1": 0.027,
+        "recall@5": 0.2162,
+        "recall@10": 0.3581,
+        "recall@20": 0.5473,
+        "recall@50": 0.7365,
+        "recall@100": 0.75,
+        "hit@5": 0.4082,
+        "hit@10": 0.551,
+        "hit@20": 0.7347,
+        "hit@50": 0.8571,
+        "mrr@10": 0.2114
+      },
+      "output": {
+        "n_queries": 427,
+        "n_gold_total": 1131,
+        "avg_gold_per_query": 2.649,
+        "recall@1": 0.1317,
+        "recall@5": 0.3307,
+        "recall@10": 0.4341,
+        "recall@20": 0.5296,
+        "recall@50": 0.6711,
+        "recall@100": 0.7082,
+        "hit@5": 0.5644,
+        "hit@10": 0.6628,
+        "hit@20": 0.7424,
+        "hit@50": 0.8314,
+        "mrr@10": 0.4424
+      }
+    },
+    "wr_kg_rerank200": {
+      "union": {
+        "n_queries": 427,
+        "n_gold_total": 1135,
+        "avg_gold_per_query": 2.658,
+        "recall@1": 0.1313,
+        "recall@5": 0.3286,
+        "recall@10": 0.4317,
+        "recall@20": 0.5304,
+        "recall@50": 0.6846,
+        "recall@100": 0.7419,
+        "hit@5": 0.5621,
+        "hit@10": 0.6604,
+        "hit@20": 0.74,
+        "hit@50": 0.8361,
+        "mrr@10": 0.4407
+      },
+      "system": {
+        "n_queries": 49,
+        "n_gold_total": 148,
+        "avg_gold_per_query": 3.02,
+        "recall@1": 0.027,
+        "recall@5": 0.2095,
+        "recall@10": 0.3514,
+        "recall@20": 0.5338,
+        "recall@50": 0.7432,
+        "recall@100": 0.777,
+        "hit@5": 0.4082,
+        "hit@10": 0.5306,
+        "hit@20": 0.7143,
+        "hit@50": 0.8571,
+        "mrr@10": 0.2032
+      },
+      "output": {
+        "n_queries": 427,
+        "n_gold_total": 1131,
+        "avg_gold_per_query": 2.649,
+        "recall@1": 0.1317,
+        "recall@5": 0.3298,
+        "recall@10": 0.4332,
+        "recall@20": 0.5305,
+        "recall@50": 0.6852,
+        "recall@100": 0.7427,
+        "hit@5": 0.5621,
+        "hit@10": 0.6604,
+        "hit@20": 0.74,
+        "hit@50": 0.8361,
+        "mrr@10": 0.4407
+      }
+    }
+  },
+  "dense_ceiling": {
+    "k_curve": [
+      1,
+      5,
+      10,
+      20,
+      50,
+      100,
+      200,
+      500,
+      1000
+    ],
+    "note": "纯 Qwen3-Embedding-0.6B 在**全量 72088 条**法条 item 上的完整排序；用于判定目标未达标是「排序问题」还是「召回天花板」",
+    "tiers": {
+      "union": {
+        "n_queries": 4270,
+        "n_gold_total": 11350,
+        "recall_at_k": {
+          "1": 0.1656,
+          "5": 0.3885,
+          "10": 0.5013,
+          "20": 0.5833,
+          "50": 0.6564,
+          "100": 0.7145,
+          "200": 0.7806,
+          "500": 0.859,
+          "1000": 0.9057
+        }
+      },
+      "system": {
+        "n_queries": 490,
+        "n_gold_total": 1480,
+        "recall_at_k": {
+          "1": 0.1081,
+          "5": 0.3919,
+          "10": 0.5068,
+          "20": 0.6284,
+          "50": 0.75,
+          "100": 0.8108,
+          "200": 0.8649,
+          "500": 0.9189,
+          "1000": 0.9595
+        }
+      },
+      "output": {
+        "n_queries": 4270,
+        "n_gold_total": 11310,
+        "recall_at_k": {
+          "1": 0.1662,
+          "5": 0.389,
+          "10": 0.5013,
+          "20": 0.5836,
+          "50": 0.6569,
+          "100": 0.7153,
+          "200": 0.7816,
+          "500": 0.8594,
+          "1000": 0.9063
+        }
+      }
+    },
+    "first_gold_rank": {
+      "n_ranked": 4270,
+      "unreachable_in_top1000": 0,
+      "p10": 1,
+      "p50": 2,
+      "p90": 255,
+      "max": 8054,
+      "hit_le": {
+        "1": 0.4403,
+        "5": 0.637,
+        "10": 0.7119,
+        "20": 0.7799,
+        "50": 0.829,
+        "100": 0.8689,
+        "200": 0.8946,
+        "500": 0.9391
+      }
+    }
+  },
+  "primary": "union",
+  "best_config": "dense_bm25",
+  "targets": {
+    "recall@5": 0.85,
+    "recall@10": 0.9
+  },
+  "targets_met": {
+    "recall@5_ge_0.85": false,
+    "recall@10_ge_0.90": false
+  },
+  "samples": [
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:1153",
+      "n_gold_union": 3,
+      "top5": [
+        "中华人民共和国刑法-a134-v2",
+        "中华人民共和国刑法-a135",
+        "中华人民共和国刑法-a135-v2",
+        "中华人民共和国刑法-a134",
+        "中华人民共和国建筑法-a71-v2"
+      ],
+      "hit5": 2,
+      "hit10": 2
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:1758",
+      "n_gold_union": 2,
+      "top5": [
+        "最高人民法院关于审理交通肇事刑事案件具体应用法律若干问题的解释-a8",
+        "中华人民共和国刑法-a310-v2",
+        "中华人民共和国刑法-a310",
+        "最高人民法院关于审理交通肇事刑事案件具体应用法律若干问题的解释-a1",
+        "中华人民共和国道路交通安全法实施条例-a92"
+      ],
+      "hit5": 2,
+      "hit10": 2
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:1795",
+      "n_gold_union": 4,
+      "top5": [
+        "中华人民共和国治安管理处罚法-a49",
+        "中华人民共和国刑法-a268-v2",
+        "中华人民共和国刑法-a268",
+        "中华人民共和国刑法-a64",
+        "中华人民共和国刑法-a64-v2"
+      ],
+      "hit5": 0,
+      "hit10": 2
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:2479",
+      "n_gold_union": 2,
+      "top5": [
+        "中华人民共和国刑法-a136-v2",
+        "中华人民共和国刑法-a136",
+        "烟花爆竹安全管理条例-a39",
+        "最高人民法院关于修改《最高人民法院关于审理非法制造、买卖、运输枪支、弹药、爆炸物等刑事案件具体应用法律若干问题的解释》的决定-a10",
+        "最高人民法院关于适用《中华人民共和国刑事诉讼法》的解释-a84-v2"
+      ],
+      "hit5": 0,
+      "hit10": 0
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:2852",
+      "n_gold_union": 3,
+      "top5": [
+        "中华人民共和国刑法-a206",
+        "中华人民共和国刑法-a206-v2",
+        "中华人民共和国刑法-a205",
+        "中华人民共和国刑法-a207",
+        "中华人民共和国刑法-a207-v2"
+      ],
+      "hit5": 1,
+      "hit10": 3
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:3023",
+      "n_gold_union": 4,
+      "top5": [
+        "最高人民法院关于审理非法制造、买卖、运输枪支、弹药、爆炸物等刑事案件具体应用法律若干问题的解释-a5",
+        "最高人民法院关于修改《最高人民法院关于审理非法制造、买卖、运输枪支、弹药、爆炸物等刑事案件具体应用法律若干问题的解释》的决定-a5",
+        "中华人民共和国刑事诉讼法-a176",
+        "人民检察院刑事诉讼规则-a437",
+        "最高人民法院关于审理非法制造、买卖、运输枪支、弹药、爆炸物等刑事案件具体应用法律若干问题的解释-a8"
+      ],
+      "hit5": 0,
+      "hit10": 0
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:3771",
+      "n_gold_union": 2,
+      "top5": [
+        "中华人民共和国合同法-a331",
+        "中华人民共和国刑法-a67-v2",
+        "最高人民法院、最高人民检察院关于修改《关于办理妨害信用卡管理刑事案件具体应用法律若干问题的解释》的决定-a10",
+        "中华人民共和国刑法-a287",
+        "中华人民共和国刑法-a287-v2"
+      ],
+      "hit5": 0,
+      "hit10": 0
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:4902",
+      "n_gold_union": 2,
+      "top5": [
+        "中华人民共和国刑法-a172",
+        "中华人民共和国刑法-a172-v2",
+        "中华人民共和国刑法-a280-v2",
+        "中华人民共和国刑法-a170",
+        "中华人民共和国刑法-a171"
+      ],
+      "hit5": 0,
+      "hit10": 0
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:5217",
+      "n_gold_union": 5,
+      "top5": [
+        "中华人民共和国刑法-a266-v2",
+        "中华人民共和国刑法-a266",
+        "人民检察院刑事诉讼规则-a516",
+        "最高人民法院、最高人民检察院关于办理诈骗刑事案件具体应用法律若干问题的解释-a7",
+        "人民检察院刑事诉讼规则-a400"
+      ],
+      "hit5": 2,
+      "hit10": 2
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:5279",
+      "n_gold_union": 5,
+      "top5": [
+        "中华人民共和国刑法-a234",
+        "中华人民共和国刑法-a234-v2",
+        "中华人民共和国刑法-a436",
+        "中华人民共和国刑法-a436-v2",
+        "中华人民共和国刑法-a232-v2"
+      ],
+      "hit5": 2,
+      "hit10": 2
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:5668",
+      "n_gold_union": 2,
+      "top5": [
+        "中华人民共和国行政诉讼法-a33",
+        "中华人民共和国刑事诉讼法-a48-v3",
+        "中华人民共和国刑事诉讼法-a50",
+        "中华人民共和国行政处罚法-a46",
+        "中华人民共和国刑法-a143-v2"
+      ],
+      "hit5": 0,
+      "hit10": 0
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:5691",
+      "n_gold_union": 2,
+      "top5": [
+        "最高人民法院、最高人民检察院关于办理组织、强迫、引诱、容留、介绍卖淫刑事案件适用法律若干问题的解释-a2",
+        "最高人民法院、最高人民检察院关于办理组织、强迫、引诱、容留、介绍卖淫刑事案件适用法律若干问题的解释-a4",
+        "最高人民法院、最高人民检察院关于办理组织、强迫、引诱、容留、介绍卖淫刑事案件适用法律若干问题的解释-a5",
+        "最高人民法院、最高人民检察院关于办理组织、强迫、引诱、容留、介绍卖淫刑事案件适用法律若干问题的解释-a14",
+        "中华人民共和国刑法-a358"
+      ],
+      "hit5": 0,
+      "hit10": 0
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:6249",
+      "n_gold_union": 7,
+      "top5": [
+        "人民检察院刑事诉讼规则-a561",
+        "中华人民共和国民法典-a1208",
+        "中华人民共和国道路交通安全法-a74",
+        "最高人民法院关于审理交通肇事刑事案件具体应用法律若干问题的解释-a8",
+        "人民检察院检察委员会工作规则-a40"
+      ],
+      "hit5": 0,
+      "hit10": 0
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:6451",
+      "n_gold_union": 2,
+      "top5": [
+        "中华人民共和国刑法-a363-v2",
+        "中华人民共和国刑法-a363",
+        "中华人民共和国刑法-a367-v2",
+        "中华人民共和国刑法-a367",
+        "中华人民共和国刑法-a364"
+      ],
+      "hit5": 2,
+      "hit10": 2
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:6522",
+      "n_gold_union": 2,
+      "top5": [
+        "娱乐场所管理条例-a8-v2",
+        "娱乐场所管理条例-a8",
+        "娱乐场所管理条例-a19",
+        "娱乐场所管理条例-a19-v2",
+        "中华人民共和国刑事诉讼法-a50"
+      ],
+      "hit5": 0,
+      "hit10": 1
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:6713",
+      "n_gold_union": 2,
+      "top5": [
+        "中华人民共和国刑法-a234-v2",
+        "中华人民共和国刑法-a234",
+        "中华人民共和国刑事诉讼法-a48-v3",
+        "中华人民共和国刑事诉讼法-a50",
+        "中华人民共和国刑法-a232-v2"
+      ],
+      "hit5": 0,
+      "hit10": 0
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:6797",
+      "n_gold_union": 2,
+      "top5": [
+        "中华人民共和国枪支管理法-a47",
+        "最高人民法院关于审理非法制造、买卖、运输枪支、弹药、爆炸物等刑事案件具体应用法律若干问题的解释-a5",
+        "最高人民法院关于审理非法制造、买卖、运输枪支、弹药、爆炸物等刑事案件具体应用法律若干问题的解释-a4",
+        "中华人民共和国枪支管理法-a2",
+        "中华人民共和国枪支管理法-a44"
+      ],
+      "hit5": 0,
+      "hit10": 0
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:7118",
+      "n_gold_union": 2,
+      "top5": [
+        "中华人民共和国刑法-a359-v2",
+        "中华人民共和国刑法-a359",
+        "最高人民法院、最高人民检察院关于办理组织、强迫、引诱、容留、介绍卖淫刑事案件适用法律若干问题的解释-a14",
+        "最高人民法院、最高人民检察院关于办理组织、强迫、引诱、容留、介绍卖淫刑事案件适用法律若干问题的解释-a2",
+        "最高人民法院、最高人民检察院关于办理组织、强迫、引诱、容留、介绍卖淫刑事案件适用法律若干问题的解释-a5"
+      ],
+      "hit5": 2,
+      "hit10": 2
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:7178",
+      "n_gold_union": 4,
+      "top5": [
+        "中华人民共和国刑法-a264",
+        "中华人民共和国刑法-a264-v2",
+        "人民检察院刑事诉讼规则(试行)-a436",
+        "人民检察院刑事诉讼规则-a400",
+        "人民检察院刑事诉讼规则(试行)-a434"
+      ],
+      "hit5": 2,
+      "hit10": 4
+    },
+    {
+      "uid": "Dusker__lawyer-llama__DISC-Law-SFT-Triplet:7367",
+      "n_gold_union": 3,
+      "top5": [
+        "人民检察院刑事诉讼规则-a65",
+        "中华人民共和国刑法-a234-v2",
+        "中华人民共和国刑法-a234",
+        "中华人民共和国刑法-a235",
+        "中华人民共和国刑法-a235-v2"
+      ],
+      "hit5": 0,
+      "hit10": 0
+    }
+  ],
+  "elapsed_sec": 1974.9
+}

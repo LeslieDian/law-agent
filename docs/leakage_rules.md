@@ -1,5 +1,10 @@
 # 防数据泄漏规则（论文实验的关键环节，必须留下可复核记录）
 
+> ⛔ **2026-09-19：CLaw 已退役**（官方数据从未获取、无法验证）。
+> 本文件中以 CLaw 为基准的条款**一律作废**；黑名单 = LexRubric + LexEval。
+> 现行去污口径见 `scripts/corpus/decontaminate.py` 与
+> `docs/corpus/DECONTAMINATION_REPORT_PASS.md`。理由见 `README.md`「⛔ CLaw 已退役」段。
+
 ## 1. 绝对禁止进入训练/验证集的内容
 
 - [ ] 254 个 CLaw 案例的**题目**

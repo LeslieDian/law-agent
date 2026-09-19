@@ -1,0 +1,171 @@
+{
+  "stage": "5-train",
+  "run": "A0_unified_qlora_SMOKE",
+  "generated_at": "2026-09-19 13:29:56",
+  "verdict": "FAIL",
+  "checks": {
+    "chat_template_renders": true,
+    "assistant_only_loss": true,
+    "lora_trainable_gt_0": true,
+    "rendered_gt_0": false,
+    "drop_rate_ok": true,
+    "loss_no_nan": true,
+    "loss_decreased": true,
+    "vram_peak_recorded": true
+  },
+  "notes": [
+    "TrainingArguments 丢弃的键：logging_dir, warmup_ratio"
+  ],
+  "config": {
+    "base_model": "/mnt/data/lidian/law-agent/models/Qwen3-8B",
+    "train_file": "data/train/train.jsonl",
+    "dev_file": "data/dev/dev.jsonl",
+    "smoke": 500,
+    "max_seq_length": 4096,
+    "micro_batch_size": 4,
+    "gradient_accumulation_steps": 4,
+    "lr": 0.0001,
+    "epochs": 1,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "target_modules": [
+      "q_proj",
+      "k_proj",
+      "v_proj",
+      "o_proj",
+      "gate_proj",
+      "up_proj",
+      "down_proj"
+    ],
+    "quantization": {
+      "load_in_4bit": true,
+      "bnb_4bit_quant_type": "nf4",
+      "bnb_4bit_use_double_quant": true,
+      "bnb_4bit_compute_dtype": "bfloat16"
+    },
+    "enable_thinking": false
+  },
+  "data": {
+    "train_scan": {
+      "rows": 500,
+      "has_messages": 500,
+      "single_turn": 500,
+      "multi_turn": 0,
+      "no_assistant": 0,
+      "skipped_no_messages": 0
+    },
+    "dataset_stats": {
+      "rendered": 0,
+      "dropped": 0,
+      "drop_reasons": {},
+      "truncated": 0,
+      "asst_tok": 0,
+      "tot_tok": 0
+    },
+    "n_train_samples": 500
+  },
+  "trainable_params": {
+    "lora": 43646976,
+    "total": 4761498624,
+    "ratio_pct": 0.9167
+  },
+  "train_result": {
+    "train_runtime": 196.2366,
+    "train_samples_per_second": 1.631,
+    "train_steps_per_second": 0.102,
+    "total_flos": 1.427954059186176e+16,
+    "train_loss": 0.6846774727106094,
+    "epoch": 0.64
+  },
+  "loss_curve": [
+    [
+      1,
+      1.1423134803771973
+    ],
+    [
+      2,
+      0.9850746393203735
+    ],
+    [
+      3,
+      0.8480644822120667
+    ],
+    [
+      4,
+      0.7696303725242615
+    ],
+    [
+      5,
+      0.731279730796814
+    ],
+    [
+      6,
+      0.6794297099113464
+    ],
+    [
+      7,
+      0.6671024560928345
+    ],
+    [
+      8,
+      0.6679023504257202
+    ],
+    [
+      9,
+      0.6438369154930115
+    ],
+    [
+      10,
+      0.6605208516120911
+    ],
+    [
+      11,
+      0.6769130825996399
+    ],
+    [
+      12,
+      0.5547311305999756
+    ],
+    [
+      13,
+      0.5769346952438354
+    ],
+    [
+      14,
+      0.6493732929229736
+    ],
+    [
+      15,
+      0.61175537109375
+    ],
+    [
+      16,
+      0.6204670667648315
+    ],
+    [
+      17,
+      0.5947695970535278
+    ],
+    [
+      18,
+      0.5352940559387207
+    ],
+    [
+      19,
+      0.5131157636642456
+    ],
+    [
+      20,
+      0.5650404095649719
+    ]
+  ],
+  "peak_vram_gb": 24.42,
+  "train_seconds": 196.6,
+  "elapsed_seconds": 214.6,
+  "gpu": {
+    "0": {
+      "name": "NVIDIA A800 80GB PCIe",
+      "total_gb": 79.1
+    }
+  }
+}

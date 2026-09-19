@@ -1,0 +1,129 @@
+{
+  "generated_at": "2026-09-19T14:13:51",
+  "pipeline": {
+    "dense": {
+      "model": "/mnt/data/lidian/law-agent/models/Qwen3-Embedding-0.6B",
+      "dim": 1024,
+      "index_rows": 72088,
+      "top_k": 50,
+      "instruction_aware": true
+    },
+    "bm25": {
+      "n_docs": 72088,
+      "vocab": 24172,
+      "nnz": 3008557,
+      "avg_len": 66.5,
+      "k1": 1.5,
+      "b": 0.75,
+      "min_df": 2,
+      "build_sec": 26.5,
+      "avg_query_terms_in_vocab": 101.4
+    },
+    "graph": {
+      "next_nodes": 69530,
+      "cites_nodes": 3973,
+      "hops": 1,
+      "seed": 20,
+      "w_next": 1.0,
+      "w_cites": 0.5
+    },
+    "rrf_k": 60,
+    "hotness": {
+      "rows": 72440,
+      "w_hot": 0.05,
+      "formula": {
+        "norm_log1p": "log1p(x)/log1p(max_x)",
+        "provision_hotness": "0.85*norm_log1p(in_cites) + 0.15*rank_norm",
+        "case_hotness": "norm_log1p(n_same_case)",
+        "ranking": "final = rrf_score * (1 + W_HOT * hotness)   [W_HOT 默认 0.05]"
+      }
+    },
+    "reranker": {
+      "enabled": false,
+      "model": null,
+      "pool": 50,
+      "n_calls": 0
+    }
+  },
+  "library_layout": {
+    "provision_library": "provision_embedding",
+    "vector_level_filter": "item",
+    "excluded": "level=doc（文档级，语义粒度不同）"
+  },
+  "configs": {
+    "vector": "纯向量（Qwen3-Embedding-0.6B）"
+  },
+  "gold_definition": {
+    "system(tierA)": "数据集自带 `system` 的相关法律条文清单 —— 权威口径",
+    "output(tierB)": "从**参考答案** `output` 解析法条引用 —— 覆盖大，但是**下界**",
+    "union": "tierA ∪ tierB（主口径）"
+  },
+  "law_name_resolution": {
+    "alias": 1964,
+    "exact": 128,
+    "ambiguous": 20,
+    "miss": 26
+  },
+  "queries": {
+    "rows": 2000,
+    "with_gold": 841,
+    "no_gold": 1147,
+    "empty_query": 12,
+    "tierA_rows": 104,
+    "tierB_rows": 840,
+    "refs_system": 315,
+    "refs_output": 2241,
+    "refs_system_missing_in_index": 0,
+    "refs_output_missing_in_index": 3
+  },
+  "item_texts": {
+    "n_missing_body": 0,
+    "n_ids": 72088
+  },
+  "metrics": {
+    "vector": {
+      "union": {
+        "n_queries": 20,
+        "n_gold_total": 60,
+        "avg_gold_per_query": 3.0,
+        "hit@5": 0.55,
+        "hit@10": 0.65,
+        "recall@5": 0.35,
+        "recall@10": 0.4667,
+        "mrr@10": 0.4467
+      },
+      "system": {
+        "n_queries": 20,
+        "n_gold_total": 60,
+        "avg_gold_per_query": 3.0,
+        "hit@5": 0.55,
+        "hit@10": 0.65,
+        "recall@5": 0.35,
+        "recall@10": 0.4667,
+        "mrr@10": 0.4467
+      },
+      "output": {
+        "n_queries": 20,
+        "n_gold_total": 60,
+        "avg_gold_per_query": 3.0,
+        "hit@5": 0.55,
+        "hit@10": 0.65,
+        "recall@5": 0.35,
+        "recall@10": 0.4667,
+        "mrr@10": 0.4467
+      }
+    }
+  },
+  "primary": "union",
+  "best_config": "vector",
+  "targets": {
+    "recall@5": 0.85,
+    "recall@10": 0.9
+  },
+  "targets_met": {
+    "recall@5_ge_0.85": false,
+    "recall@10_ge_0.90": false
+  },
+  "samples": [],
+  "elapsed_sec": 42.8
+}

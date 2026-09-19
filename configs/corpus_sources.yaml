@@ -203,17 +203,28 @@ target_mix:
 
 # ============================================================
 # 去污黑名单（绝对不许进训练/验证集）
+#   ★ 2026-09-19 更新：CLaw 已退役（官方数据从未获取、无法验证），
+#     黑名单实际 = LexRubric + LexEval 两项。
 # ============================================================
 contamination_blacklist:
   method: "精确哈希 + simhash(64bit, 汉明距离<=3)"
   gate: "DECONTAMINATION_REPORT.json verdict 必须为 PASS 才允许训练"
+  # ★ 法条流例外（2026-09-19 事故修复）：法条流只做**精确 sha1** 剔除，
+  #   近似命中改为 `--statutes-near audit` 只记录不剔除。
+  #   理由：法条流不进 SFT（不存在评测泄漏风险），且评测集必然引用法条原文
+  #   → 拿法条正文比评测题在结构上必然产生假阳性。旧口径曾因此误删
+  #   739 部法规 / 4,191,231 字（含民法典、刑法、刑诉法）。
+  statutes_policy: "exact-only (--statutes-near audit)"
   items:
-    - name: CLaw
-      location: "data/raw/claw/ 中 254 个最高法案例"
-      rule: "题目/参考答案/改写版本/判分解释 一律禁用"
     - name: LexRubric
       location: "data/benchmark/lexrubric/"
       rule: "649 题 + 12,335 rubric 一律禁用"
     - name: LexEval
       location: "data/benchmark/lexeval/"
       rule: "23 任务 / 14,150 题 一律禁用"
+  retired:
+    - name: CLaw
+      retired_at: "2026-09-19"
+      reason: "官方数据从未公开发布；data/raw/ 为空、docs/data_manifest.json 原登记的 4 个文件 sha256 全为 null，无法获取也无法验证 → 从论文评测体系彻底退出（含其『254 案不进训练集』隔离规则，该规则本就是空规则）"
+      note: "不是漏做去污，而是该基准在本项目中不存在。论文与评测均不得再出现 CLaw 比较或复现表述。"
+

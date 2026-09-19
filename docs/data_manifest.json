@@ -1,8 +1,9 @@
 {
-  "_comment": "数据固化清单。data/raw 下载后立即登记，此后只读。所有 sha256 由 src/prepare/register_data.py 自动填充。",
+  "_comment": "语料固化清单。data/raw 下载后立即登记，此后只读。所有 sha256 由 src/prepare/register_data.py 自动填充。",
   "created_at": "2026-09-17",
-  "last_updated": null,
-  "scope": "仅登记 CLaw 语料（民法/刑法/程序法）与案例推理原始数据。",
+  "last_updated": "2026-09-19",
+  "scope": "登记本项目**实际使用**的法律语料原始数据：5 个 HuggingFace 公开数据集（法条流 2 个 + 案例/问答流 3 个）。",
+  "status_note": "本文件于 2026-09-19 重写。原版 scope 写的是「仅登记 CLaw 语料」，并登记了 4 个 data/raw/claw_* 文件 —— 那 4 个文件从未存在（sha256 全 null）。详见末尾 retired_datasets。",
   "benchmarks_registry": {
     "note": "外部评测基准（LexRubric / LexEval）单独登记，与本清单彻底分离，禁止并入本文件 files[]。",
     "path": "docs/benchmarks/README.md",
@@ -16,84 +17,134 @@
     "hash_algorithm": "sha256",
     "reproducible_notes": "必须记录下载日期、来源地址、数据版本；禁止覆盖原始文件，修订版另存为 *_v2"
   },
-  "dataset": {
-    "name": "CLaw",
-    "scope": "民法 / 刑法 / 程序法 三法域法律知识 + 案例推理",
-    "contact": "ypxxz2019@pku.edu.cn",
-    "official_repo": null,
-    "reproduction_statement": "依据 CLaw 公开论文所描述协议构建的兼容性复现实验",
-    "warning": "不得表述为『完全复现 CLaw 官方实验』"
+  "acquisition": {
+    "endpoint": "https://hf-mirror.com",
+    "probed_on": "192.168.195.61",
+    "candidate_registry": "configs/corpus_sources.yaml",
+    "license_policy": "只采用 license_grade=A（Apache-2.0 / MIT）的源进论文实验集"
   },
-  "expected_counts": {
-    "laws": 306,
-    "provisions": 64849,
-    "cases": 254
+  "actual_totals": {
+    "raw_records_scanned": 308767,
+    "after_decontamination": 294499,
+    "removed_by_decontamination": 14268,
+    "statute_items_after_split": 72449,
+    "cases_in_retrieval_library": 82820,
+    "note": "口径见 docs/corpus/APPLY_SUMMARY.json 与 docs/corpus/DECONTAMINATION_REPORT.json"
   },
-  "verified_counts": {
-    "laws": null,
-    "provisions": null,
-    "cases": null
-  },
-  "verification_status": "PENDING",
   "files": [
     {
-      "file": "data/raw/claw_statutes.jsonl",
-      "kind": "statutes",
-      "expected_records": 64849,
-      "actual_records": null,
-      "source_url": null,
-      "download_date": null,
-      "data_version": null,
-      "sha256": null
+      "dataset": "ShengbinYue/DISC-Law-SFT",
+      "hub": "huggingface",
+      "license": "apache-2.0",
+      "license_grade": "A",
+      "role": "案例/问答主力（expert_train + router_train + general_replay）",
+      "records": 252355,
+      "removed_by_decontam": 12598,
+      "kept": 239757
     },
     {
-      "file": "data/raw/claw_cases.jsonl",
-      "kind": "cases",
-      "expected_records": 254,
-      "actual_records": null,
-      "source_url": null,
-      "download_date": null,
-      "data_version": null,
-      "sha256": null
+      "dataset": "twang2218/chinese-law-and-regulations",
+      "hub": "huggingface",
+      "license": "apache-2.0",
+      "license_grade": "A",
+      "role": "法条原文主力（statute_kb）→ 逐条切分来源",
+      "records": 22510,
+      "removed_by_decontam": 0,
+      "kept": 22510
     },
     {
-      "file": "data/raw/claw_prompts.json",
-      "kind": "prompts",
-      "expected_records": null,
-      "actual_records": null,
-      "source_url": null,
-      "download_date": null,
-      "data_version": null,
-      "sha256": null
+      "dataset": "Dusker/lawyer-llama",
+      "hub": "huggingface",
+      "license": "mit",
+      "license_grade": "A",
+      "role": "案例/问答（expert_train + case_corpus）",
+      "records": 18435,
+      "removed_by_decontam": 1117,
+      "kept": 17318
     },
     {
-      "file": "data/raw/claw_judge_prompt.txt",
-      "kind": "judge_prompt",
-      "expected_records": null,
-      "actual_records": null,
-      "source_url": null,
-      "download_date": null,
-      "data_version": null,
-      "sha256": null
+      "dataset": "Skepsun/lawyer_llama_data",
+      "hub": "huggingface",
+      "license": "apache-2.0",
+      "license_grade": "A",
+      "role": "司法考试题（expert_train + router_train），程序法域关键来源",
+      "records": 14467,
+      "removed_by_decontam": 553,
+      "kept": 13914
+    },
+    {
+      "dataset": "pandalla/chinese_law_examples",
+      "hub": "huggingface",
+      "license": "apache-2.0",
+      "license_grade": "A",
+      "role": "条级法条样例（statute_kb，原登记为 reference_only，实际已进法条流）",
+      "records": 1000,
+      "removed_by_decontam": 0,
+      "kept": 1000
     }
   ],
+  "expected_counts": {
+    "laws": 1904,
+    "provisions": 72449,
+    "cases": 82820,
+    "note": "laws=切条后保留的国家级规范数（阶段 2b）；provisions=条级产物；cases=检索库案件数（= 去污后 qa 流 case_analysis 且与四份 split 不相交）"
+  },
+  "verified_counts": {
+    "laws": 1904,
+    "provisions": 72449,
+    "cases": 82820
+  },
+  "verification_status": "VERIFIED_2026_09_19",
   "statute_fields_required": [
-    "law_id", "law_name", "version_id", "promulgation_date",
-    "effective_from", "effective_to", "article_no", "paragraph_no",
-    "subparagraph_no", "text", "source_url", "sha256"
+    "law_id", "law_name", "article_no", "text", "status",
+    "effective_from", "domain", "law_type", "source_dataset"
   ],
   "case_fields_required": [
-    "case_id", "facts", "judgment", "question", "reference_answer",
-    "source", "publication_date", "case_type"
+    "uid", "case_sha1", "domain", "domain4", "task", "input", "ask", "output"
+  ],
+  "field_notes": [
+    "原版要求 version_id / paragraph_no / subparagraph_no / effective_to —— 实测语料里**这些字段不存在或全空**：",
+    "  · version_id：语料为 2026-09 单版本快照，「同法多版本」不成立（provision_id 用 -v{k} 消歧的只有多源文档的情形）",
+    "  · paragraph_no / subparagraph_no：款/项粒度**非空 0 行** → 评测表原「条+款/项」两列已删",
+    "  · effective_to：字段不存在；effective_from 缺失约 32%，effective_period 是十年粗区间",
+    "→ 相关论文表述（时间版本过滤消融）已按实际降级为「有/无 status 过滤」，见 docs/paper_revision_notes.md"
   ],
   "corpus_sources_priority": [
-    "国家法律法规数据库",
-    "全国人大官方网站",
-    "中国政府网",
-    "最高人民法院公开材料",
-    "其他具有明确来源与发布日期的司法文件"
+    "HuggingFace 公开数据集（license_grade=A，见 configs/corpus_sources.yaml）",
+    "国家法律法规数据库（法条原文交叉校验，未直接采购）",
+    "全国人大官方网站（同上）",
+    "中国政府网（同上）",
+    "最高人民法院公开材料（同上）"
   ],
-  "corpus_fields_required": [
-    "原始来源", "发布日期", "生效日期", "失效日期", "法律版本", "抓取日期"
+  "retired_datasets": [
+    {
+      "name": "CLaw",
+      "retired_at": "2026-09-19",
+      "previously_expected_counts": { "laws": 306, "provisions": 64849, "cases": 254 },
+      "actual_files_on_disk": "无（data/raw/ 为空目录）",
+      "evidence": "本文件原登记的 4 个 data/raw/claw_*.jsonl/json 文件 sha256 / source_url / download_date 全为 null；find data/raw -type f 返回 0 行",
+      "reason": "官方数据从未公开发布，既无法获取也无法验证 → 从论文评测体系彻底退出",
+      "former_reproduction_statement": "依据 CLaw 公开论文所描述协议构建的兼容性复现实验",
+      "former_warning": "不得表述为『完全复现 CLaw 官方实验』",
+      "successor": "内部验证集（dev 1000 / test 1000 / router 20000，与检索库强隔离）+ LexEval / LexRubric 闭卷线",
+      "red_line": "论文中不得出现任何以 CLaw 为基准的比较或『复现』表述"
+    }
+  ],
+  "also_unused_but_previously_claimed": [
+    {
+      "name": "CAIL2018",
+      "status": "登记为候选（B 级，license=unknown），**未采购**",
+      "capability_covered_by": "ShengbinYue/DISC-Law-SFT 的 judgement_predit 任务（约 32,000 条）"
+    },
+    {
+      "name": "LeCaRD",
+      "status": "未采购",
+      "capability_covered_by": "DISC-Law-SFT 的 sim_case_match 任务（约 7,987 条）"
+    },
+    {
+      "name": "裁判文书网 / 人工整理案例",
+      "status": "未直接采购",
+      "capability_covered_by": "上述 5 个 HF 数据集的 case_analysis 样本（检索库 82,820 条）"
+    }
   ]
 }

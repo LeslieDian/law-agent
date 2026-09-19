@@ -1,12 +1,20 @@
 # 执行顺序（按此顺序做，最省时间；不要一上来就训练模型）
 
+> ⛔ **2026-09-19 更新：CLaw 已退役**（官方数据从未获取，无法验证）。
+> 本文件下文凡涉及 CLaw 的步骤/口径**一律作废**，理由与证据见
+> [`README.md`](../README.md) 的「⛔ CLaw 已退役」段与
+> `docs/data_manifest.json` 的 `retired_datasets`。
+> 黑名单 = LexRubric + LexEval；评测基准 = 内部验证集（dev/test/router）+ 二者闭卷线。
+
 ## 阶段 A：数据与评测链路（不碰 GPU 也可推进）
 
-1. **取得并校验 CLaw 数据** → 登记 `docs/data_manifest.json`，核对 306 / 64,849 / 254
+1. ~~取得并校验 CLaw 数据~~ → **改为**：登记**实际采购**的 5 个 HuggingFace 语料源，
+   核对 `docs/data_manifest.json` 的 `expected_counts` / `verified_counts`
+   （**已完成**：308,767 原始行 → 去污后 294,499）
 2. **建立统一输出格式与评测脚本**（`src/evaluation/`）
 3. **用原始 Qwen 跑 10 个案例**，验证端到端能跑通
 4. **验证 Judge 评分流程**（双 Judge + 盲测 + JSON 解析）
-5. **运行 E0 的 254 个案例** → 得到基础闭卷基线
+5. ~~运行 E0 的 254 个案例~~ → **改为**：运行 E0 的**内部验证集**（test 1,000 条）闭卷基线
 
 ## 阶段 B：知识层建设
 

@@ -1,0 +1,394 @@
+{
+  "generated_at": "2026-09-19T16:19:09",
+  "verdict": "PASS",
+  "checks": {
+    "cites_edges_read": true,
+    "provision_hotness_gt_0": true,
+    "provision_hotness_covers_all": true,
+    "case_hotness_gt_0": true,
+    "case_multiplicity_gt_0": true,
+    "case_hotness_covers_all": true
+  },
+  "notes": [],
+  "formula": {
+    "norm_log1p": "log1p(x)/log1p(max_x)",
+    "provision_hotness": "0.85*norm_log1p(in_cites) + 0.15*rank_norm",
+    "case_hotness": "norm_log1p(n_same_case)",
+    "ranking": "final = rrf_score * (1 + W_HOT * hotness)   [W_HOT 默认 0.05]"
+  },
+  "law_rank": {
+    "法律": 1.0,
+    "行政法规": 0.85,
+    "司法解释": 0.8,
+    "法律解释": 0.78
+  },
+  "counts": {
+    "provision": 72440,
+    "case": 145339,
+    "provision_meta_rows": 72440,
+    "case_meta_rows": 145339,
+    "cites_edges": 7224,
+    "unique_case_sha1": 134597
+  },
+  "provision_in_cites_hist": {
+    "in_cites==0": 68413,
+    "in_cites>=1": 4027,
+    "in_cites>=5": 147,
+    "in_cites>=20": 5
+  },
+  "provision_by_level": {
+    "item": 72088,
+    "doc": 352
+  },
+  "provision_by_domain": {
+    "civil": 15169,
+    "general": 45511,
+    "criminal": 4326,
+    "procedural": 7434
+  },
+  "top_provision": [
+    {
+      "provision_id": "中华人民共和国民法典-a510",
+      "hotness": 1.0,
+      "in_cites": 26,
+      "out_cites": 0,
+      "law_id": "中华人民共和国民法典",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "civil"
+    },
+    {
+      "provision_id": "中华人民共和国合同法-a61",
+      "hotness": 1.0,
+      "in_cites": 26,
+      "out_cites": 0,
+      "law_id": "中华人民共和国合同法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "civil"
+    },
+    {
+      "provision_id": "中华人民共和国民用航空法-a128",
+      "hotness": 0.947183,
+      "in_cites": 21,
+      "out_cites": 3,
+      "law_id": "中华人民共和国民用航空法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国民用航空法-a128-v2",
+      "hotness": 0.947183,
+      "in_cites": 21,
+      "out_cites": 3,
+      "law_id": "中华人民共和国民用航空法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国民用航空法-a128-v3",
+      "hotness": 0.947183,
+      "in_cites": 21,
+      "out_cites": 3,
+      "law_id": "中华人民共和国民用航空法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国民事诉讼法-a200",
+      "hotness": 0.89543,
+      "in_cites": 17,
+      "out_cites": 0,
+      "law_id": "中华人民共和国民事诉讼法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "procedural"
+    },
+    {
+      "provision_id": "中华人民共和国民事诉讼法-a200-v2",
+      "hotness": 0.89543,
+      "in_cites": 17,
+      "out_cites": 0,
+      "law_id": "中华人民共和国民事诉讼法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "procedural"
+    },
+    {
+      "provision_id": "中华人民共和国食品安全法-a50",
+      "hotness": 0.865054,
+      "in_cites": 15,
+      "out_cites": 0,
+      "law_id": "中华人民共和国食品安全法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国行政许可法-a12",
+      "hotness": 0.865054,
+      "in_cites": 15,
+      "out_cites": 0,
+      "law_id": "中华人民共和国行政许可法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国食品安全法-a50-v2",
+      "hotness": 0.865054,
+      "in_cites": 15,
+      "out_cites": 0,
+      "law_id": "中华人民共和国食品安全法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国食品安全法-a50-v3",
+      "hotness": 0.865054,
+      "in_cites": 15,
+      "out_cites": 0,
+      "law_id": "中华人民共和国食品安全法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国行政许可法-a12-v2",
+      "hotness": 0.865054,
+      "in_cites": 15,
+      "out_cites": 0,
+      "law_id": "中华人民共和国行政许可法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国刑法-a234",
+      "hotness": 0.830616,
+      "in_cites": 13,
+      "out_cites": 0,
+      "law_id": "中华人民共和国刑法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "criminal"
+    },
+    {
+      "provision_id": "中华人民共和国刑法-a234-v2",
+      "hotness": 0.830616,
+      "in_cites": 13,
+      "out_cites": 0,
+      "law_id": "中华人民共和国刑法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "criminal"
+    },
+    {
+      "provision_id": "中华人民共和国行政诉讼法-a91",
+      "hotness": 0.830616,
+      "in_cites": 13,
+      "out_cites": 0,
+      "law_id": "中华人民共和国行政诉讼法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "procedural"
+    },
+    {
+      "provision_id": "中华人民共和国土地管理法-a44",
+      "hotness": 0.811503,
+      "in_cites": 12,
+      "out_cites": 0,
+      "law_id": "中华人民共和国土地管理法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国土地管理法-a44-v2",
+      "hotness": 0.811503,
+      "in_cites": 12,
+      "out_cites": 0,
+      "law_id": "中华人民共和国土地管理法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国民用航空法-a119",
+      "hotness": 0.811503,
+      "in_cites": 12,
+      "out_cites": 3,
+      "law_id": "中华人民共和国民用航空法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国民用航空法-a129",
+      "hotness": 0.811503,
+      "in_cites": 12,
+      "out_cites": 0,
+      "law_id": "中华人民共和国民用航空法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    },
+    {
+      "provision_id": "中华人民共和国民用航空法-a119-v2",
+      "hotness": 0.811503,
+      "in_cites": 12,
+      "out_cites": 3,
+      "law_id": "中华人民共和国民用航空法",
+      "law_type_std": "法律",
+      "law_rank": 1.0,
+      "level": "item",
+      "domain4": "general"
+    }
+  ],
+  "top_case": [
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:159137",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:159189",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:159207",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:159273",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:159426",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:159585",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:159867",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:159911",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:160007",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:160110",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:160161",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:160172",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:160209",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:160339",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:160390",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:160559",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:160570",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:160991",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:161017",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    },
+    {
+      "uid": "ShengbinYue__DISC-Law-SFT__DISC-Law-SFT-Pair:161328",
+      "hotness": 1.0,
+      "n_same_case": 82,
+      "case_sha1": "d66d2bfd3783f0d9ab4876d3193b49f0df214acf"
+    }
+  ],
+  "elapsed_sec": 3.1
+}

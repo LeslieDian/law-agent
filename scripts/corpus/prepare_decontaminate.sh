@@ -16,7 +16,8 @@ echo "=== [2/3] 跑去污 ==="
 "$PY" "$HERE/decontaminate.py" \
   --root "$ROOT" \
   --out-json "$DOCS/DECONTAMINATION_REPORT.json" \
-  --out-md   "$DOCS/DECONTAMINATION_REPORT.md"
+  --out-md   "$DOCS/DECONTAMINATION_REPORT.md" \
+  --statutes-near audit
 
 echo "=== [3/3] 结论 ==="
 "$PY" - <<'PYEOF'

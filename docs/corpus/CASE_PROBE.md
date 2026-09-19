@@ -99,7 +99,13 @@ rec["case_sha1"] = sha1(inp[-400:]) if inp else ""
 | 程序法 | `TimeLimit` | ❌ | 同上 |
 | 程序法 | `Remedy` | ❌ | 同上 |
 
-**小结**：17 类实体中，**3 类可建 + 3 类弱可建 + 11 类无料**。
+**小结**：17 类实体中，**5 类可建 + 2 类弱可建 + 10 类无料**。
+
+| 判定 | 数量 | 实体 |
+|---|---:|---|
+| ✅ 可建 | **5** | `Case` / `Law` / `Domain` / `Crime` / `CauseOfAction` |
+| ⚠️ 弱可建 | **2** | `LegalIssue` / `SentencingFactor` |
+| ❌ 无料 | **10** | `Evidence` / `CrimeElement` / `LegalRelation` / `ClaimBasis` / `CivilLiability` / `ProcedureStage` / `JurisdictionRule` / `EvidenceRule` / `TimeLimit` / `Remedy` |
 论文 3.2.6 声明的「100,674 节点 / 192,304 关系」需要能对上的口径：
 Case ~99,626 + Law 1,579 + Domain 4 ≈ **101,209**（数量级吻合，但**具体口径必须复现**）。
 

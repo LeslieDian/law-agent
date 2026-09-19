@@ -736,12 +736,22 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
 - ✅ **决策项 C｜阶段 2/3 缺陷根治 —— 已完成**（2026-09-18）：`normalize_corpus.py` 的 `uid` 已加入 `source_file`
   词干、合并流只并本轮正式产出、`*.sample.jsonl` 残留已剔除，阶段 2/3/2b/4 **全链路已重跑一遍**。
   详见 [`docs/corpus/README.md`](docs/corpus/README.md) 第十节「已修复缺陷与前后对照」。
-- ⬜ 阶段 4b：法条条目 **65,037 条向量化入库 + 建图**（`indexes/` 目前为空）。
-  **设计已定稿并做过可行性实测** → [`docs/retrieval_design.md`](docs/retrieval_design.md)（节点 7→5、关系 8→5，
-  实测证据 [`docs/corpus/VECTOR_DB_PROBE.json`](docs/corpus/VECTOR_DB_PROBE.json)）。
-  ⚠️ 三个硬伤需先拍板：① 时间版本过滤无字段可依（A2 消融失效）；② 款/项粒度为 0（评测表两列填不了）；
-  ③ 图谱 `CITES` 只覆盖 6.3% 条文 → 扩展主力须改 `NEXT`。
-  ⚠️ 入库前必须先跑 `src/prepare/check_leakage.py` 四级查重。
+- ⬜ 阶段 4b：**检索层（向量库 + 知识图谱）构建**（`indexes/` 目前为空）。
+  设计已定稿并做过可行性实测 → [`docs/retrieval_design.md`](docs/retrieval_design.md)
+  （节点 7→5、关系 8→5；证据 [`docs/corpus/VECTOR_DB_PROBE.json`](docs/corpus/VECTOR_DB_PROBE.json)）。
+  **已拍板（D1–D5 全按「A」）**：
+  ① 时间版本过滤无字段可依 → A2 消融改用 `status`（现行/已废止）；
+  ② 款/项粒度为 0 → 评测表删「条+款/项」两列；
+  ③ 图谱 `CITES` 只覆盖 6.3% 条文 → 扩展主力改 `NEXT`（覆盖 100%）；
+  ④ 多版本语料不补，论文声明「2026-09 快照、单版本」；
+  ⑤ 论文区分「模式层设计（17 类全保留）」与「数据层实例化（实测 5 可建 + 2 弱 + 10 无料）」。
+  **长文本隐患已排除**（2026-09-19）：item 最长 26,980 字**不是切条遗漏**，
+  而是条文自带的附表（[`docs/corpus/LONG_TEXT_PROBE.md`](docs/corpus/LONG_TEXT_PROBE.md)）；
+  影响面仅 372/65,037 = 0.57%，不需重跑阶段 2b。
+  **论文改写稿已备** → [`docs/paper_revision_notes.md`](docs/paper_revision_notes.md)
+  （数据来源按实际改写、3.2.6 规模给口径、`Law` 节点语义对齐、评测表删列）。
+  ⚠️ **开工前两件必做**：① **4b-0 泄漏门禁** —— 检索库 ∩ (val ∪ test ∪ router) 必须为 0；
+  ② 跑 `src/prepare/check_leakage.py` 四级查重。
 - ⬜ 阶段 5–9：LoRA 训练 → 路由 → MoE 消融 → 内部验证集选 checkpoint → 终评
 - ⬜ （可选）配置 `HF_TOKEN` 后补采 `Aiiluo/Chinese-Law-SFT-Dataset`（2.6 MB，gated）
 

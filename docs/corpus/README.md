@@ -27,6 +27,8 @@
 | `DERIVE_REPORT.md` / `DERIVE_STATS.json` | 阶段 2c 程序法条文任务派生报告 + 自检 |
 | `SPLIT_REPORT.md` / `SPLIT_STATS.json` / `SPLIT_VERIFY.md` / `.json` | 阶段 4 切分报告 + 质检门禁 **PASS** |
 | `VECTOR_DB_PROBE.json` | 阶段 4b 前置探查：向量库 / 知识图谱设计的**可行性实测**（节点可派生性、时间字段覆盖、交叉引用规模、文本长度分布） |
+| `CASE_PROBE.md` | 案例侧实测：案件类样本规模、Case 属性可得性、论文 17 类实体的可实例化判定（5 可建 / 2 弱 / 10 无料） |
+| `LONG_TEXT_PROBE.md` | 长文本隐患结论：item 最长 26,980 字**不是切条遗漏**（行首多条约号 = 0），而是条文自带附表；影响面 372/65,037 |
 
 ---
 

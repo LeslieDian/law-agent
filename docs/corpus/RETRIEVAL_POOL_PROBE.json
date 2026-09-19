@@ -1,0 +1,170 @@
+{
+  "generated_at": "2026-09-19T09:55:57",
+  "host": "aidda80061",
+  "root": "/mnt/data/lidian/law-agent",
+  "case_kinds_used": [
+    "case_analysis"
+  ],
+  "splits": {
+    "train": {
+      "file": "data/train/train.jsonl",
+      "rows": 100000,
+      "unique_uids": 100000
+    },
+    "dev": {
+      "file": "data/dev/dev.jsonl",
+      "rows": 1000,
+      "unique_uids": 1000
+    },
+    "test": {
+      "file": "data/test/test.jsonl",
+      "rows": 1000,
+      "unique_uids": 1000
+    },
+    "router": {
+      "file": "data/router/router_train.jsonl",
+      "rows": 20000,
+      "unique_uids": 20000
+    }
+  },
+  "split_pair_overlap": {
+    "dev∩router": 0,
+    "dev∩test": 0,
+    "dev∩train": 0,
+    "router∩test": 0,
+    "router∩train": 0,
+    "test∩train": 0
+  },
+  "split_pair_overlap_max": 0,
+  "eval_set": {
+    "members": [
+      "dev",
+      "test",
+      "router"
+    ],
+    "unique_uids": 22000
+  },
+  "all_four_splits": {
+    "unique_uids": 122000
+  },
+  "qa": {
+    "files": [
+      "data/corpus/decontaminated/qa/Dusker__lawyer-llama.jsonl",
+      "data/corpus/decontaminated/qa/ShengbinYue__DISC-Law-SFT.jsonl",
+      "data/corpus/decontaminated/qa/Skepsun__lawyer_llama_data.jsonl"
+    ],
+    "rows": 270989,
+    "unique_uids": 270989,
+    "task_kind_counts": {
+      "case_analysis": 146346,
+      "qa": 98384,
+      "exam": 25842,
+      "concept": 417
+    },
+    "task_counts_top30": {
+      "legal_question_answering": 88277,
+      "jud_read_compre": 36036,
+      "judgement_predit": 30005,
+      "leg_ele_extra": 23281,
+      "exam": 21066,
+      "leg_eve_detec": 20566,
+      "sent_pred": 10908,
+      "jud_doc_sum": 7912,
+      "sim_case_match": 7179,
+      "leg_case_cls": 6146,
+      "legal_advice": 5794,
+      "op_sum": 4313,
+      "qa": 2888,
+      "judical_examination_v2": 2865,
+      "judical_examination": 1911,
+      "legal_counsel": 965,
+      "legal_counsel_multi_turn": 460,
+      "crime_concept": 417
+    }
+  },
+  "case_scope": {
+    "task_kinds": [
+      "case_analysis"
+    ],
+    "records": 146346,
+    "unique_uids": 146346,
+    "distribution_by_kind": [
+      {
+        "task_kind": "case_analysis",
+        "records": 146346,
+        "unique_uids": 146346,
+        "overlap_with_eval": 11811,
+        "overlap_with_all_splits": 63525
+      },
+      {
+        "task_kind": "qa",
+        "records": 98384,
+        "unique_uids": 98384,
+        "overlap_with_eval": 7971,
+        "overlap_with_all_splits": 40336
+      },
+      {
+        "task_kind": "exam",
+        "records": 25842,
+        "unique_uids": 25842,
+        "overlap_with_eval": 2176,
+        "overlap_with_all_splits": 14902
+      },
+      {
+        "task_kind": "concept",
+        "records": 417,
+        "unique_uids": 417,
+        "overlap_with_eval": 42,
+        "overlap_with_all_splits": 237
+      }
+    ]
+  },
+  "statute_items": {
+    "files": [
+      "data/corpus/statute_items/pandalla__chinese_law_examples.items.jsonl",
+      "data/corpus/statute_items/twang2218__chinese-law-and-regulations.items.jsonl"
+    ],
+    "rows": 65037,
+    "unique_uids": 65037,
+    "overlap_with_eval": 0,
+    "overlap_with_all_splits": 0
+  },
+  "derived": {
+    "rows": 13484,
+    "unique_uids": 13484,
+    "overlap_with_eval": 0
+  },
+  "pool_options": {
+    "A_source_minus_all_splits": {
+      "total": 217026,
+      "from_qa": 151989,
+      "from_items": 65037,
+      "case_like": 82821
+    },
+    "B_source_minus_eval_only": {
+      "total": 314026,
+      "from_qa": 248989,
+      "from_items": 65037,
+      "case_like": 134535
+    },
+    "C_case_only_minus_all_splits": {
+      "total": 82821,
+      "from_qa": 82821,
+      "from_items": 0,
+      "case_like": 82821
+    }
+  },
+  "checks": {
+    "split_pair_overlap_zero": true,
+    "qa_uid_unique": true,
+    "items_uid_unique": true,
+    "items_not_in_eval": true,
+    "pool_A_not_in_eval": true,
+    "pool_A_not_in_any_split": true,
+    "pool_B_not_in_eval": true,
+    "pool_C_not_in_any_split": true,
+    "derived_excluded_from_pool": true
+  },
+  "verdict": "PASS",
+  "elapsed_sec": 15.4
+}

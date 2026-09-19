@@ -736,7 +736,7 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
 - ✅ **决策项 C｜阶段 2/3 缺陷根治 —— 已完成**（2026-09-18）：`normalize_corpus.py` 的 `uid` 已加入 `source_file`
   词干、合并流只并本轮正式产出、`*.sample.jsonl` 残留已剔除，阶段 2/3/2b/4 **全链路已重跑一遍**。
   详见 [`docs/corpus/README.md`](docs/corpus/README.md) 第十节「已修复缺陷与前后对照」。
-- ⬜ 阶段 4b：**检索层（向量库 + 知识图谱）构建**（`indexes/` 目前为空）。
+- 🟡 阶段 4b：**检索层（向量库 + 知识图谱）构建**（`indexes/` 目前为空；**4b-0 / 4b-1 已完成**）。
   设计已定稿并做过可行性实测 → [`docs/retrieval_design.md`](docs/retrieval_design.md)
   （节点 7→5、关系 8→5；证据 [`docs/corpus/VECTOR_DB_PROBE.json`](docs/corpus/VECTOR_DB_PROBE.json)）。
   **已拍板（D1–D5 全按「A」）**：
@@ -750,8 +750,17 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   影响面仅 372/65,037 = 0.57%，不需重跑阶段 2b。
   **论文改写稿已备** → [`docs/paper_revision_notes.md`](docs/paper_revision_notes.md)
   （数据来源按实际改写、3.2.6 规模给口径、`Law` 节点语义对齐、评测表删列）。
-  ⚠️ **开工前两件必做**：① **4b-0 泄漏门禁** —— 检索库 ∩ (val ∪ test ∪ router) 必须为 0；
-  ② 跑 `src/prepare/check_leakage.py` 四级查重。
+  ✅ **4b-0 泄漏门禁 —— 已完成（PASS，2026-09-19）**：四份 split 两两交集 **0**；
+  实测**评测集 22,000 条 100% 落在 qa 流，其中案件分析类独占 11,811 条** ——
+  不做集合差就直接向量化，近 1.2 万条评测样本会进检索库（模型对考题「开卷检索」）。
+  **检索库范围已定案**：案件文书 **82,821** + 法条条文 **65,037** = **147,858** 条，
+  与 train / dev / test / router **四份全部不相交**（最强隔离）。
+  证据与理由 → [`docs/corpus/RETRIEVAL_SCOPE.md`](docs/corpus/RETRIEVAL_SCOPE.md)。
+  ✅ **4b-1 法名两级规范化 —— 已完成**：`raw 1,807 → L1(剥书名号) 1,727 → L2(再剥版本后缀) 1,579`；
+  跨源交集 `0 → 80 → 228` —— 不归一化两源在字符串层面**一个法都连不上**，图谱会被撕成两半。
+  ⚠️ 原 H4 记「228 个书名号重复」**归因有误**，实为 **80 书名号 + 148 版本后缀**。
+  ⬜ **下一步 4b-2**：`NEXT` / `CITES` 边抽取（`NEXT` 覆盖 100%，`CITES` 6.3% 降辅助）。
+  ⚠️ 向量化之前仍须跑 `src/prepare/check_leakage.py` 四级查重。
 - ⬜ 阶段 5–9：LoRA 训练 → 路由 → MoE 消融 → 内部验证集选 checkpoint → 终评
 - ⬜ （可选）配置 `HF_TOKEN` 后补采 `Aiiluo/Chinese-Law-SFT-Dataset`（2.6 MB，gated）
 

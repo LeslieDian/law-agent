@@ -195,13 +195,25 @@ def fig_equivalence(out_dir):
         b = load_json(q4)
         q_abs = [float(e.get("relative", 0.0)) for e in b["per_expert"]]
 
-    f, axes = plt.subplots(1, 2, figsize=(9.6, 3.8))
+    f, axes = plt.subplots(1, 2, figsize=(9.6, 4.0))
     ax = axes[0]
     ax.bar(names, fp_abs, color="#3f8f5f", width=0.6)
+    m = max(fp_abs or [0.0])
+    # ★ 四个专家全是 0 时，matplotlib 会把 y 轴自动缩到 ±0.05 → 柱子完全看不见，
+    #   看起来像"图画坏了"。必须显式给一个对称的极小量程 + 文字说明。
+    if m <= 0:
+        ax.set_ylim(-1e-3, 1e-3)
+        ax.text(0.5, 0.55, "all four experts: exactly 0\n(bit-exact)",
+                transform=ax.transAxes, ha="center", va="center",
+                fontsize=11, color="#2f6f4f", weight="bold")
+    else:
+        ax.set_ylim(0, m * 1.25)
     ax.set_title("fp32, all 36 layers:  max|delta| = %.1e\n(bit-exact -> assembly & math correct)"
-                 % max(fp_abs or [0.0]))
+                 % m)
     ax.set_ylabel("max |delta|  (abs)")
     ax.grid(axis="y", alpha=0.3, linewidth=0.5)
+    for t in ax.get_xticklabels():
+        t.set_rotation(18); t.set_ha("right"); t.set_fontsize(8)
 
     ax = axes[1]
     if q_abs:
@@ -209,13 +221,16 @@ def fig_equivalence(out_dir):
         ax.bar(names, q_abs, color="#b05050", width=0.6)
         ax.axhline(tol, color="#333333", linestyle="--", linewidth=1,
                    label="nominal tol = %.2f" % tol)
-        ax.legend(fontsize=7.5)
+        ax.legend(fontsize=7.5, loc="upper left")
         ax.set_title("nf4 4-bit: relative diff = quantization noise\n(recorded, NOT a correctness gate)")
         ax.set_ylabel("relative diff")
+        ax.set_ylim(0, max(q_abs) * 1.35)
     else:
         ax.text(0.5, 0.5, "4-bit report missing", ha="center", va="center")
         ax.set_axis_off()
     ax.grid(axis="y", alpha=0.3, linewidth=0.5)
+    for t in ax.get_xticklabels():
+        t.set_rotation(18); t.set_ha("right"); t.set_fontsize(8)
     f.tight_layout()
     r = os.path.join(out_dir, "fig_moe_equivalence.png")
     f.savefig(r)

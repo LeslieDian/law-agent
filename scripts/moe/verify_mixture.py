@@ -134,6 +134,14 @@ def logits_mixture(base_dir, adapter_dirs, names, scales, device, dtype, four_bi
                    max_layers, inputs, gate_share, onehot):
     """被测路径：底座 + 自建层内软混合，门控强制 one-hot 到第 onehot 个专家。"""
     base = load_base(base_dir, device, dtype, four_bit, max_layers)
+    if four_bit:
+        # ★ 口径对齐（2026-09-20）：peft 参照路径与**训练**（train_qlora.py）都调了
+        #   prepare_model_for_kbit_training —— 它会把所有非量化 bf16 参数（LN/lm_head）
+        #   upcast 到 fp32。被测路径不调的话 LN 停在 bf16，36 层累积出 ~2% 相对差，
+        #   会被 1% 容差误判 FAIL（实锤：四个专家相对差 1.8–2.5e-2，修后应归零）。
+        from peft import prepare_model_for_kbit_training
+        base = prepare_model_for_kbit_training(base, use_gradient_checkpointing=False)
+        base.eval()
     ctx = MixtureContext(detach_experts=True, use_mask=True)
     ctx.force_onehot = int(onehot)
     bank, meta = load_expert_bank(adapter_dirs, names=names, dtype=torch.float32)

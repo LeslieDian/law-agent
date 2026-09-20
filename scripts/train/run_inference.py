@@ -259,6 +259,18 @@ def load_model_and_tok():
         model = model.to("cuda")
     model.config.use_cache = True          # 训练时关了，推理要开
 
+    # ★ 推理口径 = 训练口径（2026-09-20 实锤，单适配器与 MoE 两条路径都必须过这里）：
+    #   训练（train_qlora.py）调了 prepare_model_for_kbit_training，它把**所有非量化
+    #   bf16 参数（LN / lm_head）upcast 到 fp32**。推理不调的话 LN/lm_head 停在 bf16，
+    #   36 层累积后 logit 相对训练前向差 ~2e-2 —— 系统性偏差、且对被评的所有系统同向。
+    #   等价性自检（verify_mixture GPU/4bit 全量）四专家相对差 1.8–2.5e-2 就是这条没对齐。
+    if not ARGS.no_4bit:
+        from peft import prepare_model_for_kbit_training
+        model = prepare_model_for_kbit_training(
+            model, use_gradient_checkpointing=False)
+        model.eval()
+        model.config.use_cache = True
+
     adapter_note = "none"
     if ARGS.moe_gate:
         # ---- L2 层内软混合：底座 + K 专家 + 门控 --------------------------

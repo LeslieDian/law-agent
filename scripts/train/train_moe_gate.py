@@ -38,7 +38,32 @@ import os
 import sys
 import time
 
-import torch
+
+# ★ 必须在 import torch（以及任何 CUDA 调用）之前限制可见卡。
+#   原因：HF `Trainer` 内部的 `Accelerator` 会把模型搬到 `accelerator.device`
+#   （默认 cuda:0）。只写 `device_map={"": "cuda:1"}` **挡不住这一步** ——
+#   实测结果是门控训练跑到物理 GPU0 上，与正在跑的 A0 评测抢卡 → CUDA OOM。
+#   `train_qlora.py` 从一开始就是"先解析 --gpu、再 import torch"，本脚本漏了
+#   （这是本项目第 4 个「train_moe_gate.py 从未在本环境真跑过」的症状：
+#    ① MoE 推理路径缺失 ② warmup_ratio 字段已被删 ③ 量化守卫误报 ④ 设备未限制）。
+def _predetect_gpu():
+    """在 import torch 之前从 sys.argv 里把 --gpu 抠出来。"""
+    argv = sys.argv
+    for i, t in enumerate(argv):
+        if t == "--gpu" and i + 1 < len(argv):
+            return argv[i + 1]
+        if t.startswith("--gpu="):
+            return t.split("=", 1)[1]
+    return None
+
+
+_PRE_GPU = _predetect_gpu()
+if _PRE_GPU is not None:
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(_PRE_GPU)
+    os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
+
+import torch  # noqa: E402  （必须在上面的 CUDA_VISIBLE_DEVICES 之后）
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _HERE)                                   # train_router
@@ -322,7 +347,17 @@ def main():
     # ---- 模型 ------------------------------------------------------------
     from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
 
-    dev = "cuda:%d" % a.gpu if a.device.startswith("cuda") else a.device
+    # ★ 与文件顶部的 CUDA_VISIBLE_DEVICES 配套：
+    #   既然已把目标卡设成「唯一可见卡」，它在进程内的序号就**恒为 0**。
+    #   这里若仍写 "cuda:%d" % a.gpu，在只可见 1 张卡时就是**非法序号**
+    #   （accelerate 的 device_map 会直接报错或把权重重新摊到可见卡，等于修复失效）。
+    #   —— 这是同一个 CUDA_VISIBLE_DEVICES 改动引出的第 5 个坑。
+    if a.device.startswith("cuda"):
+        dev = "cuda:0" if _PRE_GPU is not None else "cuda:%d" % a.gpu
+    else:
+        dev = a.device
+    jprint("[设备] --gpu=%s --device=%s → CUDA_VISIBLE_DEVICES=%s；实际落卡 %s"
+           % (a.gpu, a.device, os.environ.get("CUDA_VISIBLE_DEVICES", "(未限制)"), dev))
     tok = AutoTokenizer.from_pretrained(a.base, trust_remote_code=True)
     if os.path.isfile(a.chat_template):
         tok.chat_template = open(a.chat_template, encoding="utf-8").read()
@@ -413,6 +448,27 @@ def main():
         jprint("⚠️ TrainingArguments 不认识的键（已丢弃并留痕）:", _dropped)
     targs = TrainingArguments(**{k: v for k, v in raw.items() if k in _fields})
     vram = PeakVRAM.make()()
+    # ★ transformers 的 `validate_quantization_for_training` 只用
+    #   `isinstance(model, PeftModel)` 判"有没有可训练适配器"。我们的可训练参数是
+    #   **自研门控**（GatedLoRAMixture 里的 72 个 nn.Linear，2.36M 个 **fp32 非量化**
+    #   参数），并非 peft 适配器 → 该守卫必然误报
+    #   `You cannot perform fine-tuning on purely quantized models`。
+    #   守卫的**本意**是"别在毫无可训练参数的全量化模型上白跑训练"，
+    #   所以这里把它替换成**等价的精确检查**：确认确实存在可训练的非量化参数才放行，
+    #   否则照样报错。这是本项目第 3 个「train_moe_gate.py 从未在本环境真跑过」的症状
+    #   （前两个：`warmup_ratio` 已删字段、MoE 推理路径缺失）。
+    _trainable = [p for p in model.parameters() if p.requires_grad]
+    _n_trainable = sum(p.numel() for p in _trainable)
+    _all_fp32 = all(p.dtype == torch.float32 for p in _trainable)
+    if _n_trainable <= 0 or not _all_fp32:
+        raise RuntimeError(
+            "门控可训练参数检查失败：n=%d all_fp32=%s —— 装配有误，拒绝开训"
+            % (_n_trainable, _all_fp32))
+    jprint("[量化守卫] 可训练参数 %d 个（全 fp32，非量化）→ 放行 Trainer 的量化校验"
+           % _n_trainable)
+    import transformers.trainer as _tr_mod
+    _tr_mod.validate_quantization_for_training = lambda m: None
+
     trainer = GatedTrainer.make(ctx, a.balance_alpha)(
         model=model, args=targs, train_dataset=ds_tr,
         data_collator=collator, callbacks=[vram])

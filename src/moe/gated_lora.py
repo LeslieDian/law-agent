@@ -295,23 +295,24 @@ class GatedLoRAMixture(nn.Module):
         acc = None
         with (torch.no_grad() if detached else _Null()):
             xin = x.detach() if detached else x
-            # ★ dtype 口径必须与 peft 一致：peft 的 LoraLayer.forward 在 4bit 底座上
-            #   会先 `x = x.to(self.lora_A[...].weight.dtype)`，即把激活 **upcast 到
-            #   LoRA 权重自身的 fp32** 再算增量。我们若反过来把专家降到激活的 bf16
-            #   去算，36 层累积后与 peft 差 **2.0–2.4% 相对**（实测四项一致），
-            #   会被等价性自检按 1% 容差判 FAIL —— 是精度口径问题，不是装配错误
-            #   （装配错会导致量级失控，而非稳定的 2%）。
-            #   CPU/fp32 自检里两者同为 fp32，**永远掩盖这一点**（与设备 bug 同类）。
+            # ★ dtype 口径必须与 peft 逐位对齐（两处，2026-09-20 GPU 自检 FAIL 后实锤）：
+            #   (1) 激活 upcast 到 LoRA 权重自身的 fp32 —— peft 在 4bit 底座上就是这么算的；
+            #       把专家降到 bf16 去算，36 层累积后差 2%+。
+            #   (2) 增量**保持 fp32 直接加进底座输出**（bf16 + fp32 → fp32 提升，与 peft 的
+            #       `result += lora_B(lora_A(x)) * scaling` 逐位同型）。若先把 delta 降回
+            #       bf16 再加，每个模块差 ~1 ULP，36 层放大后 logit 相对差 ~2e-2，
+            #       仍会被 1% 容差判 FAIL。副作用是混合模块之后的激活流变成 fp32 ——
+            #       这与训练口径（prepare_model_for_kbit_training 也 upcast）一致，不是浪费。
             _wd = self.A.dtype
             xin = xin.to(_wd)
             for i in range(self.K):
-                d = (xin @ self.A[i].t()) @ self.B[i].t()   # [B, T, out]
-                d = (d * self.scaling[i]).to(out.dtype)
+                d = (xin @ self.A[i].t()) @ self.B[i].t()   # [B, T, out]，fp32
+                d = d * self.scaling[i]
                 wi = g[:, i].to(d.dtype).view(-1, 1, 1)
                 term = d * wi
                 acc = term if acc is None else acc + term
         if acc is not None:
-            out = out + acc
+            out = out + acc                                  # bf16 + fp32 → fp32（与 peft 同型）
         return out
 
 

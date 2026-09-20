@@ -9,10 +9,19 @@
 标记区 `<!-- AUTO_RESULTS_BEGIN ... -->` … `<!-- AUTO_RESULTS_END -->`（含标记本身）
 整体替换为 block 文件内容。**标记之外一个字节都不动。**
 
+支持多标记区（`--tag`）：
+  · `AUTO_RESULTS`（默认）← docs/eval/README_BLOCK.md（评测结果表，由 collect_results.py 生成）
+  · `AUTO_STAGE`          ← docs/eval/STAGE_STATUS.md（阶段进度表，由 stage_status.py 生成）
+每个阶段跑完都能各刷各的，互不干扰。
+
 用法
 --------------------------------------------------------------------------
     python scripts/eval/patch_readme.py \
         --readme README.md --block docs/eval/README_BLOCK.md
+
+    # 阶段进度表（每阶段完成刷一次）
+    python scripts/eval/patch_readme.py --tag AUTO_STAGE \
+        --readme README.md --block docs/eval/STAGE_STATUS.md
 
     # 只看会改成什么，不落盘
     python scripts/eval/patch_readme.py --readme README.md --block X.md --dry-run
@@ -22,16 +31,18 @@ from __future__ import annotations
 import argparse
 import sys
 
-BEGIN = "<!-- AUTO_RESULTS_BEGIN"
-END = "<!-- AUTO_RESULTS_END"
-
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--readme", default="README.md")
     ap.add_argument("--block", default="docs/eval/README_BLOCK.md")
+    ap.add_argument("--tag", default="AUTO_RESULTS",
+                    help="标记区名，如 AUTO_RESULTS / AUTO_STAGE")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
+
+    BEGIN = "<!-- %s_BEGIN" % a.tag
+    END = "<!-- %s_END" % a.tag
 
     with open(a.readme, encoding="utf-8") as f:
         txt = f.read()

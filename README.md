@@ -1027,6 +1027,20 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
   2. **`--max-seq-length` 别按 4096 配**：实测 token 长度 p50 368 / p90 907 / p99 2048（上限），
      配 4096 只是白占显存。**改 2048，零截断**。
 
+<!-- AUTO_STAGE_BEGIN 由 scripts/eval/stage_status.py 自动生成，勿手改 -->
+
+### 阶段进度（自动汇总）
+
+> **本段由自动化回填**：`scripts/eval/stage_status.py` 扫描答案文件行数、日志 `rc=`/`[n/N]` 进度、
+> 完成标志与报告文件后生成，经 `patch_readme.py --tag AUTO_STAGE` 贴入。**每完成一个阶段刷新一次并自动推送 GitHub**。
+> 机读版：`docs/eval/STAGE_STATUS.json`。
+
+| 阶段 | 项 | 状态 | 进度 | 备注 |
+|---|---|---|---|---|
+| _待扫描_ | — | ⬜ 待跑 | — | — |
+
+<!-- AUTO_STAGE_END -->
+
 <!-- AUTO_RESULTS_BEGIN 由 scripts/eval/collect_results.py 自动生成，勿手改 -->
 
 ### 终评结果（自动汇总）

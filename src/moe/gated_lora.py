@@ -262,11 +262,18 @@ class GatedLoRAMixture(nn.Module):
         self.tag = tag
         self.expert_names = list(expert_names)
         self.K = len(As)
+        # ★ 专家张量必须与底座同设备：load_expert_bank 在 CPU 上读 safetensors
+        #   （故意的，省搬显存峰值），不在这里搬设备就会在前向 `xin @ A.T` 处
+        #   直接 device mismatch —— 4bit 底座在 cuda 时必崩。
+        #   CPU 自检（--device cpu）恰好掩盖了这一点，只有上 GPU 才暴露。
+        _w = getattr(base, "weight", None)
+        _dev = _w.device if _w is not None else next(base.parameters()).device
         # persistent=False：门控权重才是要保存的；专家权重随适配器目录走，
         # 塞进 checkpoint 会让每个 ckpt 白胖 700MB。
-        self.register_buffer("A", torch.stack(As), persistent=False)          # [K, r, in]
-        self.register_buffer("B", torch.stack(Bs), persistent=False)          # [K, out, r]
-        self.register_buffer("scaling", torch.tensor(scales, dtype=torch.float32),
+        self.register_buffer("A", torch.stack(As).to(_dev), persistent=False)  # [K, r, in]
+        self.register_buffer("B", torch.stack(Bs).to(_dev), persistent=False)  # [K, out, r]
+        self.register_buffer("scaling",
+                             torch.tensor(scales, dtype=torch.float32, device=_dev),
                              persistent=False)                                # [K]
 
     def forward(self, x):
@@ -288,6 +295,15 @@ class GatedLoRAMixture(nn.Module):
         acc = None
         with (torch.no_grad() if detached else _Null()):
             xin = x.detach() if detached else x
+            # ★ dtype 口径必须与 peft 一致：peft 的 LoraLayer.forward 在 4bit 底座上
+            #   会先 `x = x.to(self.lora_A[...].weight.dtype)`，即把激活 **upcast 到
+            #   LoRA 权重自身的 fp32** 再算增量。我们若反过来把专家降到激活的 bf16
+            #   去算，36 层累积后与 peft 差 **2.0–2.4% 相对**（实测四项一致），
+            #   会被等价性自检按 1% 容差判 FAIL —— 是精度口径问题，不是装配错误
+            #   （装配错会导致量级失控，而非稳定的 2%）。
+            #   CPU/fp32 自检里两者同为 fp32，**永远掩盖这一点**（与设备 bug 同类）。
+            _wd = self.A.dtype
+            xin = xin.to(_wd)
             for i in range(self.K):
                 d = (xin @ self.A[i].t()) @ self.B[i].t()   # [B, T, out]
                 d = (d * self.scaling[i]).to(out.dtype)

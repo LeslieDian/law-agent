@@ -33,6 +33,7 @@ from __future__ import annotations
 import argparse
 import collections
 import json
+import math
 import os
 import sys
 import time
@@ -373,14 +374,24 @@ def main():
         return 0
 
     collator = PadCollator(tok.pad_token_id)
-    targs = TrainingArguments(
+    # ★ transformers 5.17 已删除 `TrainingArguments.warmup_ratio`（只剩 `warmup_steps`），
+    #   硬传 ratio 会直接 TypeError。train_qlora.py 早就适配并留了注释，**本脚本漏了** ——
+    #   后果是门控训练在这个环境里从未真正跑起来过（一执行到 TrainingArguments 就崩，
+    #   而且前面的装配/渲染全部正常，很容易被误判成"已经在跑"）。
+    #   这里按 train_qlora 同口径换算（ratio × 估计总步数），并对未知键过滤 + 留痕。
+    steps_per_epoch = int(math.ceil(len(ds_tr) / max(1, a.batch_size * a.grad_accum)))
+    total_steps_est = max(1, int(round(steps_per_epoch * a.epochs)))
+    warmup_steps = int(round(a.warmup_ratio * total_steps_est))
+    jprint("[环境适配] warmup_ratio=%s x est_total_steps=%d -> warmup_steps=%d"
+           % (a.warmup_ratio, total_steps_est, warmup_steps))
+    raw = dict(
         output_dir=os.path.join(a.out_dir, "run"),
         per_device_train_batch_size=a.batch_size,
         gradient_accumulation_steps=a.grad_accum,
         num_train_epochs=a.epochs,
         learning_rate=a.lr,
         weight_decay=a.weight_decay,
-        warmup_ratio=a.warmup_ratio,
+        warmup_steps=warmup_steps,            # ← 由 warmup_ratio 换算，不用已删除的字段
         lr_scheduler_type="cosine",
         max_grad_norm=1.0,
         optim="paged_adamw_8bit",
@@ -396,6 +407,11 @@ def main():
         dataloader_num_workers=2,
         label_names=["labels"],
     )
+    _fields = set(getattr(TrainingArguments, "__dataclass_fields__", {}).keys())
+    _dropped = sorted(k for k in raw if k not in _fields)
+    if _dropped:
+        jprint("⚠️ TrainingArguments 不认识的键（已丢弃并留痕）:", _dropped)
+    targs = TrainingArguments(**{k: v for k, v in raw.items() if k in _fields})
     vram = PeakVRAM.make()()
     trainer = GatedTrainer.make(ctx, a.balance_alpha)(
         model=model, args=targs, train_dataset=ds_tr,
@@ -419,6 +435,16 @@ def main():
         "gate_share": a.gate_share, "gate_init": a.gate_init,
         "K": len(names), "n_gates": stat["n_gates"],
         "trainable_params": n_tr, "balance_alpha": a.balance_alpha,
+        # 训练口径（论文"训练配置"要用实际值，不是 CLI 默认值）
+        "data": a.data,
+        "train_samples": len(ds_tr), "dev_samples": len(ds_dv),
+        "batch_size": a.batch_size, "grad_accum": a.grad_accum,
+        "eff_batch": a.batch_size * a.grad_accum,
+        "steps_per_epoch": steps_per_epoch, "total_steps_est": total_steps_est,
+        "epochs": a.epochs, "lr": a.lr, "weight_decay": a.weight_decay,
+        "warmup_ratio_cfg": a.warmup_ratio, "warmup_steps_actual": warmup_steps,
+        "max_seq_length": a.max_seq_length, "seed": a.seed,
+        "dropped_training_args": _dropped,
     })
     jprint("[落盘] %s" % gate_path)
 

@@ -85,6 +85,16 @@ def parse_args(argv=None):
     ap.add_argument("--gpu", default=None, help="单卡号，如 0")
     ap.add_argument("--no-4bit", action="store_true", help="关 4bit（调试用）")
     ap.add_argument("--no-resume", action="store_true", help="忽略已有 answers.jsonl，重跑")
+    # ---- L2 层内软混合（MoE）推理路径 -----------------------------------
+    # 指定后**取代** --adapter：底座 + K 个专家 + 门控 一起装成混合模型。
+    # 没有这条路径时 MoE 训完也无法评测（run_inference 只会挂单个 peft 适配器）。
+    ap.add_argument("--moe-gate", default=None,
+                    help="门控权重 gate_weights.pt 路径；给了就走 MoE 推理")
+    ap.add_argument("--moe-experts", default="civil,criminal,procedure,unified",
+                    help="逗号分隔的专家名（与训练门控时逐字一致）")
+    ap.add_argument("--moe-gate-share", default="in_features",
+                    choices=["in_features", "module"],
+                    help="必须与训练门控时一致，否则门控键名对不上")
     ap.add_argument("--dry-run", action="store_true", help="只构造 prompt，不加载模型")
     ap.add_argument("--dump-samples", type=int, default=5,
                     help="报告里抽样展示几条问答")
@@ -250,7 +260,56 @@ def load_model_and_tok():
     model.config.use_cache = True          # 训练时关了，推理要开
 
     adapter_note = "none"
-    if ARGS.adapter and ARGS.adapter.lower() != "none":
+    if ARGS.moe_gate:
+        # ---- L2 层内软混合：底座 + K 专家 + 门控 --------------------------
+        # 与 --adapter 互斥：mixture 自己就是"多个适配器同时挂载"的形态。
+        sys.path.insert(0, os.path.join(ROOT, "src"))
+        from moe.gated_lora import (MixtureContext, install_mask_capture,
+                                    install_mixture, load_expert_bank, load_gates)
+        gp = ARGS.moe_gate if os.path.isabs(ARGS.moe_gate) \
+            else os.path.join(ROOT, ARGS.moe_gate)
+        if not os.path.exists(gp):
+            jprint("[FATAL] 门控权重不存在：%s" % gp)
+            return None, None, None, None
+        names = [t.strip() for t in ARGS.moe_experts.split(",") if t.strip()]
+        dirs = []
+        for t in names:
+            cand = [os.path.join(ROOT, "models", "adapters", t)]
+            if t in ("unified", "A0", "a0"):
+                cand.insert(0, os.path.join(ROOT, "models", "adapters",
+                                            "A0_unified_qwen3_8b"))
+            hit = next((c for c in cand if os.path.isdir(c)), None)
+            if hit is None:
+                jprint("[FATAL] 找不到专家目录：%s（试过 %s）" % (t, cand))
+                return None, None, None, None
+            dirs.append(hit)
+        jprint("MoE 专家：%s" % ", ".join(names))
+        # ★ 专家按 fp32 读入（与训练门控时逐字一致），dtype 口径由
+        #   GatedLoRAMixture.forward 负责对齐 peft（见那边的注释）。
+        bank, meta = load_expert_bank(dirs, names=names, dtype=torch.float32)
+        ctx = MixtureContext(detach_experts=True)
+        install_mask_capture(model, ctx)          # 门控池化要 attention_mask
+        stat = install_mixture(model, bank, ctx, gate_share=ARGS.moe_gate_share,
+                               gate_init="uniform",
+                               expert_meta={"expert_names": names,
+                                            "scaling": meta["scaling"]})
+        jprint("MoE 装配：替换模块 %d，门控 %d，K=%s，α/r=%s"
+               % (stat["n_replaced"], stat["n_gates"], stat.get("K"),
+                  meta["scaling"]))
+        if stat["n_replaced"] == 0:
+            jprint("[FATAL] 一个模块都没替换掉 —— 键名或结构对不上")
+            return None, None, None, None
+        info = load_gates(model, gp)
+        jprint("门控加载：missing=%d unexpected=%d meta=%s"
+               % (len(info["missing"]), len(info["unexpected"]),
+                  json.dumps(info.get("meta", {}), ensure_ascii=False)[:240]))
+        if info["missing"]:
+            jprint("[FATAL] %d 个门控键没接上（gate_share 或专家顺序不一致）"
+                   % len(info["missing"]))
+            return None, None, None, None
+        adapter_note = "moe:%s" % gp
+        globals()["_MOE_CTX"] = ctx
+    elif ARGS.adapter and ARGS.adapter.lower() != "none":
         from peft import PeftModel
         ad = ARGS.adapter if os.path.isabs(ARGS.adapter) else os.path.join(ROOT, ARGS.adapter)
         if not os.path.exists(os.path.join(ad, "adapter_config.json")):
@@ -399,17 +458,25 @@ def render_md(r):
 # ---------------------------------------------------------------------------
 # 主流程
 # ---------------------------------------------------------------------------
+def default_system_name():
+    """系统标识：--system-name 优先，其次 MoE，其次 adapter 目录名，最后 base。"""
+    if ARGS.system_name:
+        return ARGS.system_name
+    if ARGS.moe_gate:
+        return "moe_L2"
+    if ARGS.adapter and ARGS.adapter.lower() != "none":
+        return os.path.basename(ARGS.adapter.rstrip("/"))
+    return "base"
+
+
 def main():
     t0 = time.time()
     if not ARGS.out:
-        name = ARGS.system_name or (
-            os.path.basename(ARGS.adapter.rstrip("/")) if ARGS.adapter
-            and ARGS.adapter.lower() != "none" else "base")
-        ARGS.out = "outputs/infer/%s_%s" % (ARGS.task, name)
+        ARGS.out = "outputs/infer/%s_%s" % (ARGS.task, default_system_name())
     out_dir = ARGS.out if os.path.isabs(ARGS.out) else os.path.join(ROOT, ARGS.out)
     os.makedirs(out_dir, exist_ok=True)
     ans_path = os.path.join(out_dir, "answers.jsonl")
-    system_name = ARGS.system_name or os.path.basename(ARGS.adapter.rstrip("/"))
+    system_name = default_system_name()
 
     jprint("=" * 78)
     jprint("任务       :", ARGS.task)
@@ -484,6 +551,8 @@ def main():
     lat, tin, tout = [], [], []
     samples = []
     failed = []
+    usage_sum = None          # MoE：门控使用率累积（[n_gates, K] 之和）
+    usage_n = 0
     t_start = time.time()
     for bi in range(0, len(todo), ARGS.batch_size):
         chunk = todo[bi:bi + ARGS.batch_size]
@@ -543,6 +612,15 @@ def main():
                                 "answer_head": ans[:600],
                                 "reference": str(ref)})
         fout.flush()
+        # ---- MoE：累积专家使用率（每个门控的批均值权重）------------------
+        # 必须每批清空 _all_probs：否则 1008 个门控 × 上千批次会无界增长。
+        _ctx = globals().get("_MOE_CTX")
+        if _ctx is not None and _ctx._all_probs:
+            s = torch.stack(_ctx._all_probs).sum(dim=0)
+            usage_sum = s if usage_sum is None else usage_sum + s
+            usage_n += 1
+            _ctx._all_probs.clear()
+            _ctx._probs.clear()
         done_now = bi + len(chunk)
         speed = done_now / max(time.time() - t_start, 1e-6)
         eta = (len(todo) - done_now) / speed if speed > 0 else 0
@@ -585,6 +663,9 @@ def main():
             "quantization": "none" if ARGS.no_4bit else "nf4+double_quant+bf16",
             "enable_thinking": False,
             "padding_side": "left",
+            "moe_gate": ARGS.moe_gate,
+            "moe_experts": ARGS.moe_experts if ARGS.moe_gate else None,
+            "moe_gate_share": ARGS.moe_gate_share if ARGS.moe_gate else None,
         },
         "stats": {
             "n_total": len(records),
@@ -611,6 +692,19 @@ def main():
         "samples": samples,
         "elapsed_seconds_total": round(time.time() - t0, 1),
     }
+
+    # MoE 专属产物：门控在**评测集**上的平均专家权重（论文"专家使用率"图用）
+    if usage_sum is not None and usage_n:
+        _u = usage_sum / usage_n                       # [n_gates, K]
+        report["expert_usage"] = {
+            "n_gates": int(_u.shape[0]),
+            "n_batches": usage_n,
+            "experts": [t.strip() for t in ARGS.moe_experts.split(",") if t.strip()],
+            "mean_weight_overall": [round(float(x), 4)
+                                    for x in _u.mean(dim=0).tolist()],
+            "mean_weight_per_gate": [round(float(x), 4)
+                                     for x in _u.mean(dim=1).tolist()],
+        }
 
     if ARGS.report_json:
         p = ARGS.report_json if os.path.isabs(ARGS.report_json) \

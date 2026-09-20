@@ -1,7 +1,7 @@
 # 法律领域智能体：混合专家模型 + 知识图谱
 
 > 论文《基于混合专家模型和知识图谱的法律领域智能体研究与构建》实验代码仓库
-> 最后更新：2026-09-19
+> 最后更新：2026-09-20
 
 面向**民法、刑法、程序法**三法域的法律智能问答系统。以 Qwen3-8B 为共享底座，
 训练三个 QLoRA 领域适配器；以 Neo4j 统一存储法律知识图谱与案例向量索引；在线链路采用
@@ -46,7 +46,7 @@
 | **知识层** | Neo4j 5.26 Community（Docker） | — | Law / LawVersion / Provision / Case / Cause / Court / Date |
 | **检索融合** | **加权 RRF（k=10）** | — | 不同检索源各自排名后融合，**不比原始分数**；权重 dense 1.0 / BM25 0.7 / 图谱 0.25（dev 扫出）。等权 RRF 会打崩精度，见 §4b-5b |
 | **编排** | LangGraph | 1.2.11 | 事实整理 → 证据检索 → 专家路由 → 适配器调用 → 结果聚合 |
-| **判分器（双盲）** | `gemini-2.5-pro` + `deepseek-r1` | 外部 API | 匿名化编号 + 洗自指标签 + 打乱顺序（seed=42），见 `configs/judge.yaml` |
+| **判分器（双盲）** | `MiniMax-M3`（主，国内可达）+ `gemini-2.5-pro` / `deepseek-r1`（可选 provider） | 外部 API | 匿名化编号 + 洗自指标签 + 打乱顺序（seed=42），见 `configs/judge.yaml`；LexRubric 判分走 `--judges minimax-m3` |
 | **评测基准** | LexRubric / LexEval | — | 见 [第 4 节](#4-评测基准) |
 
 **备选底座对照**（只用于消融与审稿人问询，不参与主线）：
@@ -99,7 +99,10 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 
 检索侧消融：去重排序器 / 去时间版本过滤 / 去知识图谱 / 去领域适配器路由 / 换向量模型（四路）。
 
-推理参数全局统一：`do_sample=false, temperature=0, top_p=1, max_new_tokens=1536`。
+推理参数全局统一：`do_sample=false, temperature=0, top_p=1`。
+`max_new_tokens` **分档**（对所有系统统一，不破坏可比性；批内最长序列支配整批墙钟时间，
+客观题给 1536 会把吞吐拖慢 ~6 倍）：**LexEval 客观题 = 256，LexEval 生成题与 LexRubric = 1536**。
+注意 LexEval 5_2（长文摘要，gold p50≈1004 字）在 cap 1536 下会有截断（相对比较仍成立，论文注明）。
 
 详见 [`docs/experiment_matrix.md`](docs/experiment_matrix.md)。
 
@@ -205,7 +208,8 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 - **通用回放仍是缺口（待决策）**：池里 `replay` 标记 **全部为 0** —— DISC-Law-SFT 内置的
   Alpaca-GPT4 / Firefly 通用回放**不在已下载的 4 个文件内**，故「通用回放 10%」目前
   由 `general` 桶（法律领域内域不明确的样本）代充。**待决策**：是否另采非法律中文通用指令数据。
-- **法条流不进 SFT**：65,037 条法条条目是检索语料（向量库主料），不下采样、不参与配比；
+- **法条流不进 SFT**：72,449 条法条检索单元是检索语料（向量库主料；2026-09-19 重跑后口径，
+  原 65,037 → +7,412），不下采样、不参与配比；
   跨流检查 QA ∩ 法条 `content_sha1` = **0**（`cross_flow_overlap = 0`）。
 - 训练集来源分布：DISC-Law-SFT 85,095（85.10%）/ Skepsun 6,048（6.05%）/
   Dusker 5,857（5.86%）/ **derived/statute-items 3,000（3.00%）**。
@@ -318,7 +322,7 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
                           （uid 全局唯一由构造成立 + 当场断言；合并流只并本轮正式产出）
 阶段 3  去污（双向）      → DECONTAMINATION_REPORT_PASS.json（复扫 verdict = PASS）★硬门禁 ✅
                           （两条不变量：uid 唯一、removed == hit_uids）
-阶段 2b 法条切条 + 法条域打标 → data/corpus/statute_items/*.jsonl（整部法 → 65,037 条）✅
+阶段 2b 法条切条 + 法条域打标 → data/corpus/statute_items/*.jsonl（整部法 → 72,449 条）✅
                           （切条与质检在同一包装脚本内，verdict ≠ PASS 即失败）
 阶段 2c 程序法条文任务派生 → data/corpus/derived/statute_tasks.jsonl（13,484 条，补题型多样性）✅
 阶段 4  切分 + 分层下采样  → data/{train,dev,test,router}/（122,000 条，四份两两不相交）✅
@@ -549,7 +553,7 @@ law-agent/
 │  │  │  ├─ qa/_all.jsonl      # 阶段 2：上述三份的合并副本（285,257 行；uid 全局唯一，当场断言）
 │  │  │  └─ statutes/*.jsonl   # 阶段 2：法条流（整部法规全文，23,510 部）
 │  │  ├─ decontaminated/   # 阶段 3：去污清洗镜像（只读基线；qa 270,989 + statutes 22,771）
-│  │  ├─ statute_items/    # 阶段 2b：切条后的逐条法条（65,037 条 = 向量库主料）
+│  │  ├─ statute_items/    # 阶段 2b：切条后的逐条法条（72,449 条 = 向量库主料）
 │  │  ├─ derived/          # 阶段 2c：程序法条文任务派生（13,484 条，synthetic，只进 train）
 │  │  └─ MANIFEST.json     # 逐文件 SHA-256 清单
 │  ├─ train/               # 阶段 4：train.jsonl(100,000) + {civil,criminal,procedure,general}.jsonl
@@ -677,6 +681,27 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
 执行顺序见 [`docs/run_order.md`](docs/run_order.md)。
 核心原则：**先跑通评测链路，再训练模型；先用少量案例验证 Judge，再整体开跑。**
 （原表述为「再跑 254 个」= CLaw 254 案 —— **CLaw 已于 2026-09-19 退役**，见下方专用段。）
+
+### 总实验流程（2026-09-20 定稿 · 按序执行 · 状态实时更新）
+
+> 顺序即依赖序：上游不出 PASS，下游不开工。GPU 侧"训练占 GPU1、推理/评测占 GPU0"可并行。
+
+| # | 步骤 | 内容 / 验收标准 | 状态 |
+|---|---|---|---|
+| P0 | 语料与检索层 | 阶段 0–4 + 4b 全链（去污复扫 PASS、四份 split、Neo4j 导入、检索消融达标） | ✅ PASS |
+| P1 | A0 统一适配器 QLoRA | Qwen3-8B 4bit + r16/α32 七投影，13,276 步 / 2ep，`verdict=PASS` 11/11 | ✅ PASS（train_loss 0.6756 / dev eval_loss 0.3896） |
+| P2 | 三域专家 QLoRA | criminal / civil / procedure，各自 `verdict=PASS` 11/11 检查 | ✅ PASS（criminal 0.5434 / civil 0.7009 / procedure 0.7730） |
+| P3 | A0 全量基准生成 | GPU0 分档链：lexrubric 649 (cap1536) → lexeval 客观 11,400 (cap256) → lexeval 生成 2,750 (cap1536)，单系统 ≈14h | 🔄 进行中（2026-09-20 19:06 起，`logs/eval_A0_chain.log`） |
+| P4 | A0 判分 | LexEval 客观秒级本地打分；LexRubric 走 `--judges minimax-m3`（12,335 条 rubric / 系统） | ⬜ 等 P3 |
+| P5 | L1 请求级路由 | Qwen3-Embedding 冻结 + 逻辑回归头，独立集 top1_acc / 回退率验收 | ✅ PASS（top1_acc 0.8370 / macro_f1 0.7922 / routed_acc 0.8976） |
+| P6 | L2 层内门控 MoLE | 4 专家齐备后：① `verify_mixture.py` **在目标 GPU** 全层全专家等价自检 → ② `train_moe_gate.py`（lr 1e-3，balance α=0.01，fp32 门控，≈2.36M 参数，1–1.5h），验收 `expert_utilization` 无坍缩 | ⬜ 自检与训练待跑（4 专家 P2 已齐） |
+| P7 | MoE 推理分支 | `run_inference.py --moe-gate`（底座+K 专家+门控装配），否则 MoE 行无法进评测 | ✅ 代码已写（本地，随本次提交） |
+| P8 | checkpoint 选择 | 用 dev（内部验证集）在 ckpt-6638(1ep) vs ckpt-13276(2ep) 间选点；**论文干净数字必须来自 test(1k) 或基准集**，dev 训练时被用作 eval 不可当"未见数据" | ⬜ |
+| P9 | 消融 + 终评 | E0/E5 主对比 + A1/A3/A4（oracle/平均/随机路由）+ A7/A8/A9；各系统按 P3 分档口径生成、按 P4 判分；完整矩阵双卡 ≈1.75–2.6 天 | ⬜ |
+
+**论文数字红线**：① 生成侧指标只能来自 P3/P4 的评测产物（loss 不是论文指标）；② MoE 行评测前 P6+P7 必须双 PASS；
+③ 所有系统的 `max_new_tokens` 分档口径必须一致。
+
 
 ### 已完成
 
@@ -1012,7 +1037,12 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   新增 `--clean-cases` 强制清空旧案件库（案件池条数一变→分片错位，旧 `.done` 会**静默跳过**）。
   顺带修掉 `build_embeddings.py` 里写死的合理带 `30000 ≤ cases ≤ 120000`
   （新池 145,339 必然误判 FAIL）→ 改为从 `case_analysis` 总行数现算。
-- ⬜ **阶段 6–9**：路由训练 → MoE 消融 → 内部验证集选 checkpoint → 终评（LexEval / LexRubric 各只跑一次）。
+- ✅ **三域专家 QLoRA 全部 PASS（2026-09-20）**：criminal 30k / 3,874 步 / 4h26m / loss 0.5434；
+  civil 40k / 5,628 步 / 6h25m / loss 0.7009；procedure 20k / 2,606 步 / 2h02m（7,333.9s）/ loss 0.7730。
+  三者 `verdict=PASS`、11 项检查全 True、峰值显存 55.15 GB（A800）。报告 `docs/train/A0_{domain}_report.*`。
+  ⚠️ 实际步数 > rows/16（token 预算裁剪长样本批次所致），论文训练配置表用实际值。
+- ⬜ **阶段 6–9**：L2 门控自检+训练（4 专家已齐）→ MoE 等价验证 → 消融 → checkpoint 选择 → 终评
+  （LexEval / LexRubric 各只跑一次；A0 评测链 2026-09-20 已在 GPU0 启动）。
 - ⬜ （可选）配置 `HF_TOKEN` 后补采 `Aiiluo/Chinese-Law-SFT-Dataset`（2.6 MB，gated）
   与 `Brench/chinese_law_data_rag_ft`、`wormtooth/MNBVC-judgment`（按需抽样），扩充法条/案例侧。
 - ✅ **阶段 3 复扫门禁 —— 已收口**：`prepare_decontaminate_pass.sh` 跑完（与数据管线并行），

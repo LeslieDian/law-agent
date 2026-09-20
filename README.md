@@ -691,16 +691,19 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
 | P0 | 语料与检索层 | 阶段 0–4 + 4b 全链（去污复扫 PASS、四份 split、Neo4j 导入、检索消融达标） | ✅ PASS |
 | P1 | A0 统一适配器 QLoRA | Qwen3-8B 4bit + r16/α32 七投影，13,276 步 / 2ep，`verdict=PASS` 11/11 | ✅ PASS（train_loss 0.6756 / dev eval_loss 0.3896） |
 | P2 | 三域专家 QLoRA | criminal / civil / procedure，各自 `verdict=PASS` 11/11 检查 | ✅ PASS（criminal 0.5434 / civil 0.7009 / procedure 0.7730） |
-| P3 | A0 全量基准生成 | GPU0 分档链：lexrubric 649 (cap1536) → lexeval 客观 11,400 (cap256) → lexeval 生成 2,750 (cap1536)，单系统 ≈14h | 🔄 进行中（2026-09-20 19:06 起，`logs/eval_A0_chain.log`） |
+| P3 | A0 全量基准生成 | GPU0 分档链：lexrubric 649 (cap1536) → lexeval 客观 11,400 (cap256) → lexeval 生成 2,750 (cap1536)，单系统 ≈14h | 🔄 2026-09-20 20:24 以**口径对齐后代码**重启（旧口径 504 条已归档 `answers.bf16norm_STALE.jsonl`） |
 | P4 | A0 判分 | LexEval 客观秒级本地打分；LexRubric 走 `--judges minimax-m3`（12,335 条 rubric / 系统） | ⬜ 等 P3 |
 | P5 | L1 请求级路由 | Qwen3-Embedding 冻结 + 逻辑回归头，独立集 top1_acc / 回退率验收 | ✅ PASS（top1_acc 0.8370 / macro_f1 0.7922 / routed_acc 0.8976） |
-| P6 | L2 层内门控 MoLE | 4 专家齐备后：① `verify_mixture.py` **在目标 GPU** 全层全专家等价自检 → ② `train_moe_gate.py`（lr 1e-3，balance α=0.01，fp32 门控，≈2.36M 参数，1–1.5h），验收 `expert_utilization` 无坍缩 | ⬜ 自检与训练待跑（4 专家 P2 已齐） |
-| P7 | MoE 推理分支 | `run_inference.py --moe-gate`（底座+K 专家+门控装配），否则 MoE 行无法进评测 | ✅ 代码已写（本地，随本次提交） |
+| P6 | L2 层内门控 MoLE | 4 专家齐备后：① `verify_mixture.py` **在目标 GPU** 全层全专家等价自检 → ② `train_moe_gate.py`（lr 1e-3，balance α=0.01，fp32 门控，≈2.36M 参数），验收 `expert_utilization` 无坍缩 | 🔄 ① PASS（2026-09-20 GPU/4bit 全量：四专家 max\|Δ\|=0 逐位一致）；② 训练中（GPU1，1,125 步，`logs/train/L2_gate.log`） |
+| P7 | MoE 推理分支 | `run_inference.py --moe-gate`（底座+K 专家+门控装配），否则 MoE 行无法进评测 | ✅ 代码已写并提交（commit 56ebc2a / 767715b） |
 | P8 | checkpoint 选择 | 用 dev（内部验证集）在 ckpt-6638(1ep) vs ckpt-13276(2ep) 间选点；**论文干净数字必须来自 test(1k) 或基准集**，dev 训练时被用作 eval 不可当"未见数据" | ⬜ |
 | P9 | 消融 + 终评 | E0/E5 主对比 + A1/A3/A4（oracle/平均/随机路由）+ A7/A8/A9；各系统按 P3 分档口径生成、按 P4 判分；完整矩阵双卡 ≈1.75–2.6 天 | ⬜ |
 
 **论文数字红线**：① 生成侧指标只能来自 P3/P4 的评测产物（loss 不是论文指标）；② MoE 行评测前 P6+P7 必须双 PASS；
-③ 所有系统的 `max_new_tokens` 分档口径必须一致。
+③ 所有系统的 `max_new_tokens` 分档口径必须一致；④ **凡 4bit 底座，推理与门控训练都必须调
+`prepare_model_for_kbit_training`**（LN/lm_head upcast fp32）—— 训练调了而推理不调，
+36 层累积后 logit 相对差 ~2e-2，等价性自检 GPU/4bit 实锤（四专家 1.8–2.5e-2 FAIL → 修后 max\|Δ\|=0）。
+LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 peft 同型）。
 
 
 ### 已完成

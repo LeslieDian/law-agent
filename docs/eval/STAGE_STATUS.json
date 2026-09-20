@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-20T22:56:01",
+  "generated_at": "2026-09-20T22:59:00",
   "done": 2,
   "total": 19,
   "rows": [
@@ -14,14 +14,14 @@
       "stage": "A0 评测链",
       "system": "LexEval 客观 11,400 + 生成 2,750",
       "status": "进行中",
-      "progress": "832/14150",
+      "progress": "1056/14150",
       "note": "客观 cap=256 / 生成 cap=1536"
     },
     {
       "stage": "阶段 6 门控",
       "system": "L2 门控训练",
       "status": "进行中",
-      "progress": "745/1125",
+      "progress": "758/1125",
       "note": "72 gates / 2.36M 参数；→ 等 gate_weights.pt"
     },
     {
@@ -127,7 +127,7 @@
       "system": "汇总 + 出图",
       "status": "已完成",
       "progress": "",
-      "note": "collect_results.py + make_figures.py；最近一次 09-20 20:33"
+      "note": "collect_results.py + make_figures.py；最近一次 09-20 22:56"
     },
     {
       "stage": "收尾",

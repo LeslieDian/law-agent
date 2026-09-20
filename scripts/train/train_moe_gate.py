@@ -374,6 +374,15 @@ def main():
         trust_remote_code=True, attn_implementation="sdpa")
     model.config.use_cache = False
 
+    # ★ 口径对齐（2026-09-20）：推理侧（run_inference --moe-gate）与 peft 参照、
+    #   以及 A0/专家 QLoRA 训练都调了 prepare_model_for_kbit_training
+    #   （非量化 bf16 参数 LN/lm_head → fp32）。门控训练若不调，前向与推理前向
+    #   差 ~2% 相对（36 层累积），训出的门控等于贴在另一套激活上 —— 必须一致。
+    from peft import prepare_model_for_kbit_training
+    model = prepare_model_for_kbit_training(
+        model, use_gradient_checkpointing=False)
+    model.config.use_cache = False
+
     ctx = MixtureContext(detach_experts=True, use_mask=True)
     bank, meta = load_expert_bank(dirs, names=names, dtype=torch.float32)
     jprint("[专家] K=%d  %s" % (len(names), list(zip(names, meta["scaling"]))))

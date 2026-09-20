@@ -722,9 +722,14 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
 > **修复**：`--statutes-near {remove,audit,ignore}`（**默认 `audit`**）—— 法条流**只做精确 sha1 剔除**，
 > 近似命中只记录不剔除（报告单列 4b 节留痕）；`remove` 可复现历史行为。
 >
-> **独立复核（第三方口径）**：拿旧剔除清单直接撞法条流 uid（不是比对目录差集，是撞清单）——
-> `DECONTAM_REMOVED_UIDS.txt` 15,007 行 ∩ `normalized/statutes` 唯一 uid（23,510）= **恰好 739**，
+> **独立复核（第三方口径）**：拿**事故期**剔除清单直接撞法条流 uid（不是比对目录差集，是撞清单）——
+> 事故期清单 **15,007** 行 ∩ `normalized/statutes` 唯一 uid（23,510）= **恰好 739**，
 > 与 `normalized − decontaminated = 739` 完全一致。**事故量化闭环，且这条交集本身就是最好的门禁断言。**
+>
+> ⚠️ **口径提醒**：上面的 15,007 行是**修复前的中间产物**。仓库里 checked-in 的
+> [`docs/corpus/DECONTAM_REMOVED_UIDS.txt`](docs/corpus/DECONTAM_REMOVED_UIDS.txt) 是重跑后的**最终**清单
+> —— **14,268 行**，与 [`APPLY_SUMMARY.json`](docs/corpus/APPLY_SUMMARY.json) 的 `banned_uids = 14268`
+> 逐字一致。**不要拿仓库里这一份去复算 739**（那是另一代清单）。
 >
 > **重跑结果（4b 链 v4，2026-09-19 13:23 起）**：
 > `STEP0` 四断言全过（★ 剔除清单 ∩ 法条流 = **0**）→ apply 294,499 保留 / 14,268 剔除
@@ -1022,6 +1027,24 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
   2. **`--max-seq-length` 别按 4096 配**：实测 token 长度 p50 368 / p90 907 / p99 2048（上限），
      配 4096 只是白占显存。**改 2048，零截断**。
 
+<!-- AUTO_RESULTS_BEGIN 由 scripts/eval/collect_results.py 自动生成，勿手改 -->
+
+### 终评结果（自动汇总）
+
+> **本段由自动化回填**：`logs/_run/gpu1_queue.sh`（MoE 行，GPU1）+ `scripts/eval/overnight_run.sh`
+> （base 行 + 判分 + 出图，GPU0/API）两条链跑完后，`scripts/eval/collect_results.py` 生成数字、
+> 自动化脚本用 `scripts/eval/patch_readme.py` 替换本段。机读数据见 `docs/eval/RESULTS_MATRIX.json`，
+> 图见 `docs/figures/`，原始证据见 `docs/eval/EVIDENCE.txt`。
+>
+> ⬜ **占位**：过夜链 2026-09-20 20:30 启动（GPU0 = A0 三阶段 → base 三阶段 → 三专家内部集；
+> GPU1 = L2 门控训练 → MoE 四阶段；API 通道 = MiniMax-M3 判分）。跑完后本表自动替换为实测值。
+
+| 系统 | LexRubric (归一化 %) | LexEval 客观 Acc | LexEval 生成 ROUGE-L | 内部集 ROUGE-L | 内部集法条命中 | 已生成答案 (rubric/eval/internal) |
+|---|---:|---:|---:|---:|---:|---|
+| _待回填_ | — | — | — | — | — | — |
+
+<!-- AUTO_RESULTS_END -->
+
 ### 待办
 
 - ✅ **阶段 5 收口 —— 已完成**：A0 统一适配器 13,276 步 / 2 epochs 跑完（13h45m49s），
@@ -1218,7 +1241,10 @@ bash scripts/corpus/prepare_decontaminate_pass.sh
 - ⚠️ **「复扫 PASS」的适用边界**：复扫必须扫**应用剔除后的镜像**才有意义。
   若拿它当「删除是否正确」的证据 —— **它做不到**，它只能证明「剔除已生效且无残留」。
   2026-09-19 那次误删 739 部法规，就是被一份这样的空转 PASS 掩盖过去的
-  （镜像里 293,760 行 / 0 命中，因为它已经删干净了）。
+  （**事故期镜像** 293,760 行 / 0 命中，因为它已经删干净了）。
+  ⚠️ **口径提醒**：293,760 是**事故期**那份镜像；重跑后的最终镜像为 **294,499** 行
+  （`docs/corpus/DECONTAMINATION_REPORT_PASS.json` → `checked.total_rows`，2026-09-19T15:00:10，
+  与 `APPLY_SUMMARY.json` 的 `total_kept = 294499` 一致）。**两份不要混用。**
 - ✅ CLaw 已退出论文（2026-09-18 用户决策），黑名单 = LexEval + LexRubric，复扫可直接出**纯 PASS**；
   论文中不再出现 CLaw，评测基准以内部验证集 + LexEval/LexRubric 闭卷线为准。
 - 经验教训（2026-09-18 实测）：首版报告的 `near_hits.by_bench_tag` 是从**被截断的样例列表**

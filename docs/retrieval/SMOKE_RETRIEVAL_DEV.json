@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19T15:08:39",
+  "generated_at": "2026-09-19T16:48:15",
   "pipeline": {
     "dense": {
       "model": "/mnt/data/lidian/law-agent/models/Qwen3-Embedding-0.6B",
@@ -16,7 +16,7 @@
       "k1": 1.5,
       "b": 0.75,
       "min_df": 2,
-      "build_sec": 26.4,
+      "build_sec": 26.6,
       "avg_query_terms_in_vocab": 83.32
     },
     "graph": {
@@ -50,7 +50,7 @@
       "enabled": true,
       "model": "models/bge-reranker-v2-m3",
       "pool": 50,
-      "n_calls": 1708
+      "n_calls": 427
     }
   },
   "library_layout": {
@@ -64,11 +64,7 @@
     "dense_bm25": "向量 + BM25（等权 RRF）",
     "dense_graph": "向量 + 图谱扩展（等权 RRF，注入式）",
     "hybrid": "向量 + BM25 + 图谱，等权 RRF",
-    "full": "hybrid + 热度 + 精排（池 50）",
-    "wr_dense_bm25": "加权 RRF：dense 1.0 + BM25 w",
-    "wr_rerank50": "加权 RRF + 热度 + 精排（池 50）",
-    "wr_rerank200": "加权 RRF + 热度 + 精排（池 200）★",
-    "wr_kg_rerank200": "加权 RRF + 限长降权图谱 + 热度 + 精排（池 200）"
+    "full": "hybrid + 热度 + 精排（池 50）"
   },
   "gold_definition": {
     "system(tierA)": "数据集自带 `system` 的相关法律条文清单 —— 权威口径",
@@ -397,206 +393,6 @@
         "hit@50": 0.8454,
         "mrr@10": 0.4586
       }
-    },
-    "wr_dense_bm25": {
-      "union": {
-        "n_queries": 427,
-        "n_gold_total": 1135,
-        "avg_gold_per_query": 2.658,
-        "recall@1": 0.1551,
-        "recall@5": 0.4194,
-        "recall@10": 0.5031,
-        "recall@20": 0.5894,
-        "recall@50": 0.6793,
-        "recall@100": 0.7075,
-        "hit@5": 0.6651,
-        "hit@10": 0.726,
-        "hit@20": 0.7845,
-        "hit@50": 0.8431,
-        "mrr@10": 0.5147
-      },
-      "system": {
-        "n_queries": 49,
-        "n_gold_total": 148,
-        "avg_gold_per_query": 3.02,
-        "recall@1": 0.0811,
-        "recall@5": 0.3378,
-        "recall@10": 0.4595,
-        "recall@20": 0.5338,
-        "recall@50": 0.7162,
-        "recall@100": 0.75,
-        "hit@5": 0.5306,
-        "hit@10": 0.6327,
-        "hit@20": 0.6939,
-        "hit@50": 0.8367,
-        "mrr@10": 0.3623
-      },
-      "output": {
-        "n_queries": 427,
-        "n_gold_total": 1131,
-        "avg_gold_per_query": 2.649,
-        "recall@1": 0.1556,
-        "recall@5": 0.4209,
-        "recall@10": 0.5049,
-        "recall@20": 0.5897,
-        "recall@50": 0.6799,
-        "recall@100": 0.7082,
-        "hit@5": 0.6651,
-        "hit@10": 0.726,
-        "hit@20": 0.7845,
-        "hit@50": 0.8431,
-        "mrr@10": 0.5147
-      }
-    },
-    "wr_rerank50": {
-      "union": {
-        "n_queries": 427,
-        "n_gold_total": 1135,
-        "avg_gold_per_query": 2.658,
-        "recall@1": 0.133,
-        "recall@5": 0.3542,
-        "recall@10": 0.4564,
-        "recall@20": 0.5709,
-        "recall@50": 0.6793,
-        "recall@100": 0.6793,
-        "hit@5": 0.5948,
-        "hit@10": 0.6862,
-        "hit@20": 0.7822,
-        "hit@50": 0.8431,
-        "mrr@10": 0.455
-      },
-      "system": {
-        "n_queries": 49,
-        "n_gold_total": 148,
-        "avg_gold_per_query": 3.02,
-        "recall@1": 0.0405,
-        "recall@5": 0.223,
-        "recall@10": 0.3919,
-        "recall@20": 0.6419,
-        "recall@50": 0.7162,
-        "recall@100": 0.7162,
-        "hit@5": 0.4082,
-        "hit@10": 0.5918,
-        "hit@20": 0.7959,
-        "hit@50": 0.8367,
-        "mrr@10": 0.2432
-      },
-      "output": {
-        "n_queries": 427,
-        "n_gold_total": 1131,
-        "avg_gold_per_query": 2.649,
-        "recall@1": 0.1335,
-        "recall@5": 0.3554,
-        "recall@10": 0.458,
-        "recall@20": 0.5712,
-        "recall@50": 0.6799,
-        "recall@100": 0.6799,
-        "hit@5": 0.5948,
-        "hit@10": 0.6862,
-        "hit@20": 0.7822,
-        "hit@50": 0.8431,
-        "mrr@10": 0.455
-      }
-    },
-    "wr_rerank200": {
-      "union": {
-        "n_queries": 427,
-        "n_gold_total": 1135,
-        "avg_gold_per_query": 2.658,
-        "recall@1": 0.1313,
-        "recall@5": 0.3295,
-        "recall@10": 0.4326,
-        "recall@20": 0.5295,
-        "recall@50": 0.6705,
-        "recall@100": 0.7075,
-        "hit@5": 0.5644,
-        "hit@10": 0.6628,
-        "hit@20": 0.7424,
-        "hit@50": 0.8314,
-        "mrr@10": 0.4424
-      },
-      "system": {
-        "n_queries": 49,
-        "n_gold_total": 148,
-        "avg_gold_per_query": 3.02,
-        "recall@1": 0.027,
-        "recall@5": 0.2162,
-        "recall@10": 0.3581,
-        "recall@20": 0.5473,
-        "recall@50": 0.7365,
-        "recall@100": 0.75,
-        "hit@5": 0.4082,
-        "hit@10": 0.551,
-        "hit@20": 0.7347,
-        "hit@50": 0.8571,
-        "mrr@10": 0.2114
-      },
-      "output": {
-        "n_queries": 427,
-        "n_gold_total": 1131,
-        "avg_gold_per_query": 2.649,
-        "recall@1": 0.1317,
-        "recall@5": 0.3307,
-        "recall@10": 0.4341,
-        "recall@20": 0.5296,
-        "recall@50": 0.6711,
-        "recall@100": 0.7082,
-        "hit@5": 0.5644,
-        "hit@10": 0.6628,
-        "hit@20": 0.7424,
-        "hit@50": 0.8314,
-        "mrr@10": 0.4424
-      }
-    },
-    "wr_kg_rerank200": {
-      "union": {
-        "n_queries": 427,
-        "n_gold_total": 1135,
-        "avg_gold_per_query": 2.658,
-        "recall@1": 0.1313,
-        "recall@5": 0.3286,
-        "recall@10": 0.4317,
-        "recall@20": 0.5304,
-        "recall@50": 0.6846,
-        "recall@100": 0.7419,
-        "hit@5": 0.5621,
-        "hit@10": 0.6604,
-        "hit@20": 0.74,
-        "hit@50": 0.8361,
-        "mrr@10": 0.4407
-      },
-      "system": {
-        "n_queries": 49,
-        "n_gold_total": 148,
-        "avg_gold_per_query": 3.02,
-        "recall@1": 0.027,
-        "recall@5": 0.2095,
-        "recall@10": 0.3514,
-        "recall@20": 0.5338,
-        "recall@50": 0.7432,
-        "recall@100": 0.777,
-        "hit@5": 0.4082,
-        "hit@10": 0.5306,
-        "hit@20": 0.7143,
-        "hit@50": 0.8571,
-        "mrr@10": 0.2032
-      },
-      "output": {
-        "n_queries": 427,
-        "n_gold_total": 1131,
-        "avg_gold_per_query": 2.649,
-        "recall@1": 0.1317,
-        "recall@5": 0.3298,
-        "recall@10": 0.4332,
-        "recall@20": 0.5305,
-        "recall@50": 0.6852,
-        "recall@100": 0.7427,
-        "hit@5": 0.5621,
-        "hit@10": 0.6604,
-        "hit@20": 0.74,
-        "hit@50": 0.8361,
-        "mrr@10": 0.4407
-      }
     }
   },
   "dense_ceiling": {
@@ -614,8 +410,8 @@
     "note": "纯 Qwen3-Embedding-0.6B 在**全量 72088 条**法条 item 上的完整排序；用于判定目标未达标是「排序问题」还是「召回天花板」",
     "tiers": {
       "union": {
-        "n_queries": 4270,
-        "n_gold_total": 11350,
+        "n_queries": 2562,
+        "n_gold_total": 6810,
         "recall_at_k": {
           "1": 0.1656,
           "5": 0.3885,
@@ -629,8 +425,8 @@
         }
       },
       "system": {
-        "n_queries": 490,
-        "n_gold_total": 1480,
+        "n_queries": 294,
+        "n_gold_total": 888,
         "recall_at_k": {
           "1": 0.1081,
           "5": 0.3919,
@@ -644,8 +440,8 @@
         }
       },
       "output": {
-        "n_queries": 4270,
-        "n_gold_total": 11310,
+        "n_queries": 2562,
+        "n_gold_total": 6786,
         "recall_at_k": {
           "1": 0.1662,
           "5": 0.389,
@@ -660,7 +456,7 @@
       }
     },
     "first_gold_rank": {
-      "n_ranked": 4270,
+      "n_ranked": 2562,
       "unreachable_in_top1000": 0,
       "p10": 1,
       "p50": 2,
@@ -680,13 +476,70 @@
   },
   "primary": "union",
   "best_config": "dense_bm25",
+  "best_config_deep_recall": "dense_bm25",
+  "best_config_head": "dense_bm25",
+  "selection_rule": {
+    "deep_recall": "argmax (recall@5, recall@10) —— 决定 RAG 送生成器的候选池",
+    "head": "argmax (hit@5, MRR@10) —— 决定用户看到的前 5 条",
+    "meet_all": "hit@5 / recall@10 / MRR@10 三条同时达标"
+  },
   "targets": {
+    "hit@5": 0.6,
+    "recall@10": 0.5,
+    "mrr@10": 0.45
+  },
+  "retired_targets": {
     "recall@5": 0.85,
-    "recall@10": 0.9
+    "recall@10": 0.9,
+    "status": "作废（数学不可达）",
+    "evidence": "纯 dense 全量排序（union，2562 query）：recall@10 = 0.5013、recall@1000 = 0.9057 —— 候选深度开到 1000 仍够不到 0.90，且实测 recall@10 远低于 0.90。瓶颈是 embedding 表示能力，不是融合口径或排序器。",
+    "decided_by": "用户 2026-09-19"
   },
   "targets_met": {
-    "recall@5_ge_0.85": false,
-    "recall@10_ge_0.90": false
+    "by_config": {
+      "vector": {
+        "hit@5": true,
+        "recall@10": true,
+        "mrr@10": true,
+        "all": true
+      },
+      "dense_hot": {
+        "hit@5": true,
+        "recall@10": true,
+        "mrr@10": true,
+        "all": true
+      },
+      "dense_bm25": {
+        "hit@5": true,
+        "recall@10": true,
+        "mrr@10": true,
+        "all": true
+      },
+      "dense_graph": {
+        "hit@5": true,
+        "recall@10": false,
+        "mrr@10": true,
+        "all": false
+      },
+      "hybrid": {
+        "hit@5": true,
+        "recall@10": true,
+        "mrr@10": true,
+        "all": true
+      },
+      "full": {
+        "hit@5": false,
+        "recall@10": false,
+        "mrr@10": true,
+        "all": false
+      }
+    },
+    "configs_meeting_all_targets": [
+      "vector",
+      "dense_hot",
+      "dense_bm25",
+      "hybrid"
+    ]
   },
   "samples": [
     {
@@ -950,5 +803,5 @@
       "hit10": 0
     }
   ],
-  "elapsed_sec": 1974.9
+  "elapsed_sec": 412.3
 }

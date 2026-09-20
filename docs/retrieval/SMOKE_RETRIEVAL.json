@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-19T16:28:03",
+  "generated_at": "2026-09-19T16:41:21",
   "pipeline": {
     "dense": {
       "model": "/mnt/data/lidian/law-agent/models/Qwen3-Embedding-0.6B",
@@ -16,7 +16,7 @@
       "k1": 1.5,
       "b": 0.75,
       "min_df": 2,
-      "build_sec": 27.1,
+      "build_sec": 26.8,
       "avg_query_terms_in_vocab": 81.23
     },
     "graph": {
@@ -60,8 +60,9 @@
   },
   "configs": {
     "vector": "纯向量（Qwen3-Embedding-0.6B）",
-    "dense_graph": "向量 + 图谱扩展（等权 RRF，注入式）",
+    "dense_hot": "纯向量 + 热度先验",
     "dense_bm25": "向量 + BM25（等权 RRF）",
+    "dense_graph": "向量 + 图谱扩展（等权 RRF，注入式）",
     "hybrid": "向量 + BM25 + 图谱，等权 RRF",
     "full": "hybrid + 热度 + 精排（池 50）"
   },
@@ -143,54 +144,54 @@
         "mrr@10": 0.526
       }
     },
-    "dense_graph": {
+    "dense_hot": {
       "union": {
         "n_queries": 414,
         "n_gold_total": 1089,
         "avg_gold_per_query": 2.63,
-        "recall@1": 0.1396,
-        "recall@5": 0.4059,
-        "recall@10": 0.5032,
-        "recall@20": 0.5849,
-        "recall@50": 0.6841,
-        "recall@100": 0.7144,
-        "hit@5": 0.6473,
-        "hit@10": 0.7295,
-        "hit@20": 0.7971,
+        "recall@1": 0.1625,
+        "recall@5": 0.404,
+        "recall@10": 0.4922,
+        "recall@20": 0.5767,
+        "recall@50": 0.6556,
+        "recall@100": 0.6556,
+        "hit@5": 0.6739,
+        "hit@10": 0.7319,
+        "hit@20": 0.8092,
         "hit@50": 0.8671,
-        "mrr@10": 0.4878
+        "mrr@10": 0.5296
       },
       "system": {
         "n_queries": 55,
         "n_gold_total": 167,
         "avg_gold_per_query": 3.036,
-        "recall@1": 0.1377,
-        "recall@5": 0.4012,
-        "recall@10": 0.485,
-        "recall@20": 0.6048,
-        "recall@50": 0.7665,
-        "recall@100": 0.7844,
+        "recall@1": 0.1437,
+        "recall@5": 0.4251,
+        "recall@10": 0.491,
+        "recall@20": 0.6108,
+        "recall@50": 0.7365,
+        "recall@100": 0.7365,
         "hit@5": 0.6,
-        "hit@10": 0.6545,
-        "hit@20": 0.8182,
+        "hit@10": 0.6727,
+        "hit@20": 0.8727,
         "hit@50": 0.9636,
-        "mrr@10": 0.4876
+        "mrr@10": 0.501
       },
       "output": {
         "n_queries": 413,
         "n_gold_total": 1077,
         "avg_gold_per_query": 2.608,
-        "recall@1": 0.1393,
-        "recall@5": 0.4058,
-        "recall@10": 0.5042,
-        "recall@20": 0.5859,
-        "recall@50": 0.6852,
-        "recall@100": 0.7159,
-        "hit@5": 0.6441,
-        "hit@10": 0.7264,
-        "hit@20": 0.7942,
-        "hit@50": 0.8668,
-        "mrr@10": 0.4842
+        "recall@1": 0.1625,
+        "recall@5": 0.4039,
+        "recall@10": 0.493,
+        "recall@20": 0.5785,
+        "recall@50": 0.6565,
+        "recall@100": 0.6565,
+        "hit@5": 0.6707,
+        "hit@10": 0.7288,
+        "hit@20": 0.8063,
+        "hit@50": 0.8644,
+        "mrr@10": 0.526
       }
     },
     "dense_bm25": {
@@ -241,6 +242,56 @@
         "hit@20": 0.799,
         "hit@50": 0.8668,
         "mrr@10": 0.5481
+      }
+    },
+    "dense_graph": {
+      "union": {
+        "n_queries": 414,
+        "n_gold_total": 1089,
+        "avg_gold_per_query": 2.63,
+        "recall@1": 0.1396,
+        "recall@5": 0.4059,
+        "recall@10": 0.5032,
+        "recall@20": 0.5849,
+        "recall@50": 0.6841,
+        "recall@100": 0.7144,
+        "hit@5": 0.6473,
+        "hit@10": 0.7295,
+        "hit@20": 0.7971,
+        "hit@50": 0.8671,
+        "mrr@10": 0.4878
+      },
+      "system": {
+        "n_queries": 55,
+        "n_gold_total": 167,
+        "avg_gold_per_query": 3.036,
+        "recall@1": 0.1377,
+        "recall@5": 0.4012,
+        "recall@10": 0.485,
+        "recall@20": 0.6048,
+        "recall@50": 0.7665,
+        "recall@100": 0.7844,
+        "hit@5": 0.6,
+        "hit@10": 0.6545,
+        "hit@20": 0.8182,
+        "hit@50": 0.9636,
+        "mrr@10": 0.4876
+      },
+      "output": {
+        "n_queries": 413,
+        "n_gold_total": 1077,
+        "avg_gold_per_query": 2.608,
+        "recall@1": 0.1393,
+        "recall@5": 0.4058,
+        "recall@10": 0.5042,
+        "recall@20": 0.5859,
+        "recall@50": 0.6852,
+        "recall@100": 0.7159,
+        "hit@5": 0.6441,
+        "hit@10": 0.7264,
+        "hit@20": 0.7942,
+        "hit@50": 0.8668,
+        "mrr@10": 0.4842
       }
     },
     "hybrid": {
@@ -359,8 +410,8 @@
     "note": "纯 Qwen3-Embedding-0.6B 在**全量 72088 条**法条 item 上的完整排序；用于判定目标未达标是「排序问题」还是「召回天花板」",
     "tiers": {
       "union": {
-        "n_queries": 2070,
-        "n_gold_total": 5445,
+        "n_queries": 2484,
+        "n_gold_total": 6534,
         "recall_at_k": {
           "1": 0.1625,
           "5": 0.404,
@@ -374,8 +425,8 @@
         }
       },
       "system": {
-        "n_queries": 275,
-        "n_gold_total": 835,
+        "n_queries": 330,
+        "n_gold_total": 1002,
         "recall_at_k": {
           "1": 0.1437,
           "5": 0.4251,
@@ -389,8 +440,8 @@
         }
       },
       "output": {
-        "n_queries": 2065,
-        "n_gold_total": 5385,
+        "n_queries": 2478,
+        "n_gold_total": 6462,
         "recall_at_k": {
           "1": 0.1625,
           "5": 0.4039,
@@ -405,7 +456,7 @@
       }
     },
     "first_gold_rank": {
-      "n_ranked": 2070,
+      "n_ranked": 2484,
       "unreachable_in_top1000": 0,
       "p10": 1,
       "p50": 2,
@@ -425,6 +476,13 @@
   },
   "primary": "union",
   "best_config": "hybrid",
+  "best_config_deep_recall": "hybrid",
+  "best_config_head": "dense_bm25",
+  "selection_rule": {
+    "deep_recall": "argmax (recall@5, recall@10) —— 决定 RAG 送生成器的候选池",
+    "head": "argmax (hit@5, MRR@10) —— 决定用户看到的前 5 条",
+    "meet_all": "hit@5 / recall@10 / MRR@10 三条同时达标"
+  },
   "targets": {
     "hit@5": 0.6,
     "recall@10": 0.5,
@@ -434,13 +492,53 @@
     "recall@5": 0.85,
     "recall@10": 0.9,
     "status": "作废（数学不可达）",
-    "evidence": "纯 dense 在 72,088 条上的 recall@1000 仅 0.832；dev 实测曲线见 dense_ceiling",
+    "evidence": "纯 dense 全量排序（union，2484 query）：recall@10 = 0.4922、recall@1000 = 0.8981 —— 候选深度开到 1000 仍够不到 0.90，且实测 recall@10 远低于 0.90。瓶颈是 embedding 表示能力，不是融合口径或排序器。",
     "decided_by": "用户 2026-09-19"
   },
   "targets_met": {
-    "hit@5_ge_0.60": true,
-    "recall@10_ge_0.50": true,
-    "mrr@10_ge_0.45": true
+    "by_config": {
+      "vector": {
+        "hit@5": true,
+        "recall@10": false,
+        "mrr@10": true,
+        "all": false
+      },
+      "dense_hot": {
+        "hit@5": true,
+        "recall@10": false,
+        "mrr@10": true,
+        "all": false
+      },
+      "dense_bm25": {
+        "hit@5": true,
+        "recall@10": true,
+        "mrr@10": true,
+        "all": true
+      },
+      "dense_graph": {
+        "hit@5": true,
+        "recall@10": true,
+        "mrr@10": true,
+        "all": true
+      },
+      "hybrid": {
+        "hit@5": true,
+        "recall@10": true,
+        "mrr@10": true,
+        "all": true
+      },
+      "full": {
+        "hit@5": true,
+        "recall@10": false,
+        "mrr@10": true,
+        "all": false
+      }
+    },
+    "configs_meeting_all_targets": [
+      "dense_bm25",
+      "dense_graph",
+      "hybrid"
+    ]
   },
   "samples": [
     {
@@ -704,5 +802,5 @@
       "hit10": 1
     }
   ],
-  "elapsed_sec": 391.4
+  "elapsed_sec": 391.1
 }

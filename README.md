@@ -958,7 +958,19 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   [`SMOKE_RETRIEVAL_DEV.md`](docs/retrieval/SMOKE_RETRIEVAL_DEV.md) /
   [`FUSION_SWEEP.md`](docs/retrieval/FUSION_SWEEP.md) /
   [`RERANKER_DIAG.json`](docs/retrieval/RERANKER_DIAG.json)。
-- 🟡 **阶段 5：A0 统一适配器 QLoRA 训练** —— 已开跑（2026-09-19）。
+- ✅ **阶段 5：A0 统一适配器 QLoRA 训练 —— 已完成，`verdict = PASS`**（2026-09-20 03:47）。
+  **13,276 步 / 2 epochs 全量跑完**（13h45m49s，3.96 s/it），`train_loss = 0.6756`、
+  dev `eval_loss = 0.3896`（末轮），峰值显存 **46.44 GB**（A800 80GB）；**11 项检查全 True**。
+  适配器落盘 `models/adapters/A0_unified_qwen3_8b`（43,646,976 个可训练参数），
+  报告 [`docs/train/A0_unified_report.md`](docs/train/A0_unified_report.md)。
+  **★ 冒烟轮（500 条）的 FAIL 是「假阴性」，已定性**：`checks.rendered_gt_0 = false`
+  并非模板渲染失败 —— `dataloader_num_workers > 0` 时 `__getitem__` 在**子进程**执行，
+  数据集内 `self.stats` 的累加**不回传父进程** → 父进程读到 `rendered = 0`，
+  把「渲染全成功」误判成失败（同期 loss 从 1.142 正常降到 0.513）。
+  修法：加 `preview(n=2000)` 在**父进程**单独跑一遍拿真实统计，
+  `rendered_gt_0` 改读 `dataset_preview`；`dataset_stats` 保留但标注「num_workers>0 时可能为 0，以 preview 为准」。
+  教训：**凡是靠 DataLoader 子进程累加的统计量，都不能当验收依据。**
+
   配置：Qwen3-8B 4bit（nf4 + double quant）/ LoRA r=16 α=32（7 个投影矩阵，
   可训练 **43,646,976 / 4,761,498,624 = 0.9167%**）/ seq 2048 / lr 1e-4 / 2 epochs / cosine / paged_adamw_8bit。
   **assistant-only loss 用「前缀边界」实现**（TRL 的 `assistant_only_loss=True` 要求模板带
@@ -984,8 +996,9 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
 
 ### 待办
 
-- 🟡 **阶段 5 收口**：A0 统一适配器训练（13,276 步 / 2 epochs）跑完后 → dev 评测 →
-  记录 loss 曲线与显存峰值 → `docs/train/A0_unified_report.md`。
+- ✅ **阶段 5 收口 —— 已完成**：A0 统一适配器 13,276 步 / 2 epochs 跑完（13h45m49s），
+  `verdict = PASS`、11 项检查全 True、峰值显存 46.44 GB、`train_loss 0.6756` /
+  dev `eval_loss 0.3896` → [`docs/train/A0_unified_report.md`](docs/train/A0_unified_report.md)。
 - ✅ **阶段 4b-4 / 4b-5 已跑完并回填数字**：Neo4j 导入报告
   [`docs/retrieval/NEO4J_IMPORT.md`](docs/retrieval/NEO4J_IMPORT.md)、检索消融矩阵
   [`docs/retrieval/SMOKE_RETRIEVAL.md`](docs/retrieval/SMOKE_RETRIEVAL.md)（test）/

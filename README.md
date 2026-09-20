@@ -1027,36 +1027,45 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
   2. **`--max-seq-length` 别按 4096 配**：实测 token 长度 p50 368 / p90 907 / p99 2048（上限），
      配 4096 只是白占显存。**改 2048，零截断**。
 
-<!-- AUTO_STAGE_BEGIN 由 scripts/eval/stage_status.py 自动生成，勿手改 -->
-
 ### 阶段进度（自动汇总）
 
-> **本段由自动化回填**：`scripts/eval/stage_status.py` 扫描答案文件行数、日志 `rc=`/`[n/N]` 进度、
-> 完成标志与报告文件后生成，经 `patch_readme.py --tag AUTO_STAGE` 贴入。**每完成一个阶段刷新一次并自动推送 GitHub**。
-> 机读版：`docs/eval/STAGE_STATUS.json`。
+> **本段由自动化回填**（`scripts/eval/stage_status.py` 扫描产物/日志/标志后生成，经 `patch_readme.py --tag AUTO_STAGE` 贴入）。每完成一个阶段刷新一次，并自动提交推送。机读版：`docs/eval/STAGE_STATUS.json`。
+>
+> 生成时间 **2026-09-20 22:56:01** ｜ 已完成 **2/19** 项
 
 | 阶段 | 项 | 状态 | 进度 | 备注 |
 |---|---|---|---|---|
-| _待扫描_ | — | ⬜ 待跑 | — | — |
+| A0 评测链 | LexRubric 649 | ✅ 已完成 | 649/649 | cap=1536；AI 裁判判分 |
+| A0 评测链 | LexEval 客观 11,400 + 生成 2,750 | 🔄 进行中 | 832/14150 | 客观 cap=256 / 生成 cap=1536 |
+| 阶段 6 门控 | L2 门控训练 | 🔄 进行中 | 745/1125 | 72 gates / 2.36M 参数；→ 等 gate_weights.pt |
+| MoE 队列 | Q1 MoE 冒烟 | ⬜ 待跑 | 0/2 | 等门控权重 |
+| MoE 队列 | Q2 MoE 内部集 1k | ⬜ 待跑 | 0/1000 | — |
+| MoE 队列 | Q3 MoE LexRubric 649 | ⬜ 待跑 | 0/649 | — |
+| MoE 队列 | Q4 MoE 客观 11,400 | ⬜ 待跑 | 0/11400 | — |
+| MoE 队列 | Q5 MoE 生成 2,750 | ⬜ 待跑 | 0/14150 | — |
+| MoE 队列 | Q6 A0 内部集 cap=1024 | ⬜ 待跑 | 0/1000 | — |
+| base 评测 | LexRubric 649 | ⬜ 待跑 | 0/649 | cap=1536 |
+| base 评测 | LexEval 客观+生成 14,150 | ⬜ 待跑 | 0/14150 | — |
+| 三专家内部集 | internal_criminal 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
+| 三专家内部集 | internal_civil 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
+| 三专家内部集 | internal_procedure 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
+| 判分(API) | MiniMax-M3 × A0_unified_qwen3_8b | 🔄 进行中 | — | 649 题 / 22 维度；冒烟 8 条中 |
+| 判分(API) | MiniMax-M3 × moe_L2 | 🔄 进行中 | — | 649 题 / 22 维度；冒烟 8 条中 |
+| 判分(API) | MiniMax-M3 × base | 🔄 进行中 | — | 649 题 / 22 维度；冒烟 8 条中 |
+| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-20 20:33 |
+| 收尾 | 过夜链整链 | 🔄 进行中 | — | MARKER_OVERNIGHT_DONE |
 
-<!-- AUTO_STAGE_END -->
+<sub>状态来源：答案文件行数 / 日志 `rc=` 与 `[n/N]` 进度 / 完成标志 / 报告文件。未到位一律如实标注，不做推测。</sub>
 
 <!-- AUTO_RESULTS_BEGIN 由 scripts/eval/collect_results.py 自动生成，勿手改 -->
-
 ### 终评结果（自动汇总）
-
-> **本段由自动化回填**：`logs/_run/gpu1_queue.sh`（MoE 行，GPU1）+ `scripts/eval/overnight_run.sh`
-> （base 行 + 判分 + 出图，GPU0/API）两条链跑完后，`scripts/eval/collect_results.py` 生成数字、
-> 自动化脚本用 `scripts/eval/patch_readme.py` 替换本段。机读数据见 `docs/eval/RESULTS_MATRIX.json`，
-> 图见 `docs/figures/`，原始证据见 `docs/eval/EVIDENCE.txt`。
->
-> ⬜ **占位**：过夜链 2026-09-20 20:30 启动（GPU0 = A0 三阶段 → base 三阶段 → 三专家内部集；
-> GPU1 = L2 门控训练 → MoE 四阶段；API 通道 = MiniMax-M3 判分）。跑完后本表自动替换为实测值。
 
 | 系统 | LexRubric (归一化 %) | LexEval 客观 Acc | LexEval 生成 ROUGE-L | 内部集 ROUGE-L | 内部集法条命中 | 已生成答案 (rubric/eval/internal) |
 |---|---:|---:|---:|---:|---:|---|
-| _待回填_ | — | — | — | — | — | — |
+| A0 (统一适配器) | — | — | — | 0.5378 | 0.5386 | 0 / 0 / 1000 |
 
+> 生成口径（全系统统一）：LexEval 客观题 cap=256 / LexEval 生成题 cap=1536 / LexRubric cap=1536 / 内部验证集 cap=1024；
+> 判分 MiniMax-M3（`configs/judge.yaml`）；完整机读数据见 `docs/eval/RESULTS_MATRIX.json`，图见 `docs/figures/`。
 <!-- AUTO_RESULTS_END -->
 
 ### 待办

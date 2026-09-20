@@ -1,0 +1,27 @@
+
+================ EVIDENCE [start]  2026-09-20 20:29:55 ================
+0, NVIDIA A800 80GB PCIe, 41439 MiB, 100 %
+1, NVIDIA A800 80GB PCIe, 53633 MiB, 100 %
+--- running ---
+ 519258     529 bash -c cd /mnt/data/lidian/law-agent && nohup bash -c 'cd /mnt/data/lidian/law-agent P=envs/main/bin/python ADAPTER=models/
+ 519259     529 bash -c cd /mnt/data/lidian/law-agent P=envs/main/bin/python ADAPTER=models/adapters/A0_unified_qwen3_8b D=data/benchmark/le
+ 519261     529 envs/main/bin/python scripts/train/run_inference.py --task lexrubric --adapter models/adapters/A0_unified_qwen3_8b --gpu 0 -
+ 527779     223 bash -c cd /mnt/data/lidian/law-agent && nohup envs/main/bin/python scripts/train/train_moe_gate.py --experts civil,criminal
+ 527780     223 envs/main/bin/python scripts/train/train_moe_gate.py --experts civil,criminal,procedure,unified --data data/router/router_tr
+ 528836     208 envs/main/bin/python scripts/train/train_moe_gate.py --experts civil,criminal,procedure,unified --data data/router/router_tr
+ 528837     208 envs/main/bin/python scripts/train/train_moe_gate.py --experts civil,criminal,procedure,unified --data data/router/router_tr
+--- answers.jsonl ---
+    1000  outputs/infer/A0_internal_test/answers.jsonl
+      32  outputs/infer/lexrubric_A0_unified_qwen3_8b/answers.jsonl
+      64  outputs/infer/_perf_lexeval_b32/answers.jsonl
+      64  outputs/infer/_perf_lexeval_bf16/answers.jsonl
+      20  outputs/infer/_smoke_internal/answers.jsonl
+      20  outputs/infer/_smoke_lexeval/answers.jsonl
+
+================ DEDUP REPORT 2026-09-20 20:33:43 ================
+  dedup outputs/infer/A0_internal_test/answers.jsonl               kept=1000   duplicates=0     bad_lines=0
+  dedup outputs/infer/lexrubric_A0_unified_qwen3_8b/answers.jsonl  kept=64     duplicates=0     bad_lines=0
+  dedup outputs/infer/_perf_lexeval_b32/answers.jsonl              kept=64     duplicates=0     bad_lines=0
+  dedup outputs/infer/_perf_lexeval_bf16/answers.jsonl             kept=64     duplicates=0     bad_lines=0
+  dedup outputs/infer/_smoke_internal/answers.jsonl                kept=20     duplicates=0     bad_lines=0
+  dedup outputs/infer/_smoke_lexeval/answers.jsonl                 kept=20     duplicates=0     bad_lines=0

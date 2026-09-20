@@ -1,0 +1,41 @@
+{
+  "n_systems": 1,
+  "systems": {
+    "A0": {
+      "key": "A0",
+      "display": "A0 (统一适配器)",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 1000
+      },
+      "internal_rouge": 0.5378,
+      "internal_statute": 0.5386,
+      "internal_acc": null,
+      "internal_n": 1000,
+      "warnings": [
+        "缺 outputs/score/lexeval_A0.json",
+        "缺 outputs/judge/lexrubric/A0/SUMMARY.json"
+      ]
+    }
+  },
+  "rows": [
+    {
+      "key": "A0",
+      "display": "A0 (统一适配器)",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 1000
+      },
+      "internal_rouge": 0.5378,
+      "internal_statute": 0.5386,
+      "internal_acc": null,
+      "internal_n": 1000,
+      "warnings": [
+        "缺 outputs/score/lexeval_A0.json",
+        "缺 outputs/judge/lexrubric/A0/SUMMARY.json"
+      ]
+    }
+  ]
+}

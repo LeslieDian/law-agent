@@ -1,0 +1,140 @@
+{
+  "generated_at": "2026-09-20T22:56:01",
+  "done": 2,
+  "total": 19,
+  "rows": [
+    {
+      "stage": "A0 评测链",
+      "system": "LexRubric 649",
+      "status": "已完成",
+      "progress": "649/649",
+      "note": "cap=1536；AI 裁判判分"
+    },
+    {
+      "stage": "A0 评测链",
+      "system": "LexEval 客观 11,400 + 生成 2,750",
+      "status": "进行中",
+      "progress": "832/14150",
+      "note": "客观 cap=256 / 生成 cap=1536"
+    },
+    {
+      "stage": "阶段 6 门控",
+      "system": "L2 门控训练",
+      "status": "进行中",
+      "progress": "745/1125",
+      "note": "72 gates / 2.36M 参数；→ 等 gate_weights.pt"
+    },
+    {
+      "stage": "MoE 队列",
+      "system": "Q1 MoE 冒烟",
+      "status": "待跑",
+      "progress": "0/2",
+      "note": "等门控权重"
+    },
+    {
+      "stage": "MoE 队列",
+      "system": "Q2 MoE 内部集 1k",
+      "status": "待跑",
+      "progress": "0/1000",
+      "note": ""
+    },
+    {
+      "stage": "MoE 队列",
+      "system": "Q3 MoE LexRubric 649",
+      "status": "待跑",
+      "progress": "0/649",
+      "note": ""
+    },
+    {
+      "stage": "MoE 队列",
+      "system": "Q4 MoE 客观 11,400",
+      "status": "待跑",
+      "progress": "0/11400",
+      "note": ""
+    },
+    {
+      "stage": "MoE 队列",
+      "system": "Q5 MoE 生成 2,750",
+      "status": "待跑",
+      "progress": "0/14150",
+      "note": ""
+    },
+    {
+      "stage": "MoE 队列",
+      "system": "Q6 A0 内部集 cap=1024",
+      "status": "待跑",
+      "progress": "0/1000",
+      "note": ""
+    },
+    {
+      "stage": "base 评测",
+      "system": "LexRubric 649",
+      "status": "待跑",
+      "progress": "0/649",
+      "note": "cap=1536"
+    },
+    {
+      "stage": "base 评测",
+      "system": "LexEval 客观+生成 14,150",
+      "status": "待跑",
+      "progress": "0/14150",
+      "note": ""
+    },
+    {
+      "stage": "三专家内部集",
+      "system": "internal_criminal 1k",
+      "status": "待跑",
+      "progress": "0/1000",
+      "note": "cap=1024；域专业化分析"
+    },
+    {
+      "stage": "三专家内部集",
+      "system": "internal_civil 1k",
+      "status": "待跑",
+      "progress": "0/1000",
+      "note": "cap=1024；域专业化分析"
+    },
+    {
+      "stage": "三专家内部集",
+      "system": "internal_procedure 1k",
+      "status": "待跑",
+      "progress": "0/1000",
+      "note": "cap=1024；域专业化分析"
+    },
+    {
+      "stage": "判分(API)",
+      "system": "MiniMax-M3 × A0_unified_qwen3_8b",
+      "status": "进行中",
+      "progress": "",
+      "note": "649 题 / 22 维度；冒烟 8 条中"
+    },
+    {
+      "stage": "判分(API)",
+      "system": "MiniMax-M3 × moe_L2",
+      "status": "进行中",
+      "progress": "",
+      "note": "649 题 / 22 维度；冒烟 8 条中"
+    },
+    {
+      "stage": "判分(API)",
+      "system": "MiniMax-M3 × base",
+      "status": "进行中",
+      "progress": "",
+      "note": "649 题 / 22 维度；冒烟 8 条中"
+    },
+    {
+      "stage": "收尾",
+      "system": "汇总 + 出图",
+      "status": "已完成",
+      "progress": "",
+      "note": "collect_results.py + make_figures.py；最近一次 09-20 20:33"
+    },
+    {
+      "stage": "收尾",
+      "system": "过夜链整链",
+      "status": "进行中",
+      "progress": "",
+      "note": "MARKER_OVERNIGHT_DONE"
+    }
+  ]
+}

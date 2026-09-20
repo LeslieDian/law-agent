@@ -22,7 +22,8 @@
 | `normalized_STATS.json` / `normalized_DEDUP_REPORT.json` | 阶段 2 统计与全局精确去重明细 |
 | `DECONTAMINATION_REPORT.md` / `.json` | 阶段 3 **首扫**证据（`verdict = FAIL`，含 18,587 处命中明细） |
 | `DECONTAMINATION_REPORT_PASS.md` / `.json` | 阶段 3 **复扫 PASS** 证据（门禁用） |
-| `DECONTAM_REMOVED_UIDS.txt` / `DECONTAM_REMOVED_UIDS_PASS.txt` | 剔除清单 15,007 行 / 复扫清单**空文件**（门禁证据） |
+| `DECONTAM_REMOVED_UIDS.txt` / `APPLY_SUMMARY.json` | 剔除清单 **14,268** 行（2026-09-19 修复版）/ 应用剔除断言汇总（两硬断言 True） |
+| ~~`DECONTAM_REMOVED_UIDS_PASS.txt`~~ | 事故代（9/18）的空文件门禁，已被 PASS 报告本体取代，**已删除** |
 | `STATUTE_SPLIT_REPORT.md` / `statute_items_STATS.json` / `statute_items_VERIFY.md` / `.json` | 阶段 2b 切条报告 + 质检 **PASS** |
 | `DERIVE_REPORT.md` / `DERIVE_STATS.json` | 阶段 2c 程序法条文任务派生报告 + 自检 |
 | `SPLIT_REPORT.md` / `SPLIT_STATS.json` / `SPLIT_VERIFY.md` / `.json` | 阶段 4 切分报告 + 质检门禁 **PASS** |
@@ -236,32 +237,33 @@ raw **349,665 条** → qa 流 **285,257 条** + 法条库 **23,510 条**。
 **两遍式流程与结果**：
 
 1. **首扫**（308,767 行 / 耗时 ~1.6 h）：黑名单 = LexEval 14,150 + LexRubric 649
-   （CLaw 已退出论文，不在黑名单）→ **精确命中 0 / 近似命中 18,587 处 → 剔除 15,007 个唯一 uid**。
-   近似命中汉明距离分布 `{0:493, 1:986, 2:2,524, 3:14,584}`；命中集中在 `DISC-Law-SFT`（−12,598 行）
-   与 LexEval 案件类任务的**同案近文**样本。
+   （CLaw 已退出论文，不在黑名单）→ **精确命中 0 / 近似命中 18,587 处 → 剔除 14,268 个唯一 uid**
+   （★ 2026-09-19 起 `--statutes-near audit`：**法条流近似命中只审计不剔除**，739 条法条因此免于误删；
+   事故代口径的 15,007 见第十节对照）。近似命中汉明距离分布 `{0:493, 1:986, 2:2,524, 3:14,584}`；
+   命中集中在 `DISC-Law-SFT`（−12,598 行）与 LexEval 案件类任务的**同案近文**样本。
 2. **应用剔除**：生成清洗镜像 `data/corpus/decontaminated/`（原 `normalized/` 保持只读，
-   逐文件 SHA-256 已登记，见镜像内 `APPLY_SUMMARY.json`）。**两条硬断言**：
+   逐文件 SHA-256 已登记，见镜像内 `APPLY_SUMMARY.json`，**已入库本目录**）。**两条硬断言**：
    - `uid_unique_assert = true` —— 输入 308,767 行 / 308,767 个唯一 uid / **重复 0**；
-   - `removal_identity_assert = true` —— **实际剔除 15,007 条 == 命中 15,007 个 uid**（恒等式成立）。
+   - `removal_identity_assert = true` —— **实际剔除 14,268 条 == 命中 14,268 个 uid**（恒等式成立）。
    - 另有 `banned_missing_uids = 0`、`stale_files_in_dst = []`（镜像目录无未登记残留）。
-3. **复扫**（清洗镜像 293,760 行 / 耗时 5,716s）：**精确 0 / 近似 0 → verdict = PASS**，
-   `DECONTAM_REMOVED_UIDS_PASS.txt` 为**空文件**（0 行，门禁证据）。
-   **恒等式闭环**：首扫 308,767 − 复扫 293,760 = **15,007 = 剔除 uid 数**；
-   逐域差额 criminal 6,038 / civil 5,096 / procedural 1,389 / general 2,484 合计亦为 15,007。
+3. **复扫**（清洗镜像 294,499 行，报告生成于 2026-09-19T15:00:10）：**精确 0 / 近似 0 → verdict = PASS**，
+   门禁证据 = `DECONTAMINATION_REPORT_PASS.{json,md}` 本体（`checked.total_rows = 294,499`）。
+   **恒等式闭环**：首扫 308,767 − 复扫 294,499 = **14,268 = 剔除 uid 数**；
+   逐域差额 criminal 6,014 / civil 4,986 / procedural 1,357 / general 1,911 合计亦为 14,268。
 
-**逐文件剔除明细**（`APPLY_SUMMARY.json` 的 `per_file`，合计 removed = 15,007）：
+**逐文件剔除明细**（`APPLY_SUMMARY.json` 的 `per_file`，合计 removed = 14,268）：
 
 | 文件 | kept | removed |
 |---|---|---|
 | `qa/Dusker__lawyer-llama.jsonl` | 17,318 | 1,117 |
 | `qa/ShengbinYue__DISC-Law-SFT.jsonl` | 239,757 | **12,598** |
 | `qa/Skepsun__lawyer_llama_data.jsonl` | 13,914 | 553 |
-| `statutes/pandalla__chinese_law_examples.jsonl` | 984 | 16 |
-| `statutes/twang2218__chinese-law-and-regulations.jsonl` | 21,787 | 723 |
+| `statutes/pandalla__chinese_law_examples.jsonl` | 1,000 | 0 |
+| `statutes/twang2218__chinese-law-and-regulations.jsonl` | 22,510 | 0 |
 
 **同源风险专项**：Skepsun 司考（首扫 normalized **14,467** 条 → 剔除后 **13,914** 条）
 vs LexRubric `sifakaoshi`（**176** 条）——
-首扫 **精确 0 / 近似 1**（汉明 3，uid `Skepsun__lawyer_llama_data__all:12431`，**已落在 15,007 剔除集内**）；
+首扫 **精确 0 / 近似 1**（汉明 3，uid `Skepsun__lawyer_llama_data__all:12431`，**已落在 14,268 剔除集内**）；
 剔除后复扫 **精确 0 / 近似 0** → **风险排除**（两者虽都源自公开司考真题，但题目集不相交）。
 
 **清洗后分域（唯一记录，排除 `_all.jsonl` 合并副本双计）**：
@@ -269,13 +271,13 @@ vs LexRubric `sifakaoshi`（**176** 条）——
 | 流 | 刑法 | 民法 | 程序法 | 通用 | 合计 |
 |---|---|---|---|---|---|
 | qa | **91,400** | **99,705** | **24,088** | **55,796** | **270,989** |
-| statutes | 382 | 2,921 | 522 | 18,946 | 22,771 |
+| statutes | 406 | 3,031 | 554 | 19,519 | **23,510** |
 
-逐域剔除量：criminal 6,038 / civil 5,096 / procedural 1,389 / general 2,484（合计 15,007）。
+逐域剔除量：criminal 6,014 / civil 4,986 / procedural 1,357 / general 1,911（合计 14,268）。
 每域仍超额（目标 3万/4万/2万/1万），10 万配比不受去污影响。
 
-报告：`DECONTAMINATION_REPORT.md`（首扫 FAIL 证据）+ `DECONTAMINATION_REPORT_PASS.md/.json`（复扫 PASS）
-+ `DECONTAM_REMOVED_UIDS.txt`（15,007 uid 剔除清单）+ `DECONTAM_REMOVED_UIDS_PASS.txt`（空，门禁证据）。
+报告：`DECONTAMINATION_REPORT.md`（首扫 FAIL 证据）+ `DECONTAMINATION_REPORT_PASS.md/.json`（复扫 PASS，2026-09-19T15:00:10）
++ `DECONTAM_REMOVED_UIDS.txt`（14,268 uid 剔除清单）+ `APPLY_SUMMARY.json`（应用剔除断言汇总）。
 
 **阶段 3 的两个加固（2026-09-18，防「错误的 PASS」）**：
 
@@ -291,6 +293,9 @@ vs LexRubric `sifakaoshi`（**176** 条）——
 > 修复后复扫（**20:41:35**）改走五份正式分文件，`checked = 293,760`，与 `apply` 阶段登记的
 > `kept = 293,760` **逐个数字吻合**。**凡是不能与"被查总量"对上的 PASS，都不是证据。**
 > 这也是"新鲜度守卫"必须存在的直接原因（详见第十节 10.2）。
+>
+> ★ **现行口径（2026-09-19T15:00:10 第三代）**：`--statutes-near audit` 上线后全链路重跑，
+> `checked.total_rows = 294,499`（恢复 739 条被误删法条），剔除 14,268 —— 即本文各表数字。
 
 之后阶段 4 需在**已有超额数据上做分层下采样**（按 `task` × `domain` × `source` 分层，
 避免某一任务型垄断某个专家），并在此之前先切出 val/test 与路由集（与专家训练集 disjoint）。

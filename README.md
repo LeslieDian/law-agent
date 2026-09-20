@@ -339,7 +339,7 @@ token 级以 A5 作为对比消融，实现与否**待阶段 6 结果后决定**
 | 2 | ✅ **每域实得量 ≥ 目标量**（本次总缺口 0）；`domain_source` = `fallback` 占比 **< 15%**；人工抽检 50 条准确率 ≥ 95%；**uid 全局唯一（当场断言）** |
 | 2b | ✅ 三大诉讼法条文齐备；法条域按法名判定；切条质检 C1–C7 全过、verdict PASS（残留条号 0 / 目录块 0） |
 | 2c | ✅ 派生素材全为 `synthetic=true`；答案**逐字取自原文**（不符 0）；`domain=procedural` 100%；**只进 train** |
-| 3 | ✅ **去污 verdict = PASS**（复扫 293,760 行 / 精确 0 / 近似 0），报告里有近重复命中明细；**两条硬断言**：uid 唯一、实际剔除行数 == 命中 uid 数 |
+| 3 | ✅ **去污 verdict = PASS**（复扫 294,499 行 / 精确 0 / 近似 0；2026-09-19 修复版证据，见 `docs/corpus/DECONTAMINATION_REPORT_PASS.*` 与 `APPLY_SUMMARY.json`），报告里有近重复命中明细；**两条硬断言**：uid 唯一、实际剔除行数 == 命中 uid 数 |
 | 4 | ✅ 路由集 ∩ 专家训练集 = **0**（`uid_g` 与 `content_sha1` **双口径**断言）；训练集逐域配比 = 目标（**精确相等，不是「接近」**）；val/test 与训练集也 disjoint；**派生份额 ≤ 15% 且零放宽** |
 | 5–8 | 每档消融都有独立 config + 独立输出目录，**不许共用目录覆盖** |
 | 9 | ★ checkpoint 只能由内部验证集选定；外部基准（LexRubric / LexEval）各只跑一次终评 |
@@ -714,7 +714,7 @@ bash scripts/corpus/prepare_corpus.sh --list            # 看看阶段 1 要采�
   逐文件 SHA-256 已登记，验收 **PASS**（[`docs/corpus/`](docs/corpus/)）；
   采集链路幂等：`bash scripts/corpus/prepare_corpus.sh`
 - ⛔ **检索指标原目标 `Recall@5 ≥ 0.85` / `Recall@10 ≥ 0.90` 已作废（2026-09-19，实测不可达）**：
-  纯 dense 在 72,088 条法条上把候选深度开到 **1000**，recall 也只有 **0.832**
+  纯 dense 在 72,088 条法条上把候选深度开到 **1000**，recall 也只有 **0.8981**
   → 该目标在数学上不可达（瓶颈是 0.6B embedding 的表示能力，非融合/排序）。
   **新主指标（可达）**：`hit@5 ≥ 0.60` / `recall@10 ≥ 0.50` / `MRR@10 ≥ 0.45`，
   实测（test 414 query，`hybrid`）：**hit@5 0.6691 / recall@10 0.5216 / MRR@10 0.5328 —— 全部达标**；

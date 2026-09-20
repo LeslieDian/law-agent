@@ -1,0 +1,59 @@
+{
+  "generated_at": "2026-09-19T13:24:23",
+  "uids_file": "docs/corpus/DECONTAM_REMOVED_UIDS.txt",
+  "banned_uids": 14268,
+  "banned_hit_uids": 14268,
+  "banned_missing_uids": 0,
+  "src": "/mnt/data/lidian/law-agent/data/corpus/normalized",
+  "dst": "/mnt/data/lidian/law-agent/data/corpus/decontaminated",
+  "skipped_input_files": [
+    "qa/_all.jsonl"
+  ],
+  "stale_files_in_dst": [],
+  "input_records": 308767,
+  "input_unique_uids": 308767,
+  "uid_duplicates": 0,
+  "uid_unique_assert": true,
+  "removal_identity_assert": true,
+  "total_kept": 294499,
+  "total_removed": 14268,
+  "by_domain_kept": {
+    "criminal": 91806,
+    "civil": 102736,
+    "procedural": 24642,
+    "general": 75315
+  },
+  "by_domain_removed": {
+    "criminal": 6014,
+    "civil": 4986,
+    "procedural": 1357,
+    "general": 1911
+  },
+  "per_file": {
+    "qa/Dusker__lawyer-llama.jsonl": {
+      "kept": 17318,
+      "removed": 1117,
+      "sha256": "5fa84adb7cb46b625fcd6a74ebdc506f409c0d47ae09bf42236ec8a9d05e95e2"
+    },
+    "qa/ShengbinYue__DISC-Law-SFT.jsonl": {
+      "kept": 239757,
+      "removed": 12598,
+      "sha256": "408028c6d9519a00af1a41ecf7d3f3e9dfb7cc0d75b862fe2f538553c1a494d2"
+    },
+    "qa/Skepsun__lawyer_llama_data.jsonl": {
+      "kept": 13914,
+      "removed": 553,
+      "sha256": "61fa6078aa6389dbef06d4c9415a10262e8b1c96794376ef353670ef66dd1307"
+    },
+    "statutes/pandalla__chinese_law_examples.jsonl": {
+      "kept": 1000,
+      "removed": 0,
+      "sha256": "549d40cba5ffcb77dfded7be3e03c601dd14f78011798516c76a906c05013c42"
+    },
+    "statutes/twang2218__chinese-law-and-regulations.jsonl": {
+      "kept": 22510,
+      "removed": 0,
+      "sha256": "4989b4c51d018e7761bb323a601537fe3b27480ba52ff4cd6d23d48bd5bdb417"
+    }
+  }
+}

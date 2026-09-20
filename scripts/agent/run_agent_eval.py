@@ -84,6 +84,10 @@ def main():
     n_found = sum(len(v.get("found") or []) for v in ver)
     n_missing = sum(len(v.get("missing") or []) for v in ver)
     n_ooc = sum(len(v.get("out_of_ctx") or []) for v in ver)
+    n_unres = sum(len(v.get("law_unresolved") or []) for v in ver)
+    n_mentions = sum(r.get("n_mentions") or 0 for r in recs) or \
+        sum(v.get("n_mentions") or 0 for v in ver)
+    n_verdictable = n_found + n_missing + n_ooc
     lat = [r.get("latency_sec") or 0 for r in recs]
     lat.sort()
     p50 = lat[len(lat) // 2] if lat else 0
@@ -96,10 +100,16 @@ def main():
 |---|---:|
 | 题数 | {n_total} |
 | 补检触发率 | {n_requery / n_total:.4f}（{n_requery}/{n_total}） |
-| 引用条数（首轮 → 终答） | {cit_first} → {cit_final} |
+| 引用条数（首轮 → 终答，**去重**） | {cit_first} → {cit_final} |
 | 终答引用三态 | 落实 {n_found} / 疑似编造 {n_missing} / 出上下文 {n_ooc} |
-| 引用落实率（终答） | {n_found / max(1, n_found + n_missing + n_ooc):.4f} |
+| 法名无法解析（单列，**不计入编造**） | {n_unres} |
+| 引用落实率（终答，去重后） | {n_found / max(1, n_verdictable):.4f} |
+| 引用提及次数（含重复，原始） | {n_mentions} |
 | 延迟 p50 / 总耗时 | {p50:.1f}s / {time.time() - t_start:.0f}s |
+
+> 口径说明：同一《法名》第X条在答案里重复出现只计 **1 条**（去重）；
+> 法名无法解析到 `law_id` 的引用单列 `law_unresolved`，**不并入「疑似编造」**，
+> 避免把「解析器认不出」误报成模型在编造。
 
 逐题 trace：`outputs/agent/agent_traces_{tag}.jsonl`
 """

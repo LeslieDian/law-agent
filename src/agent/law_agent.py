@@ -25,6 +25,21 @@ from typing import Any
 _CITE_RE = re.compile(r"《([^》]{2,40})》\s*第\s*([一二三四五六七八九十百千零〇0-9]{1,12})\s*条")
 
 
+def _uniq_cites(answer: str) -> list:
+    """答案里的《法名》第X条 → 去重后的 (法名, 条号原文) 列表（保序）。
+
+    ★ 去重是必须的：A0 的答案会把《刑法》第 358 条连写十来次，
+      不去重的话「引用条数」「引用落实率」全被重复计数污染。
+    """
+    out, seen = [], set()
+    for law, art_s in _CITE_RE.findall(answer):
+        if (law, art_s) in seen:
+            continue
+        seen.add((law, art_s))
+        out.append((law, art_s))
+    return out
+
+
 def _make_cn2int():
     """复用 scripts/retrieval/extract_edges.py 的 cn2int（与 gold 解析同一实现）；
     找不到时退回内置简版，保证本模块可独立做 dry-run。"""
@@ -116,6 +131,10 @@ class RetrievalTool:
         self.ids, self.mat = sr.load_item_vectors(
             os.path.join(emb_root, sr.PROVISION_COLLECTION))
         self.provision_index = sr.build_provision_index(self.root)
+        # ★ 引用核验必需：模型写的是简称（《刑法》），索引键是 L2 的 law_id
+        #   （中华人民共和国刑法）。解析器与 gold 构造共用同一个实现（单一事实源）。
+        self.law_ids, self.resolve_law, self.law_resolve_stat = sr.build_law_resolver(
+            os.path.join(self.root, "indexes/retrieval/provision_nodes.jsonl"))
         self.item_texts, _ = sr.build_item_texts(self.root, self.ids)
         self.D, self.vocab, _ = sr.build_bm25(self.item_texts)
         self.adj_next = sr.load_edges(os.path.join(self.root, "indexes/retrieval/edges_next.jsonl"))
@@ -163,15 +182,34 @@ class RetrievalTool:
             })
         return hits
 
-    def lookup(self, law: str, article: int) -> dict | None:
-        """按《法名》+ 条号直查条文（引用核验的兜底通道）。"""
+    def lookup(self, law: str, article: int) -> dict:
+        """按《法名》+ 条号直查条文（引用核验的兜底通道）。
+
+        ★ 这里有两处曾导致**每条引用都被误判成「疑似编造」**的坑，勿回退：
+          1) 索引键是 L2 的 `law_id`（中华人民共和国刑法），而模型引用写的是
+             **简称**（《刑法》）——必须先过 `build_law_resolver` 解析；
+          2) `build_provision_index` 的值是 **list**（同一 (法名,条号) 可能有多版本，
+             如 `...a358` / `...a358-v2`），当标量用会永远 miss。
+
+        返回三态之一：
+          - `found`          : 命中，带 pid/text（是否在本次候选内由核验器判断）
+          - `not_in_library` : 法名解析成功，但库里确实没有该条 → 疑似编造
+          - `law_unresolved` : 法名无法解析（不在库/歧义）→ **不足以判定编造**，
+                               诚实起见单列，不并入「库中无」。
+        """
         self._load()
-        pid = self.provision_index.get((law, article))
-        if pid is None or pid not in self.pid_index:
-            return None
-        idx = self.pid_index[pid]
-        return {"pid": pid, "law": law, "article": article,
-                "text": self.item_texts[idx]}
+        lids = self.resolve_law(law)
+        if not lids:
+            return {"status": "law_unresolved", "law": law, "article": article}
+        for lid in lids:
+            for pid in self.provision_index.get((lid, article)) or []:
+                idx = self.pid_index.get(pid)
+                if idx is not None:
+                    return {"status": "found", "pid": pid, "law_id": lid,
+                            "law": law, "article": article,
+                            "text": self.item_texts[idx]}
+        return {"status": "not_in_library", "law": law, "article": article,
+                "law_id": lids[0], "law_ids": list(lids)}
 
 
 class GenerationTool:
@@ -238,21 +276,33 @@ class CitationVerifier:
     def __call__(self, answer: str, retrieved: list[dict]) -> dict:
         self.retriever._load()
         pids_in_ctx = {h["pid"] for h in retrieved}
-        found, missing, out_of_ctx = [], [], []
+        found, missing, out_of_ctx, unresolved = [], [], [], []
+        seen = set()
+        n_mentions = 0
         for law, art_s in _CITE_RE.findall(answer):
+            n_mentions += 1
             art = cn2int(art_s)
-            if not art or art < 0:
+            if art is None or art < 0:
                 continue
+            if (law, art) in seen:
+                continue      # ★ 同一法条在答案里被重复引用多次，只判一次
+            seen.add((law, art))
             hit = self.retriever.lookup(law, art)
             rec = {"law": law, "article": art}
-            if hit is None:
-                missing.append(rec)          # 知识库里没有 → 疑似编造
+            st = hit["status"]
+            if st == "law_unresolved":
+                unresolved.append(rec)       # 法名不在库/歧义 → 不足以判定编造
+            elif st == "not_in_library":
+                missing.append(rec)          # 法名已解析、库里确实没有 → 疑似编造
             elif hit["pid"] not in pids_in_ctx:
                 out_of_ctx.append(rec)       # 库里有、但不在本次候选 → 应触发补检
             else:
                 found.append(rec)
         return {"found": found, "missing": missing, "out_of_ctx": out_of_ctx,
-                "n_citations": len(found) + len(missing) + len(out_of_ctx)}
+                "law_unresolved": unresolved,
+                "n_citations": len(found) + len(missing) + len(out_of_ctx)
+                + len(unresolved),
+                "n_mentions": n_mentions}
 
 
 class LawAgent:
@@ -275,7 +325,7 @@ class LawAgent:
                          "pids": [h["pid"] for h in contexts]})
         answer = self.generator(question, contexts)
         tr.n_generations += 1
-        tr.citations_first = [c for c in _CITE_RE.findall(answer)]
+        tr.citations_first = _uniq_cites(answer)
 
         for step_i in range(2, self.max_steps + 1):
             verdict = self.verifier(answer, contexts)
@@ -288,10 +338,12 @@ class LawAgent:
                                 ("+out_of_ctx" if verdict["out_of_ctx"] else "")
             extra_q = " ".join("%s 第%d条" % (c["law"], c["article"])
                                for c in (verdict["missing"] + verdict["out_of_ctx"]))
-            more = self.retriever.search(question + " " + extra_q)
+            refine_q = question + " " + extra_q   # 实际送进检索的查询（trace 记它）
+            more = self.retriever.search(refine_q)
             tr.n_retrievals += 1
             tr.steps.append({"step": step_i, "tool": "retrieve(refine)",
-                             "query": extra_q, "n_hits": len(more),
+                             "query": refine_q, "extra_terms": extra_q,
+                             "n_hits": len(more),
                              "pids": [h["pid"] for h in more]})
             seen = {h["pid"] for h in contexts}
             contexts = contexts + [h for h in more if h["pid"] not in seen]
@@ -299,7 +351,7 @@ class LawAgent:
             tr.n_generations += 1
 
         tr.verified_final = self.verifier(answer, contexts)
-        tr.citations_final = [c for c in _CITE_RE.findall(answer)]
+        tr.citations_final = _uniq_cites(answer)
         tr.answer = answer
         tr.latency_sec = round(time.time() - t0, 2)
         return tr

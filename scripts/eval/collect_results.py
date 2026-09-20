@@ -192,7 +192,8 @@ def main():
     # ---- README 块（供自动 patch 进仓库 README）----
     rb = ["<!-- AUTO_RESULTS_BEGIN 由 scripts/eval/collect_results.py 自动生成，勿手改 -->",
           "### 终评结果（自动汇总）", "", md.strip(), "",
-          "> 生成口径：LexEval 客观题 cap=256 / 生成题 cap=1536 / LexRubric cap=1536；",
+          "> 生成口径（全系统统一）：LexEval 客观题 cap=256 / LexEval 生成题 cap=1536 / "
+          "LexRubric cap=1536 / 内部验证集 cap=1024；",
           "> 判分 MiniMax-M3（`configs/judge.yaml`）；完整机读数据见 "
           "`docs/eval/RESULTS_MATRIX.json`，图见 `docs/figures/`。",
           "<!-- AUTO_RESULTS_END -->", ""]

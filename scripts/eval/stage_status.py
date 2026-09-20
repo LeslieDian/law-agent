@@ -167,24 +167,26 @@ def build_rows():
 
     # ---- API：判分 ----
     jr = _read("logs/overnight/judge_results.txt")
-    smoke_dirs = []
-    _jd = os.path.join(ROOT, "outputs", "judge", "lexrubric")
-    if os.path.isdir(_jd):
-        smoke_dirs = [d for d in os.listdir(_jd) if d.startswith("_smoke")]
-    for sysname in ("A0_unified_qwen3_8b", "moe_L2", "base"):
+    lanelog = _read("logs/overnight/judge_lane.log")
+    # 判分通道是串行的 A0 → moe_L2 → base：靠 lane 日志里的 READY/冒烟目录判断轮到谁了
+    for sysname, smoke_name in (("A0_unified_qwen3_8b", "_smoke_A0"),
+                                ("moe_L2", "_smoke_moe_L2"),
+                                ("base", "_smoke_base")):
         ok = ("JUDGE_OK_%s" % sysname) in jr
         fail = ("JUDGE_FAIL_%s" % sysname) in jr
         smoke_fail = ("JUDGE_SMOKE_FAIL_%s" % sysname) in jr
+        smoke_here = os.path.isdir(os.path.join(ROOT, "outputs", "judge", "lexrubric", smoke_name))
         if ok:
             st = "已完成"
         elif smoke_fail:
             st = "失败(冒烟)"
         elif fail:
             st = "失败"
-        elif smoke_dirs:
+        elif smoke_here:
             st = "进行中"
         else:
-            st = "待跑"
+            # 通道是否已经轮到这个系统？（lane 日志里有 "READY <sys>" 就是已就绪）
+            st = "已就绪" if ("READY %s" % sysname) in lanelog else "待跑"
         add("判分(API)", "MiniMax-M3 × %s" % sysname, st, "",
             "649 题 / 22 维度" + ("；冒烟 8 条中" if st == "进行中" else ""))
 
@@ -202,7 +204,7 @@ def build_rows():
     return rows
 
 
-ICON = {"已完成": "✅", "进行中": "🔄", "待跑": "⬜", "失败": "❌", "失败(冒烟)": "❌"}
+ICON = {"已完成": "✅", "进行中": "🔄", "已就绪": "🟡", "待跑": "⬜", "失败": "❌", "失败(冒烟)": "❌"}
 
 
 def render_md(rows) -> str:
@@ -210,6 +212,10 @@ def render_md(rows) -> str:
     done = sum(1 for r in rows if r["status"] == "已完成")
     total = len(rows)
     out = []
+    # ★ 块必须自带标记：patch_readme.py 是"连标记一起替换"，
+    #   块内不带标记 → 第一次替换后标记就永久消失了（实测踩过）。参见 collect_results.py。
+    out.append("<!-- AUTO_STAGE_BEGIN 由 scripts/eval/stage_status.py 自动生成，勿手改 -->")
+    out.append("")
     out.append("### 阶段进度（自动汇总）")
     out.append("")
     out.append("> **本段由自动化回填**（`scripts/eval/stage_status.py` 扫描产物/日志/标志后生成，"
@@ -227,6 +233,8 @@ def render_md(rows) -> str:
     out.append("")
     out.append("<sub>状态来源：答案文件行数 / 日志 `rc=` 与 `[n/N]` 进度 / 完成标志 / 报告文件。"
                "未到位一律如实标注，不做推测。</sub>")
+    out.append("")
+    out.append("<!-- AUTO_STAGE_END -->")
     return "\n".join(out) + "\n"
 
 

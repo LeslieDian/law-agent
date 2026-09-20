@@ -1,6 +1,6 @@
 # 阶段 4b-4 Neo4j 导入报告
 
-> 生成时间：2026-09-19T16:28:10　脚本：`scripts/retrieval/import_neo4j.py`　step=`all`
+> 生成时间：2026-09-20T13:17:13　脚本：`scripts/retrieval/import_neo4j.py`　step=`all`
 
 ## 0. 库布局（case 4 库 + 法条 1 库）
 
@@ -24,7 +24,7 @@
 | `Provision` | 72449 |
 | `Case` | 145339 |
 | `case_rows_by_domain` | general=22263, civil=45638, criminal=74170, procedural=3268 |
-| `case_rows_without_text` | 62519 |
+| `case_rows_without_text` | 0 |
 | `HAS_PROVISION` | 72449 |
 | `IN_DOMAIN` | 72449 |
 | `OF_TYPE` | 72440 |
@@ -73,25 +73,25 @@
 
 分库明细：`{"provision_by_level": {"item": 72088, "doc": 352}, "case_rows_by_domain": {"general": 22263, "civil": 45638, "criminal": 74170, "procedural": 3268}, "hotness_available": true}`
 
-**verdict = PASS**　耗时 539.3s
+**verdict = PASS**　耗时 528.8s
 
 ## 3. 执行轨迹
 
 ```
 [   0.0s] 建约束与索引
-[   0.1s] 导 Law / LawType / Domain / SourceDataset
-[   0.3s] 导 Provision（item → p.embedding；doc → p.embedding_doc）
-[ 165.0s] 补齐无向量的 Provision 节点（只入图谱）
-[ 166.8s] 导 Case（4 库 → c.embedding_<domain4>）
-[ 523.8s] 导 HAS_PROVISION
-[ 524.6s] 回填 Provision.law_type ← Law.law_type_std（补 pandalla 的分类串）
-[ 524.7s] 导 IN_DOMAIN / OF_TYPE / FROM_SOURCE
-[ 526.4s] 导 NEXT
-[ 529.0s] 导 CITES
-[ 529.4s] 导 SAME_CASE（同案多视角，星形连接）
-[ 529.7s] 导热度权重（hotness.json → 节点属性）
-[ 537.5s] 建向量索引（数据就绪后建，更快）
-[ 537.5s] 等待索引 ONLINE
-[ 537.5s] 验收计数
+[   0.0s] 导 Law / LawType / Domain / SourceDataset
+[   0.2s] 导 Provision（item → p.embedding；doc → p.embedding_doc）
+[ 163.8s] 补齐无向量的 Provision 节点（只入图谱）
+[ 165.6s] 导 Case（4 库 → c.embedding_<domain4>）
+[ 514.1s] 导 HAS_PROVISION
+[ 514.8s] 回填 Provision.law_type ← Law.law_type_std（补 pandalla 的分类串）
+[ 514.9s] 导 IN_DOMAIN / OF_TYPE / FROM_SOURCE
+[ 516.7s] 导 NEXT
+[ 519.5s] 导 CITES
+[ 519.8s] 导 SAME_CASE（同案多视角，星形连接）
+[ 520.1s] 导热度权重（hotness.json → 节点属性）
+[ 527.1s] 建向量索引（数据就绪后建，更快）
+[ 527.1s] 等待索引 ONLINE
+[ 527.1s] 验收计数
 ```
 

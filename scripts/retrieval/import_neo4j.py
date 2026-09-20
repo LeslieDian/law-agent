@@ -381,9 +381,12 @@ def main():
 
         # 3) Case（4 库 → 4 个属性 / 4 个向量索引）
         step("导 Case（4 库 → c.embedding_<domain4>）")
+        # ★ 2026-09-20 修复：向量库 scope="eval" 只排除 dev/test（KB 包含 train/router 案例），
+        #   但 facts 挂载此前把四份 split 全部排除 → 62,519 条 train/router 案例
+        #   有真向量、facts/question/output 全空（命中后送生成器的是空案例）。
+        #   现与 build_embeddings 的 scope="eval" 对齐：只排 dev/test。
         split_uids = set()
-        for p in (root + "/data/train/train.jsonl", root + "/data/dev/dev.jsonl",
-                  root + "/data/test/test.jsonl", root + "/data/router/router_train.jsonl"):
+        for p in (root + "/data/dev/dev.jsonl", root + "/data/test/test.jsonl"):
             for rec in iter_jsonl(p):
                 u = rec.get("uid_g") or rec.get("uid")
                 if u:
@@ -436,6 +439,15 @@ def main():
         counters["Case"] = sum(n_case_by_dom.values())
         counters["case_rows_by_domain"] = dict(n_case_by_dom)
         counters["case_rows_without_text"] = n_case_no_text
+        # ★ 门禁：案例向量全部来自非 dev/test 的 qa 流，理论上 100% 可挂载 facts。
+        #   2026-09-19 那次 62,519 条空 facts（43%）就是口径错位且无门禁才静默入库的。
+        n_total_case = sum(n_case_by_dom.values())
+        if n_total_case and n_case_no_text / n_total_case > 0.005:
+            print("[FATAL] case facts 挂载失败率 %.2f%%（%d/%d）> 0.5%% —— "
+                  "facts 来源与向量库口径不一致，拒绝入库"
+                  % (100.0 * n_case_no_text / n_total_case,
+                     n_case_no_text, n_total_case), file=sys.stderr)
+            return 2
 
     # ------------------------------------------------------------- edges
     if args.step in ("all", "edges"):

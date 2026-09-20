@@ -12,12 +12,12 @@ judges:
     provider: openai_compatible
     base_url_env: "DEEPSEEK_BASE_URL"
     api_key_env: "DEEPSEEK_API_KEY"
-  # MiniMax（国内站 OpenAI 兼容端点，2026-09 核实）
+  # MiniMax（国内站 OpenAI 兼容端点，2026-09-20 服务器实测 M3 可用）
   # key 放服务器环境变量 MINIMAX_API_KEY，勿写入仓库。
   # reasoning_split=true 让思维链走 reasoning_details 字段，content 保持纯文本，便于 JSON 解析。
-  - name: "minimax-m2.7"
+  - name: "minimax-m3"
     provider: openai_compatible
-    model: "MiniMax-M2.7"
+    model: "MiniMax-M3"
     base_url: "https://api.minimaxi.com/v1"
     base_url_env: "MINIMAX_BASE_URL"
     api_key_env: "MINIMAX_API_KEY"
@@ -60,5 +60,5 @@ statistics:
 note: >
   若原版 Gemini-2.5-Pro 或 DeepSeek-R1 接口已不可用，须在论文中注明：
   "本实验使用现行模型版本重新评分，因此评分与 CLaw 论文历史结果仅作参考性比较。"
-  同理，若以 MiniMax-M2.7 替换/增补 Judge，也须在论文实验设置一节注明所用 Judge
-  的确切模型版本号与接口日期。
+  同理，若以 MiniMax-M3 替换/增补 Judge，也须在论文实验设置一节注明所用 Judge
+  的确切模型版本号与接口日期（2026-09-20 实测接入）。

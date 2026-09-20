@@ -1,0 +1,84 @@
+# ============================================================
+# QLoRA 训练配置 —— 单域适配器 civil（民商事）
+# 由 configs/qlora_unified.yaml 派生，超参与 A0_unified 逐字对齐（只换数据）
+# 对照要求：unified vs civil/criminal/procedure 只允许"训练数据域"一个变量
+# ============================================================
+run_name: qlora_civil_v1
+
+# 底座与 A0 完全一致：Qwen/Qwen3-8B，4bit nf4
+#   A0 实测：4bit 常驻 5.66GB、LoRA r=16 单步峰值 9.14GB、训练峰值 46.44GB
+model:
+  base_model: "/mnt/data/lidian/law-agent/models/Qwen3-8B"
+  hf_repo_id: "Qwen/Qwen3-8B"
+  base_revision: "PIN_COMMIT_HASH"
+  trust_remote_code: true
+  dtype: bfloat16
+  attn_implementation: "sdpa"
+
+quantization:
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_compute_dtype: bfloat16
+
+lora:
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  bias: none
+  task_type: CAUSAL_LM
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+training:
+  max_seq_length: 2048                  # ★ 与 A0 一致（勿改成 4096，否则对照失效）
+  # ★★ 以下三项均为 A0 的**实际生效值**，不是 qlora_unified.yaml 里的文本值。
+  #    依据：A0 报告 micro_batch_size_effective=16、total_steps_est=12500
+  #    （=100000/16×2），反推 A0 跑的是 --micro-batch 16 --grad-accum 1。
+  #    A0 报告里 micro_batch_size=4 / gradient_accumulation_steps=4 记的是
+  #    配置文本值（config 未被命令行覆盖时的原样），**不是生效值**。
+  #    max_batch_tokens 更关键：代码默认只有 max(4096, micro*1024)=4096，
+  #    会把平均批大小压到 ~3.5 条（实测），等效 batch 掉到 ~13.9。
+  micro_batch_size: 16                  # 每批最多 16 条
+  gradient_accumulation_steps: 1        # 等效 batch = 16 × 1 = 16
+  max_batch_tokens: 16384               # token 预算上限，A0 生效值
+  gradient_checkpointing: true
+  learning_rate: 0.0001
+  num_train_epochs: 2
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  lr_scheduler_type: cosine
+  max_grad_norm: 1.0
+  optim: paged_adamw_8bit
+  bf16: true
+  fp16: false
+  logging_steps: 10
+  save_strategy: epoch
+  save_total_limit: 3
+  seed: 42
+
+data:
+  train_file: data/train/civil.jsonl    # 40,000 条
+  dev_file: data/dev/civil.jsonl        # 400 条
+  format: chat
+  assistant_only_loss: true
+  chat_template: auto
+
+output:
+  output_dir: models/adapters/civil
+  logging_dir: outputs/train_logs/civil
+
+smoke_test:
+  enabled: true
+  max_samples: 500
+  checks:
+    - chat_template 渲染正确
+    - 仅 assistant 段计入 loss
+    - loss 正常下降（无 NaN）
+    - 记录显存峰值

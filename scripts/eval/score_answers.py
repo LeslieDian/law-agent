@@ -31,6 +31,14 @@
     python scripts/eval/score_answers.py --task internal_test \
         --answers outputs/infer/A0_internal_test/answers.jsonl \
         --out outputs/score/A0_internal_test.json --metrics all
+
+★ 分域结果（判断"要不要训单域专家"的关键依据）：加上 `--group-by-domain`，
+  报告的 by_split 就会变成 civil / criminal / procedural / general 四域分层：
+
+    python scripts/eval/score_answers.py --task internal_test \
+        --answers outputs/infer/A0_internal_test/answers.jsonl \
+        --group-by-domain data/test/test.jsonl \
+        --out outputs/score/A0_internal_test_bydomain.json --metrics all
 """
 from __future__ import annotations
 
@@ -54,6 +62,44 @@ def iter_jsonl(path):
             line = line.strip()
             if line:
                 yield json.loads(line)
+
+
+def build_uid_domain_map(path: str) -> dict:
+    """从 test.jsonl 建 uid -> domain 映射。
+
+    ★ 为什么需要它：run_inference.py 对 internal_test 把 `split` 一律写成 "test"，
+    所以 by_split 拿不到分域结果；真正的域标签只存在于原始 test.jsonl 的 `domain` 字段。
+    case_id 形如 "test::<uid>"，其中 uid 取的是 `uid or uid_g or source_id`，
+    与 run_inference.load_records 的取值顺序必须保持一致。
+    """
+    m = {}
+    for r in iter_jsonl(path):
+        key = r.get("uid") or r.get("uid_g") or r.get("source_id")
+        dom = r.get("domain")
+        if key and dom:
+            m[str(key)] = dom
+    return m
+
+
+def domain_of(case_id: str, uid2dom: dict) -> str:
+    """case_id 'test::<uid>' -> domain；查不到返回 'unknown'。"""
+    cid = str(case_id or "")
+    key = cid.split("::", 1)[1] if "::" in cid else cid
+    return uid2dom.get(key, "unknown")
+
+
+def regroup_by_domain(recs: list, uid2dom: dict) -> dict:
+    """把每条记录的 `split` 覆写成它的域标签（就地），返回域计数。
+
+    只在 internal_test 上调用 —— 其它任务的 split 本身有意义（lexeval 的类别、
+    lexrubric 的 legal_consultation/judicial_exam），不能被覆写。
+    """
+    cnt = {}
+    for r in recs:
+        d = domain_of(r.get("case_id"), uid2dom)
+        r["split"] = d
+        cnt[d] = cnt.get(d, 0) + 1
+    return cnt
 
 
 # ---- 选择题答案抽取 -------------------------------------------------------
@@ -142,6 +188,10 @@ def main() -> int:
     ap.add_argument("--metrics", default="auto",
                     help="auto | all | accuracy | rouge_l | statute_hit")
     ap.add_argument("--rouge-cap", type=int, default=800)
+    ap.add_argument("--group-by-domain", default=None,
+                    help="internal_test 专用：传 data/test/test.jsonl，"
+                         "把 by_split 换成按 domain 分层（civil/criminal/"
+                         "procedural/general）")
     a = ap.parse_args()
 
     recs = [r for r in iter_jsonl(a.answers) if not r.get("error")]
@@ -150,6 +200,14 @@ def main() -> int:
     if not recs:
         jprint("[FATAL] 没有有效答案")
         return 2
+
+    if a.group_by_domain:
+        uid2dom = build_uid_domain_map(a.group_by_domain)
+        cnt = regroup_by_domain(recs, uid2dom)
+        jprint("按 domain 分层：%s（映射表 %d 条）" % (cnt, len(uid2dom)))
+        if cnt.get("unknown"):
+            jprint("  [WARN] %d 条 case_id 在 %s 里查不到 domain —— 检查 uid 取值口径"
+                   % (cnt["unknown"], a.group_by_domain))
 
     want = set()
     if a.metrics == "auto":

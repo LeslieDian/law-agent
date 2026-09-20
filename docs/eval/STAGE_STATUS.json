@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-21T04:21:51",
+  "generated_at": "2026-09-21T05:54:26",
   "done": 5,
   "total": 20,
   "rows": [
@@ -14,7 +14,7 @@
       "stage": "A0 评测链",
       "system": "LexEval 客观 11,400 + 生成 2,750",
       "status": "进行中",
-      "progress": "12072/14150",
+      "progress": "12456/14150",
       "note": "客观 cap=256 / 生成 cap=1536"
     },
     {
@@ -134,7 +134,7 @@
       "system": "汇总 + 出图",
       "status": "已完成",
       "progress": "",
-      "note": "collect_results.py + make_figures.py；最近一次 09-21 02:50"
+      "note": "collect_results.py + make_figures.py；最近一次 09-21 04:21"
     },
     {
       "stage": "收尾",

@@ -13,9 +13,28 @@
       "internal_statute": 0.5386,
       "internal_acc": null,
       "internal_n": 1000,
+      "lexrubric_mean": 15.2157,
+      "lexrubric_pct": 12.8472,
+      "lexrubric_ci95": [
+        11.6483,
+        14.0889
+      ],
+      "lexrubric_n": 649,
+      "lexrubric_by_split": {
+        "judicial_exam": {
+          "n": 176,
+          "mean": 7.696,
+          "pct": 12.1691
+        },
+        "legal_consultation": {
+          "n": 473,
+          "mean": 18.0137,
+          "pct": 13.0995
+        }
+      },
+      "lexrubric_dimensions": null,
       "warnings": [
-        "缺 outputs/score/lexeval_A0.json",
-        "缺 outputs/judge/lexrubric/A0/SUMMARY.json"
+        "缺 outputs/score/lexeval_A0.json"
       ]
     }
   },
@@ -32,9 +51,28 @@
       "internal_statute": 0.5386,
       "internal_acc": null,
       "internal_n": 1000,
+      "lexrubric_mean": 15.2157,
+      "lexrubric_pct": 12.8472,
+      "lexrubric_ci95": [
+        11.6483,
+        14.0889
+      ],
+      "lexrubric_n": 649,
+      "lexrubric_by_split": {
+        "judicial_exam": {
+          "n": 176,
+          "mean": 7.696,
+          "pct": 12.1691
+        },
+        "legal_consultation": {
+          "n": 473,
+          "mean": 18.0137,
+          "pct": 13.0995
+        }
+      },
+      "lexrubric_dimensions": null,
       "warnings": [
-        "缺 outputs/score/lexeval_A0.json",
-        "缺 outputs/judge/lexrubric/A0/SUMMARY.json"
+        "缺 outputs/score/lexeval_A0.json"
       ]
     }
   ]

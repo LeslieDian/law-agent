@@ -127,7 +127,7 @@ def build_rows():
 
     # ---- GPU1：MoE 评测队列 Q1–Q6 ----
     qs = [
-        ("MoE 队列", "Q1 MoE 冒烟", "logs/eval/Q1_moe_smoke.log", "outputs/infer/_smoke_moe_L2/answers.jsonl", 2),
+        ("MoE 队列", "Q1 MoE 冒烟", "logs/eval/Q1_moe_smoke.log", "outputs/infer/_moe_smoke/answers.jsonl", 2),
         ("MoE 队列", "Q2 MoE 内部集 1k", "logs/eval/Q2_moe_internal.log", "outputs/infer/internal_moe_L2/answers.jsonl", 1000),
         ("MoE 队列", "Q3 MoE LexRubric 649", "logs/eval/Q3_moe_lexrubric.log", "outputs/infer/lexrubric_moe_L2/answers.jsonl", 649),
         ("MoE 队列", "Q4 MoE 客观 11,400", "logs/eval/Q4_moe_lexeval_obj.log", "outputs/infer/lexeval_moe_L2/answers.jsonl", 11400),
@@ -148,9 +148,14 @@ def build_rows():
         note = ("rc=%s" % rc) if rc else ""
         if stage == "MoE 队列" and label.startswith("Q1") and not _has("models/moe/L2_gate/gate_weights.pt"):
             st, note = "待跑", "等门控权重"
-        add(stage, label, st, ("%d/%d" % (n, total)) if total else str(n), note)
-    if _marker_in("logs/gpu1_after_gate_chain.log", "MARKER_GATE_QUEUE_DONE"):
-        add("MoE 队列", "整队列标志", "已完成", "", "MARKER_GATE_QUEUE_DONE")
+        add(stage, label, st, ("%d/%d" % (min(n, total), total)) if total else str(n), note)
+    # ★ 2026-09-21 修：当前轮次的 MoE 队列是 gpu1_queue_moe.sh（标志在 gpu1_queue_moe_chain.log），
+    #   旧逻辑只认上一轮守卫批次的 MARKER_GATE_QUEUE_DONE → 会误报「整队列已完成」。
+    if _marker_in("logs/gpu1_queue_moe_chain.log", "MARKER_GPU1_QUEUE_DONE"):
+        add("MoE 队列", "整队列标志", "已完成", "", "MARKER_GPU1_QUEUE_DONE（本轮 MoE 队列）")
+    elif _marker_in("logs/gpu1_after_gate_chain.log", "MARKER_GATE_QUEUE_DONE"):
+        add("MoE 队列", "整队列标志", "进行中", "",
+            "上一轮批次 MARKER_GATE_QUEUE_DONE；本轮见 gpu1_queue_moe_chain.log")
 
     # ---- GPU0：base 三阶段 + 三专家内部集 ----
     base_rub = _nlines("outputs/infer/lexrubric_base/answers.jsonl")
@@ -169,26 +174,32 @@ def build_rows():
     jr = _read("logs/overnight/judge_results.txt")
     lanelog = _read("logs/overnight/judge_lane.log")
     # 判分通道是串行的 A0 → moe_L2 → base：靠 lane 日志里的 READY/冒烟目录判断轮到谁了
-    for sysname, smoke_name in (("A0_unified_qwen3_8b", "_smoke_A0"),
-                                ("moe_L2", "_smoke_moe_L2"),
-                                ("base", "_smoke_base")):
+    # ★ 2026-09-21 修：判分真正的完成标志是**该 out 目录下的 SUMMARY.json**（全量跑完才写）+ judgments 满 649。
+    #   旧逻辑只认 overnight 通道的 JUDGE_OK_* 与恒存的 _smoke_* 目录 → A0/MoE 判分早已完成却显示「进行中」。
+    #   注意 A0 系统的判分 out 目录名是 "A0"，不是 "A0_unified_qwen3_8b"。
+    for sysname, smoke_name, out_dir in (("A0_unified_qwen3_8b", "_smoke_A0", "A0"),
+                                         ("moe_L2", "_smoke_moe_L2", "moe_L2"),
+                                         ("base", "_smoke_base", "base")):
         ok = ("JUDGE_OK_%s" % sysname) in jr
         fail = ("JUDGE_FAIL_%s" % sysname) in jr
         smoke_fail = ("JUDGE_SMOKE_FAIL_%s" % sysname) in jr
         smoke_here = os.path.isdir(os.path.join(ROOT, "outputs", "judge", "lexrubric", smoke_name))
-        if ok:
+        jrows = _nlines(os.path.join("outputs", "judge", "lexrubric", out_dir, "judgments.jsonl"))
+        judged = os.path.exists(os.path.join(ROOT, "outputs", "judge", "lexrubric", out_dir, "SUMMARY.json"))
+        if ok or (judged and jrows >= 649):
             st = "已完成"
         elif smoke_fail:
             st = "失败(冒烟)"
         elif fail:
             st = "失败"
-        elif smoke_here:
+        elif jrows > 0 or smoke_here:
             st = "进行中"
         else:
             # 通道是否已经轮到这个系统？（lane 日志里有 "READY <sys>" 就是已就绪）
             st = "已就绪" if ("READY %s" % sysname) in lanelog else "待跑"
-        add("判分(API)", "MiniMax-M3 × %s" % sysname, st, "",
-            "649 题 / 22 维度" + ("；冒烟 8 条中" if st == "进行中" else ""))
+        add("判分(API)", "MiniMax-M3 × %s" % sysname, st,
+            ("%d/649" % jrows) if jrows else "",
+            "649 题 / 22 维度" + ("；冒烟 8 条中" if st == "进行中" and jrows == 0 else ""))
 
     # ---- 收尾 ----
     mx = os.path.join(ROOT, "docs", "eval", "RESULTS_MATRIX.json")

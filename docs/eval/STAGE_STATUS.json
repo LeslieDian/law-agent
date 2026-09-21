@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-09-22T01:07:32",
+  "generated_at": "2026-09-22T02:37:28",
   "done": 13,
   "total": 21,
   "rows": [
@@ -63,7 +63,7 @@
       "stage": "MoE 队列",
       "system": "Q5 MoE 生成 2,750",
       "status": "进行中",
-      "progress": "13000/14150",
+      "progress": "13224/14150",
       "note": ""
     },
     {
@@ -91,7 +91,7 @@
       "stage": "base 评测",
       "system": "LexEval 客观+生成 14,150",
       "status": "进行中",
-      "progress": "13096/14150",
+      "progress": "13320/14150",
       "note": ""
     },
     {
@@ -133,7 +133,7 @@
       "stage": "判分(API)",
       "system": "MiniMax-M3 × base",
       "status": "失败",
-      "progress": "376/649",
+      "progress": "543/649",
       "note": "649 题 / 22 维度"
     },
     {
@@ -141,7 +141,7 @@
       "system": "汇总 + 出图",
       "status": "已完成",
       "progress": "",
-      "note": "collect_results.py + make_figures.py；最近一次 09-21 23:37"
+      "note": "collect_results.py + make_figures.py；最近一次 09-22 01:07"
     },
     {
       "stage": "收尾",

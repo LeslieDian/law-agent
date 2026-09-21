@@ -143,3 +143,25 @@
       64  outputs/infer/_perf_lexeval_bf16/answers.jsonl
       20  outputs/infer/_smoke_internal/answers.jsonl
       20  outputs/infer/_smoke_lexeval/answers.jsonl
+
+================ EVIDENCE [after_judge_moe_L2]  2026-09-21 19:13:25 ================
+0, NVIDIA A800 80GB PCIe, 63137 MiB, 99 %
+1, NVIDIA A800 80GB PCIe, 80639 MiB, 100 %
+--- running ---
+2324197    8326 envs/main/bin/python scripts/train/run_inference.py --task lexeval --adapter none --gpu 0 --batch-size 32 --max-new-tokens 1
+2333026    7977 envs/main/bin/python scripts/train/run_inference.py --task lexeval --moe-gate models/moe/L2_gate/gate_weights.pt --gpu 1 --b
+--- answers.jsonl ---
+    1000  outputs/infer/A0_internal_test/answers.jsonl
+    1000  outputs/infer/A0_internal_test_c1024/answers.jsonl
+    1000  outputs/infer/internal_moe_L2/answers.jsonl
+   14150  outputs/infer/lexeval_A0_unified_qwen3_8b/answers.jsonl
+   11976  outputs/infer/lexeval_base/answers.jsonl
+   11976  outputs/infer/lexeval_moe_L2/answers.jsonl
+     649  outputs/infer/lexrubric_A0_unified_qwen3_8b/answers.jsonl
+     649  outputs/infer/lexrubric_base/answers.jsonl
+     649  outputs/infer/lexrubric_moe_L2/answers.jsonl
+       2  outputs/infer/_moe_smoke/answers.jsonl
+      64  outputs/infer/_perf_lexeval_b32/answers.jsonl
+      64  outputs/infer/_perf_lexeval_bf16/answers.jsonl
+      20  outputs/infer/_smoke_internal/answers.jsonl
+      20  outputs/infer/_smoke_lexeval/answers.jsonl

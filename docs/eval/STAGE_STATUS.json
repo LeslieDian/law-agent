@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-21T18:15:28",
-  "done": 11,
+  "generated_at": "2026-09-21T20:32:12",
+  "done": 12,
   "total": 21,
   "rows": [
     {
@@ -56,14 +56,14 @@
       "stage": "MoE 队列",
       "system": "Q4 MoE 客观 11,400",
       "status": "已完成",
-      "progress": "11688/11400",
+      "progress": "12264/11400",
       "note": ""
     },
     {
       "stage": "MoE 队列",
       "system": "Q5 MoE 生成 2,750",
       "status": "进行中",
-      "progress": "11688/14150",
+      "progress": "12264/14150",
       "note": ""
     },
     {
@@ -91,7 +91,7 @@
       "stage": "base 评测",
       "system": "LexEval 客观+生成 14,150",
       "status": "进行中",
-      "progress": "11688/14150",
+      "progress": "12232/14150",
       "note": ""
     },
     {
@@ -125,23 +125,23 @@
     {
       "stage": "判分(API)",
       "system": "MiniMax-M3 × moe_L2",
-      "status": "进行中",
+      "status": "已完成",
       "progress": "",
-      "note": "649 题 / 22 维度；冒烟 8 条中"
+      "note": "649 题 / 22 维度"
     },
     {
       "stage": "判分(API)",
       "system": "MiniMax-M3 × base",
-      "status": "待跑",
+      "status": "进行中",
       "progress": "",
-      "note": "649 题 / 22 维度"
+      "note": "649 题 / 22 维度；冒烟 8 条中"
     },
     {
       "stage": "收尾",
       "system": "汇总 + 出图",
       "status": "已完成",
       "progress": "",
-      "note": "collect_results.py + make_figures.py；最近一次 09-21 17:08"
+      "note": "collect_results.py + make_figures.py；最近一次 09-21 18:15"
     },
     {
       "stage": "收尾",

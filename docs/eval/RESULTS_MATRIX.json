@@ -6,7 +6,7 @@
       "display": "base (Qwen3-8B, 无微调)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 11688,
+        "lexeval": 12232,
         "internal": 0
       },
       "warnings": [
@@ -56,13 +56,32 @@
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 11688,
+        "lexeval": 12264,
         "internal": 1000
       },
+      "lexrubric_mean": 15.0555,
+      "lexrubric_pct": 12.2078,
+      "lexrubric_ci95": [
+        11.0047,
+        13.435
+      ],
+      "lexrubric_n": 649,
+      "lexrubric_by_split": {
+        "judicial_exam": {
+          "n": 176,
+          "mean": 5.8636,
+          "pct": 9.3182
+        },
+        "legal_consultation": {
+          "n": 473,
+          "mean": 18.4757,
+          "pct": 13.283
+        }
+      },
+      "lexrubric_dimensions": null,
       "warnings": [
         "缺 outputs/score/lexeval_moe_L2.json",
-        "缺 outputs/score/internal_moe_L2.json",
-        "缺 outputs/judge/lexrubric/moe_L2/SUMMARY.json"
+        "缺 outputs/score/internal_moe_L2.json"
       ]
     }
   },
@@ -72,7 +91,7 @@
       "display": "base (Qwen3-8B, 无微调)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 11688,
+        "lexeval": 12232,
         "internal": 0
       },
       "warnings": [
@@ -122,13 +141,32 @@
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 11688,
+        "lexeval": 12264,
         "internal": 1000
       },
+      "lexrubric_mean": 15.0555,
+      "lexrubric_pct": 12.2078,
+      "lexrubric_ci95": [
+        11.0047,
+        13.435
+      ],
+      "lexrubric_n": 649,
+      "lexrubric_by_split": {
+        "judicial_exam": {
+          "n": 176,
+          "mean": 5.8636,
+          "pct": 9.3182
+        },
+        "legal_consultation": {
+          "n": 473,
+          "mean": 18.4757,
+          "pct": 13.283
+        }
+      },
+      "lexrubric_dimensions": null,
       "warnings": [
         "缺 outputs/score/lexeval_moe_L2.json",
-        "缺 outputs/score/internal_moe_L2.json",
-        "缺 outputs/judge/lexrubric/moe_L2/SUMMARY.json"
+        "缺 outputs/score/internal_moe_L2.json"
       ]
     }
   ]

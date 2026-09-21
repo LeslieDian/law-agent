@@ -1033,7 +1033,7 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
 
 > **本段由自动化回填**（`scripts/eval/stage_status.py` 扫描产物/日志/标志后生成，经 `patch_readme.py --tag AUTO_STAGE` 贴入）。每完成一个阶段刷新一次，并自动提交推送。机读版：`docs/eval/STAGE_STATUS.json`。
 >
-> 生成时间 **2026-09-21 16:04:15** ｜ 已完成 **10/21** 项
+> 生成时间 **2026-09-21 17:08:18** ｜ 已完成 **11/21** 项
 
 | 阶段 | 项 | 状态 | 进度 | 备注 |
 |---|---|---|---|---|
@@ -1044,19 +1044,19 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
 | MoE 队列 | Q1 MoE 冒烟 | 🔄 进行中 | 0/2 | — |
 | MoE 队列 | Q2 MoE 内部集 1k | ✅ 已完成 | 1000/1000 | — |
 | MoE 队列 | Q3 MoE LexRubric 649 | ✅ 已完成 | 649/649 | — |
-| MoE 队列 | Q4 MoE 客观 11,400 | 🔄 进行中 | 8160/11400 | — |
-| MoE 队列 | Q5 MoE 生成 2,750 | 🔄 进行中 | 8160/14150 | — |
+| MoE 队列 | Q4 MoE 客观 11,400 | ✅ 已完成 | 11432/11400 | — |
+| MoE 队列 | Q5 MoE 生成 2,750 | 🔄 进行中 | 11432/14150 | — |
 | MoE 队列 | Q6 A0 内部集 cap=1024 | ✅ 已完成 | 1000/1000 | — |
 | MoE 队列 | 整队列标志 | ✅ 已完成 | — | MARKER_GATE_QUEUE_DONE |
 | base 评测 | LexRubric 649 | ✅ 已完成 | 649/649 | cap=1536 |
-| base 评测 | LexEval 客观+生成 14,150 | 🔄 进行中 | 4608/14150 | — |
+| base 评测 | LexEval 客观+生成 14,150 | 🔄 进行中 | 11464/14150 | — |
 | 三专家内部集 | internal_criminal 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
 | 三专家内部集 | internal_civil 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
 | 三专家内部集 | internal_procedure 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
 | 判分(API) | MiniMax-M3 × A0_unified_qwen3_8b | 🔄 进行中 | — | 649 题 / 22 维度；冒烟 8 条中 |
 | 判分(API) | MiniMax-M3 × moe_L2 | 🔄 进行中 | — | 649 题 / 22 维度；冒烟 8 条中 |
 | 判分(API) | MiniMax-M3 × base | ⬜ 待跑 | — | 649 题 / 22 维度 |
-| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-21 14:40 |
+| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-21 16:04 |
 | 收尾 | 过夜链整链 | 🔄 进行中 | — | MARKER_OVERNIGHT_DONE |
 
 <sub>状态来源：答案文件行数 / 日志 `rc=` 与 `[n/N]` 进度 / 完成标志 / 报告文件。未到位一律如实标注，不做推测。</sub>
@@ -1108,9 +1108,9 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
 
 | 系统 | LexRubric (归一化 %) | LexEval 客观 Acc | LexEval 生成 ROUGE-L | 内部集 ROUGE-L | 内部集法条命中 | 已生成答案 (rubric/eval/internal) |
 |---|---:|---:|---:|---:|---:|---|
-| base (Qwen3-8B, 无微调) | — | — | — | — | — | 649 / 4608 / 0 |
+| base (Qwen3-8B, 无微调) | — | — | — | — | — | 649 / 11464 / 0 |
 | A0 (统一适配器) | 12.85 | — | — | 0.5378 | 0.5386 | 0 / 0 / 1000 |
-| MoE-L2 (L2 门控混合) | — | — | — | — | — | 649 / 8160 / 1000 |
+| MoE-L2 (L2 门控混合) | — | — | — | — | — | 649 / 11432 / 1000 |
 
 > 生成口径（全系统统一）：LexEval 客观题 cap=256 / LexEval 生成题 cap=1536 / LexRubric cap=1536 / 内部验证集 cap=1024；
 > 判分 MiniMax-M3（`configs/judge.yaml`）；完整机读数据见 `docs/eval/RESULTS_MATRIX.json`，图见 `docs/figures/`。

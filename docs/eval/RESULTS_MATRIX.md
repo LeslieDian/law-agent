@@ -2,9 +2,9 @@
 
 | 系统 | LexRubric (归一化 %) | LexEval 客观 Acc | LexEval 生成 ROUGE-L | 内部集 ROUGE-L | 内部集法条命中 | 已生成答案 (rubric/eval/internal) |
 |---|---:|---:|---:|---:|---:|---|
-| base (Qwen3-8B, 无微调) | — | — | — | — | — | 649 / 12232 / 0 |
+| base (Qwen3-8B, 无微调) | — | — | — | — | — | 649 / 12584 / 0 |
 | A0 (统一适配器) | 12.85 | — | — | 0.5378 | 0.5386 | 0 / 0 / 1000 |
-| MoE-L2 (L2 门控混合) | 12.21 | — | — | — | — | 649 / 12264 / 1000 |
+| MoE-L2 (L2 门控混合) | 12.21 | — | — | — | — | 649 / 12552 / 1000 |
 
 > LexRubric 归一化 % = mean_total / max_score × 100（逐 case 平均）；LexEval 客观 Acc 为 exact_match；ROUGE-L 为字符级 LCS f，cap=800。
 

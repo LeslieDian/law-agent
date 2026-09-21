@@ -6,7 +6,7 @@
       "display": "base (Qwen3-8B, 无微调)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 12232,
+        "lexeval": 12584,
         "internal": 0
       },
       "warnings": [
@@ -56,7 +56,7 @@
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 12264,
+        "lexeval": 12552,
         "internal": 1000
       },
       "lexrubric_mean": 15.0555,
@@ -91,7 +91,7 @@
       "display": "base (Qwen3-8B, 无微调)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 12232,
+        "lexeval": 12584,
         "internal": 0
       },
       "warnings": [
@@ -141,7 +141,7 @@
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 12264,
+        "lexeval": 12552,
         "internal": 1000
       },
       "lexrubric_mean": 15.0555,

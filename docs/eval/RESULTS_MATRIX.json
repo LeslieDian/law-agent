@@ -6,13 +6,32 @@
       "display": "base (Qwen3-8B, 无微调)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 13320,
+        "lexeval": 14150,
         "internal": 0
       },
+      "lexrubric_mean": 36.0131,
+      "lexrubric_pct": 31.9122,
+      "lexrubric_ci95": [
+        30.1769,
+        33.639
+      ],
+      "lexrubric_n": 649,
+      "lexrubric_by_split": {
+        "judicial_exam": {
+          "n": 176,
+          "mean": 21.4574,
+          "pct": 34.3628
+        },
+        "legal_consultation": {
+          "n": 473,
+          "mean": 41.4292,
+          "pct": 31.0003
+        }
+      },
+      "lexrubric_dimensions": null,
       "warnings": [
         "缺 outputs/score/lexeval_base.json",
-        "缺 outputs/score/internal_base.json",
-        "缺 outputs/judge/lexrubric/base/SUMMARY.json"
+        "缺 outputs/score/internal_base.json"
       ]
     },
     "A0": {
@@ -23,15 +42,137 @@
         "lexeval": 0,
         "internal": 1000
       },
+      "lexeval_acc": 0.5412,
+      "lexeval_acc_subset": 0.5412,
+      "lexeval_n_choice": 11304,
+      "lexeval_unparsed": 42,
+      "lexeval_rouge": 0.0934,
+      "lexeval_rouge_n": 14150,
+      "lexeval_by_task": {
+        "1_1": {
+          "n": 500,
+          "exact": 0.248,
+          "subset": 0.248,
+          "unparsed": 0
+        },
+        "1_2": {
+          "n": 1000,
+          "exact": 0.541,
+          "subset": 0.541,
+          "unparsed": 0
+        },
+        "1_3": {
+          "n": 300,
+          "exact": 0.09,
+          "subset": 0.09,
+          "unparsed": 0
+        },
+        "2_1": {
+          "n": 500,
+          "exact": 0.894,
+          "subset": 0.894,
+          "unparsed": 0
+        },
+        "2_2": {
+          "n": 300,
+          "exact": 0.51,
+          "subset": 0.51,
+          "unparsed": 0
+        },
+        "2_3": {
+          "n": 100,
+          "exact": 0.93,
+          "subset": 0.93,
+          "unparsed": 0
+        },
+        "2_4": {
+          "n": 500,
+          "exact": 0.772,
+          "subset": 0.772,
+          "unparsed": 0
+        },
+        "2_5": {
+          "n": 500,
+          "exact": 0.956,
+          "subset": 0.956,
+          "unparsed": 0
+        },
+        "3_1": {
+          "n": 1000,
+          "exact": 0.805,
+          "subset": 0.805,
+          "unparsed": 0
+        },
+        "3_2": {
+          "n": 1000,
+          "exact": 0.934,
+          "subset": 0.934,
+          "unparsed": 1
+        },
+        "3_3": {
+          "n": 1000,
+          "exact": 0.473,
+          "subset": 0.473,
+          "unparsed": 0
+        },
+        "3_4": {
+          "n": 500,
+          "exact": 0.272,
+          "subset": 0.272,
+          "unparsed": 0
+        },
+        "3_5": {
+          "n": 397,
+          "exact": 0.6071,
+          "subset": 0.6071,
+          "unparsed": 0
+        },
+        "3_6": {
+          "n": 500,
+          "exact": 0.486,
+          "subset": 0.486,
+          "unparsed": 0
+        },
+        "4_1": {
+          "n": 500,
+          "exact": 0.278,
+          "subset": 0.278,
+          "unparsed": 41
+        },
+        "4_2": {
+          "n": 299,
+          "exact": 0.3278,
+          "subset": 0.3278,
+          "unparsed": 0
+        },
+        "6_1": {
+          "n": 961,
+          "exact": 0.2268,
+          "subset": 0.2268,
+          "unparsed": 0
+        },
+        "6_2": {
+          "n": 980,
+          "exact": 0.3398,
+          "subset": 0.3398,
+          "unparsed": 0
+        },
+        "6_3": {
+          "n": 467,
+          "exact": 0.5332,
+          "subset": 0.5332,
+          "unparsed": 0
+        }
+      },
       "internal_rouge": 0.5378,
       "internal_statute": 0.5386,
       "internal_acc": null,
       "internal_n": 1000,
-      "lexrubric_mean": 15.2157,
-      "lexrubric_pct": 12.8472,
+      "lexrubric_mean": 15.2758,
+      "lexrubric_pct": 12.8988,
       "lexrubric_ci95": [
-        11.6483,
-        14.0889
+        11.6616,
+        14.17
       ],
       "lexrubric_n": 649,
       "lexrubric_by_split": {
@@ -42,45 +183,164 @@
         },
         "legal_consultation": {
           "n": 473,
-          "mean": 18.0137,
-          "pct": 13.0995
+          "mean": 18.0962,
+          "pct": 13.1703
         }
       },
       "lexrubric_dimensions": null,
-      "warnings": [
-        "缺 outputs/score/lexeval_A0.json"
-      ]
+      "warnings": []
     },
     "moe_L2": {
       "key": "moe_L2",
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 13224,
+        "lexeval": 14150,
         "internal": 1000
       },
-      "lexrubric_mean": 15.0555,
-      "lexrubric_pct": 12.2078,
+      "lexeval_acc": 0.534,
+      "lexeval_acc_subset": 0.534,
+      "lexeval_n_choice": 11304,
+      "lexeval_unparsed": 43,
+      "lexeval_rouge": 0.205,
+      "lexeval_rouge_n": 14118,
+      "lexeval_by_task": {
+        "1_1": {
+          "n": 500,
+          "exact": 0.25,
+          "subset": 0.25,
+          "unparsed": 0
+        },
+        "1_2": {
+          "n": 1000,
+          "exact": 0.515,
+          "subset": 0.515,
+          "unparsed": 0
+        },
+        "1_3": {
+          "n": 300,
+          "exact": 0.0933,
+          "subset": 0.0933,
+          "unparsed": 0
+        },
+        "2_1": {
+          "n": 500,
+          "exact": 0.804,
+          "subset": 0.804,
+          "unparsed": 0
+        },
+        "2_2": {
+          "n": 300,
+          "exact": 0.4933,
+          "subset": 0.4933,
+          "unparsed": 0
+        },
+        "2_3": {
+          "n": 100,
+          "exact": 0.96,
+          "subset": 0.96,
+          "unparsed": 0
+        },
+        "2_4": {
+          "n": 500,
+          "exact": 0.662,
+          "subset": 0.662,
+          "unparsed": 0
+        },
+        "2_5": {
+          "n": 500,
+          "exact": 0.938,
+          "subset": 0.938,
+          "unparsed": 0
+        },
+        "3_1": {
+          "n": 1000,
+          "exact": 0.801,
+          "subset": 0.801,
+          "unparsed": 0
+        },
+        "3_2": {
+          "n": 1000,
+          "exact": 0.926,
+          "subset": 0.926,
+          "unparsed": 1
+        },
+        "3_3": {
+          "n": 1000,
+          "exact": 0.514,
+          "subset": 0.514,
+          "unparsed": 0
+        },
+        "3_4": {
+          "n": 500,
+          "exact": 0.262,
+          "subset": 0.262,
+          "unparsed": 0
+        },
+        "3_5": {
+          "n": 397,
+          "exact": 0.6348,
+          "subset": 0.6348,
+          "unparsed": 0
+        },
+        "3_6": {
+          "n": 500,
+          "exact": 0.526,
+          "subset": 0.526,
+          "unparsed": 0
+        },
+        "4_1": {
+          "n": 500,
+          "exact": 0.316,
+          "subset": 0.316,
+          "unparsed": 42
+        },
+        "4_2": {
+          "n": 299,
+          "exact": 0.3278,
+          "subset": 0.3278,
+          "unparsed": 0
+        },
+        "6_1": {
+          "n": 961,
+          "exact": 0.2268,
+          "subset": 0.2268,
+          "unparsed": 0
+        },
+        "6_2": {
+          "n": 980,
+          "exact": 0.3194,
+          "subset": 0.3194,
+          "unparsed": 0
+        },
+        "6_3": {
+          "n": 467,
+          "exact": 0.531,
+          "subset": 0.531,
+          "unparsed": 0
+        }
+      },
+      "lexrubric_mean": 15.6294,
+      "lexrubric_pct": 13.0962,
       "lexrubric_ci95": [
-        11.0047,
-        13.435
+        11.8533,
+        14.3798
       ],
       "lexrubric_n": 649,
       "lexrubric_by_split": {
         "judicial_exam": {
           "n": 176,
-          "mean": 5.8636,
-          "pct": 9.3182
+          "mean": 7.7614,
+          "pct": 12.4618
         },
         "legal_consultation": {
           "n": 473,
-          "mean": 18.4757,
-          "pct": 13.283
+          "mean": 18.5571,
+          "pct": 13.3323
         }
       },
       "lexrubric_dimensions": null,
       "warnings": [
-        "缺 outputs/score/lexeval_moe_L2.json",
         "缺 outputs/score/internal_moe_L2.json"
       ]
     }
@@ -91,13 +351,32 @@
       "display": "base (Qwen3-8B, 无微调)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 13320,
+        "lexeval": 14150,
         "internal": 0
       },
+      "lexrubric_mean": 36.0131,
+      "lexrubric_pct": 31.9122,
+      "lexrubric_ci95": [
+        30.1769,
+        33.639
+      ],
+      "lexrubric_n": 649,
+      "lexrubric_by_split": {
+        "judicial_exam": {
+          "n": 176,
+          "mean": 21.4574,
+          "pct": 34.3628
+        },
+        "legal_consultation": {
+          "n": 473,
+          "mean": 41.4292,
+          "pct": 31.0003
+        }
+      },
+      "lexrubric_dimensions": null,
       "warnings": [
         "缺 outputs/score/lexeval_base.json",
-        "缺 outputs/score/internal_base.json",
-        "缺 outputs/judge/lexrubric/base/SUMMARY.json"
+        "缺 outputs/score/internal_base.json"
       ]
     },
     {
@@ -108,15 +387,137 @@
         "lexeval": 0,
         "internal": 1000
       },
+      "lexeval_acc": 0.5412,
+      "lexeval_acc_subset": 0.5412,
+      "lexeval_n_choice": 11304,
+      "lexeval_unparsed": 42,
+      "lexeval_rouge": 0.0934,
+      "lexeval_rouge_n": 14150,
+      "lexeval_by_task": {
+        "1_1": {
+          "n": 500,
+          "exact": 0.248,
+          "subset": 0.248,
+          "unparsed": 0
+        },
+        "1_2": {
+          "n": 1000,
+          "exact": 0.541,
+          "subset": 0.541,
+          "unparsed": 0
+        },
+        "1_3": {
+          "n": 300,
+          "exact": 0.09,
+          "subset": 0.09,
+          "unparsed": 0
+        },
+        "2_1": {
+          "n": 500,
+          "exact": 0.894,
+          "subset": 0.894,
+          "unparsed": 0
+        },
+        "2_2": {
+          "n": 300,
+          "exact": 0.51,
+          "subset": 0.51,
+          "unparsed": 0
+        },
+        "2_3": {
+          "n": 100,
+          "exact": 0.93,
+          "subset": 0.93,
+          "unparsed": 0
+        },
+        "2_4": {
+          "n": 500,
+          "exact": 0.772,
+          "subset": 0.772,
+          "unparsed": 0
+        },
+        "2_5": {
+          "n": 500,
+          "exact": 0.956,
+          "subset": 0.956,
+          "unparsed": 0
+        },
+        "3_1": {
+          "n": 1000,
+          "exact": 0.805,
+          "subset": 0.805,
+          "unparsed": 0
+        },
+        "3_2": {
+          "n": 1000,
+          "exact": 0.934,
+          "subset": 0.934,
+          "unparsed": 1
+        },
+        "3_3": {
+          "n": 1000,
+          "exact": 0.473,
+          "subset": 0.473,
+          "unparsed": 0
+        },
+        "3_4": {
+          "n": 500,
+          "exact": 0.272,
+          "subset": 0.272,
+          "unparsed": 0
+        },
+        "3_5": {
+          "n": 397,
+          "exact": 0.6071,
+          "subset": 0.6071,
+          "unparsed": 0
+        },
+        "3_6": {
+          "n": 500,
+          "exact": 0.486,
+          "subset": 0.486,
+          "unparsed": 0
+        },
+        "4_1": {
+          "n": 500,
+          "exact": 0.278,
+          "subset": 0.278,
+          "unparsed": 41
+        },
+        "4_2": {
+          "n": 299,
+          "exact": 0.3278,
+          "subset": 0.3278,
+          "unparsed": 0
+        },
+        "6_1": {
+          "n": 961,
+          "exact": 0.2268,
+          "subset": 0.2268,
+          "unparsed": 0
+        },
+        "6_2": {
+          "n": 980,
+          "exact": 0.3398,
+          "subset": 0.3398,
+          "unparsed": 0
+        },
+        "6_3": {
+          "n": 467,
+          "exact": 0.5332,
+          "subset": 0.5332,
+          "unparsed": 0
+        }
+      },
       "internal_rouge": 0.5378,
       "internal_statute": 0.5386,
       "internal_acc": null,
       "internal_n": 1000,
-      "lexrubric_mean": 15.2157,
-      "lexrubric_pct": 12.8472,
+      "lexrubric_mean": 15.2758,
+      "lexrubric_pct": 12.8988,
       "lexrubric_ci95": [
-        11.6483,
-        14.0889
+        11.6616,
+        14.17
       ],
       "lexrubric_n": 649,
       "lexrubric_by_split": {
@@ -127,45 +528,164 @@
         },
         "legal_consultation": {
           "n": 473,
-          "mean": 18.0137,
-          "pct": 13.0995
+          "mean": 18.0962,
+          "pct": 13.1703
         }
       },
       "lexrubric_dimensions": null,
-      "warnings": [
-        "缺 outputs/score/lexeval_A0.json"
-      ]
+      "warnings": []
     },
     {
       "key": "moe_L2",
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 13224,
+        "lexeval": 14150,
         "internal": 1000
       },
-      "lexrubric_mean": 15.0555,
-      "lexrubric_pct": 12.2078,
+      "lexeval_acc": 0.534,
+      "lexeval_acc_subset": 0.534,
+      "lexeval_n_choice": 11304,
+      "lexeval_unparsed": 43,
+      "lexeval_rouge": 0.205,
+      "lexeval_rouge_n": 14118,
+      "lexeval_by_task": {
+        "1_1": {
+          "n": 500,
+          "exact": 0.25,
+          "subset": 0.25,
+          "unparsed": 0
+        },
+        "1_2": {
+          "n": 1000,
+          "exact": 0.515,
+          "subset": 0.515,
+          "unparsed": 0
+        },
+        "1_3": {
+          "n": 300,
+          "exact": 0.0933,
+          "subset": 0.0933,
+          "unparsed": 0
+        },
+        "2_1": {
+          "n": 500,
+          "exact": 0.804,
+          "subset": 0.804,
+          "unparsed": 0
+        },
+        "2_2": {
+          "n": 300,
+          "exact": 0.4933,
+          "subset": 0.4933,
+          "unparsed": 0
+        },
+        "2_3": {
+          "n": 100,
+          "exact": 0.96,
+          "subset": 0.96,
+          "unparsed": 0
+        },
+        "2_4": {
+          "n": 500,
+          "exact": 0.662,
+          "subset": 0.662,
+          "unparsed": 0
+        },
+        "2_5": {
+          "n": 500,
+          "exact": 0.938,
+          "subset": 0.938,
+          "unparsed": 0
+        },
+        "3_1": {
+          "n": 1000,
+          "exact": 0.801,
+          "subset": 0.801,
+          "unparsed": 0
+        },
+        "3_2": {
+          "n": 1000,
+          "exact": 0.926,
+          "subset": 0.926,
+          "unparsed": 1
+        },
+        "3_3": {
+          "n": 1000,
+          "exact": 0.514,
+          "subset": 0.514,
+          "unparsed": 0
+        },
+        "3_4": {
+          "n": 500,
+          "exact": 0.262,
+          "subset": 0.262,
+          "unparsed": 0
+        },
+        "3_5": {
+          "n": 397,
+          "exact": 0.6348,
+          "subset": 0.6348,
+          "unparsed": 0
+        },
+        "3_6": {
+          "n": 500,
+          "exact": 0.526,
+          "subset": 0.526,
+          "unparsed": 0
+        },
+        "4_1": {
+          "n": 500,
+          "exact": 0.316,
+          "subset": 0.316,
+          "unparsed": 42
+        },
+        "4_2": {
+          "n": 299,
+          "exact": 0.3278,
+          "subset": 0.3278,
+          "unparsed": 0
+        },
+        "6_1": {
+          "n": 961,
+          "exact": 0.2268,
+          "subset": 0.2268,
+          "unparsed": 0
+        },
+        "6_2": {
+          "n": 980,
+          "exact": 0.3194,
+          "subset": 0.3194,
+          "unparsed": 0
+        },
+        "6_3": {
+          "n": 467,
+          "exact": 0.531,
+          "subset": 0.531,
+          "unparsed": 0
+        }
+      },
+      "lexrubric_mean": 15.6294,
+      "lexrubric_pct": 13.0962,
       "lexrubric_ci95": [
-        11.0047,
-        13.435
+        11.8533,
+        14.3798
       ],
       "lexrubric_n": 649,
       "lexrubric_by_split": {
         "judicial_exam": {
           "n": 176,
-          "mean": 5.8636,
-          "pct": 9.3182
+          "mean": 7.7614,
+          "pct": 12.4618
         },
         "legal_consultation": {
           "n": 473,
-          "mean": 18.4757,
-          "pct": 13.283
+          "mean": 18.5571,
+          "pct": 13.3323
         }
       },
       "lexrubric_dimensions": null,
       "warnings": [
-        "缺 outputs/score/lexeval_moe_L2.json",
         "缺 outputs/score/internal_moe_L2.json"
       ]
     }

@@ -1033,7 +1033,7 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
 
 > **本段由自动化回填**（`scripts/eval/stage_status.py` 扫描产物/日志/标志后生成，经 `patch_readme.py --tag AUTO_STAGE` 贴入）。每完成一个阶段刷新一次，并自动提交推送。机读版：`docs/eval/STAGE_STATUS.json`。
 >
-> 生成时间 **2026-09-22 02:37:28** ｜ 已完成 **13/21** 项
+> 生成时间 **2026-09-22 05:06:03** ｜ 已完成 **17/21** 项
 
 | 阶段 | 项 | 状态 | 进度 | 备注 |
 |---|---|---|---|---|
@@ -1045,18 +1045,18 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
 | MoE 队列 | Q2 MoE 内部集 1k | ✅ 已完成 | 1000/1000 | — |
 | MoE 队列 | Q3 MoE LexRubric 649 | ✅ 已完成 | 649/649 | — |
 | MoE 队列 | Q4 MoE 客观 11,400 | ✅ 已完成 | 11400/11400 | — |
-| MoE 队列 | Q5 MoE 生成 2,750 | 🔄 进行中 | 13224/14150 | — |
+| MoE 队列 | Q5 MoE 生成 2,750 | ✅ 已完成 | 14150/14150 | — |
 | MoE 队列 | Q6 A0 内部集 cap=1024 | ✅ 已完成 | 1000/1000 | — |
-| MoE 队列 | 整队列标志 | 🔄 进行中 | — | 上一轮批次 MARKER_GATE_QUEUE_DONE；本轮见 gpu1_queue_moe_chain.log |
+| MoE 队列 | 整队列标志 | ✅ 已完成 | — | MARKER_GPU1_QUEUE_DONE（本轮 MoE 队列） |
 | base 评测 | LexRubric 649 | ✅ 已完成 | 649/649 | cap=1536 |
-| base 评测 | LexEval 客观+生成 14,150 | 🔄 进行中 | 13320/14150 | — |
+| base 评测 | LexEval 客观+生成 14,150 | ✅ 已完成 | 14150/14150 | — |
 | 三专家内部集 | internal_criminal 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
 | 三专家内部集 | internal_civil 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
 | 三专家内部集 | internal_procedure 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
 | 判分(API) | MiniMax-M3 × A0_unified_qwen3_8b | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
 | 判分(API) | MiniMax-M3 × moe_L2 | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
-| 判分(API) | MiniMax-M3 × base | ❌ 失败 | 543/649 | 649 题 / 22 维度 |
-| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-22 01:07 |
+| 判分(API) | MiniMax-M3 × base | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
+| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-22 04:27 |
 | 收尾 | 过夜链整链 | 🔄 进行中 | — | MARKER_OVERNIGHT_DONE |
 
 <sub>状态来源：答案文件行数 / 日志 `rc=` 与 `[n/N]` 进度 / 完成标志 / 报告文件。未到位一律如实标注，不做推测。</sub>
@@ -1108,9 +1108,9 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
 
 | 系统 | LexRubric (归一化 %) | LexEval 客观 Acc | LexEval 生成 ROUGE-L | 内部集 ROUGE-L | 内部集法条命中 | 已生成答案 (rubric/eval/internal) |
 |---|---:|---:|---:|---:|---:|---|
-| base (Qwen3-8B, 无微调) | — | — | — | — | — | 649 / 13320 / 0 |
-| A0 (统一适配器) | 12.85 | — | — | 0.5378 | 0.5386 | 0 / 0 / 1000 |
-| MoE-L2 (L2 门控混合) | 12.21 | — | — | — | — | 649 / 13224 / 1000 |
+| base (Qwen3-8B, 无微调) | 31.91 | — | — | — | — | 649 / 14150 / 0 |
+| A0 (统一适配器) | 12.90 | 0.5412 | 0.0934 | 0.5378 | 0.5386 | 0 / 0 / 1000 |
+| MoE-L2 (L2 门控混合) | 13.10 | 0.5340 | 0.2050 | — | — | 649 / 14150 / 1000 |
 
 > 生成口径（全系统统一）：LexEval 客观题 cap=256 / LexEval 生成题 cap=1536 / LexRubric cap=1536 / 内部验证集 cap=1024；
 > 判分 MiniMax-M3（`configs/judge.yaml`）；完整机读数据见 `docs/eval/RESULTS_MATRIX.json`，图见 `docs/figures/`。

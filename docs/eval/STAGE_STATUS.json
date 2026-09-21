@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-22T02:37:28",
-  "done": 13,
+  "generated_at": "2026-09-22T05:06:03",
+  "done": 17,
   "total": 21,
   "rows": [
     {
@@ -62,8 +62,8 @@
     {
       "stage": "MoE 队列",
       "system": "Q5 MoE 生成 2,750",
-      "status": "进行中",
-      "progress": "13224/14150",
+      "status": "已完成",
+      "progress": "14150/14150",
       "note": ""
     },
     {
@@ -76,9 +76,9 @@
     {
       "stage": "MoE 队列",
       "system": "整队列标志",
-      "status": "进行中",
+      "status": "已完成",
       "progress": "",
-      "note": "上一轮批次 MARKER_GATE_QUEUE_DONE；本轮见 gpu1_queue_moe_chain.log"
+      "note": "MARKER_GPU1_QUEUE_DONE（本轮 MoE 队列）"
     },
     {
       "stage": "base 评测",
@@ -90,8 +90,8 @@
     {
       "stage": "base 评测",
       "system": "LexEval 客观+生成 14,150",
-      "status": "进行中",
-      "progress": "13320/14150",
+      "status": "已完成",
+      "progress": "14150/14150",
       "note": ""
     },
     {
@@ -132,8 +132,8 @@
     {
       "stage": "判分(API)",
       "system": "MiniMax-M3 × base",
-      "status": "失败",
-      "progress": "543/649",
+      "status": "已完成",
+      "progress": "649/649",
       "note": "649 题 / 22 维度"
     },
     {
@@ -141,7 +141,7 @@
       "system": "汇总 + 出图",
       "status": "已完成",
       "progress": "",
-      "note": "collect_results.py + make_figures.py；最近一次 09-22 01:07"
+      "note": "collect_results.py + make_figures.py；最近一次 09-22 04:27"
     },
     {
       "stage": "收尾",

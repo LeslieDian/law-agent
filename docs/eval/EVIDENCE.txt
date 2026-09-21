@@ -120,3 +120,26 @@
       64  outputs/infer/_perf_lexeval_bf16/answers.jsonl
       20  outputs/infer/_smoke_internal/answers.jsonl
       20  outputs/infer/_smoke_lexeval/answers.jsonl
+
+================ EVIDENCE [after_internal_criminal]  2026-09-21 09:22:33 ================
+0, NVIDIA A800 80GB PCIe, 64799 MiB, 100 %
+1, NVIDIA A800 80GB PCIe, 59993 MiB, 100 %
+--- running ---
+ 519258   46886 bash -c cd /mnt/data/lidian/law-agent && nohup bash -c 'cd /mnt/data/lidian/law-agent P=envs/main/bin/python ADAPTER=models/
+ 519259   46886 bash -c cd /mnt/data/lidian/law-agent P=envs/main/bin/python ADAPTER=models/adapters/A0_unified_qwen3_8b D=data/benchmark/le
+1065662   24749 envs/main/bin/python scripts/train/run_inference.py --task lexeval --adapter models/adapters/A0_unified_qwen3_8b --gpu 0 --b
+1657701     237 envs/main/bin/python scripts/train/run_inference.py --task internal_test --moe-gate models/moe/L2_gate/gate_weights.pt --gpu
+--- answers.jsonl ---
+    1000  outputs/infer/A0_internal_test/answers.jsonl
+    1000  outputs/infer/A0_internal_test_c1024/answers.jsonl
+    1000  outputs/infer/internal_criminal/answers.jsonl
+      32  outputs/infer/internal_moe_L2/answers.jsonl
+   12936  outputs/infer/lexeval_A0_unified_qwen3_8b/answers.jsonl
+   14150  outputs/infer/lexeval_base/answers.jsonl
+     649  outputs/infer/lexrubric_A0_unified_qwen3_8b/answers.jsonl
+     649  outputs/infer/lexrubric_base/answers.jsonl
+       2  outputs/infer/_moe_smoke/answers.jsonl
+      64  outputs/infer/_perf_lexeval_b32/answers.jsonl
+      64  outputs/infer/_perf_lexeval_bf16/answers.jsonl
+      20  outputs/infer/_smoke_internal/answers.jsonl
+      20  outputs/infer/_smoke_lexeval/answers.jsonl

@@ -157,6 +157,15 @@ gpu0_lane(){
   else
     log "[WARN] 未见 A0 链 MARKER 且无 run_inference 进程 —— 按 GPU0 已空闲继续"
   fi
+  # ★ OOM 事故修复（2026-09-21）：上面的超时抢跑曾在 A0 生成进程仍占 63GB 时开跑，
+  #   base 三阶段 + 三专家内部集大面积 CUDA OOM、数据报废。现在要求 GPU0 显存
+  #   真的空下来（<10GB）才继续，最多再等 6h。
+  for i in $(seq 1 360); do
+    MEM=$(nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits -i 0 2>/dev/null | tr -d ' ')
+    [ "${MEM:-99999}" -lt 10000 ] && break
+    sleep 60
+  done
+  log "GPU0 显存 ${MEM:-?}MiB，开始通道 B 任务"
   snap "gpu0_lane_start"
   sleep 20                                                     # 等显存彻底释放
 

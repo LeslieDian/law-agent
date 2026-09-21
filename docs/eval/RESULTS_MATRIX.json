@@ -41,7 +41,7 @@
       "key": "moe_L2",
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
-        "lexrubric": 32,
+        "lexrubric": 256,
         "lexeval": 0,
         "internal": 1000
       },
@@ -93,7 +93,7 @@
       "key": "moe_L2",
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
-        "lexrubric": 32,
+        "lexrubric": 256,
         "lexeval": 0,
         "internal": 1000
       },

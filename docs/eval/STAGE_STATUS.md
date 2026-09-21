@@ -4,7 +4,7 @@
 
 > **本段由自动化回填**（`scripts/eval/stage_status.py` 扫描产物/日志/标志后生成，经 `patch_readme.py --tag AUTO_STAGE` 贴入）。每完成一个阶段刷新一次，并自动提交推送。机读版：`docs/eval/STAGE_STATUS.json`。
 >
-> 生成时间 **2026-09-21 23:37:02** ｜ 已完成 **13/21** 项
+> 生成时间 **2026-09-22 01:07:32** ｜ 已完成 **13/21** 项
 
 | 阶段 | 项 | 状态 | 进度 | 备注 |
 |---|---|---|---|---|
@@ -16,18 +16,18 @@
 | MoE 队列 | Q2 MoE 内部集 1k | ✅ 已完成 | 1000/1000 | — |
 | MoE 队列 | Q3 MoE LexRubric 649 | ✅ 已完成 | 649/649 | — |
 | MoE 队列 | Q4 MoE 客观 11,400 | ✅ 已完成 | 11400/11400 | — |
-| MoE 队列 | Q5 MoE 生成 2,750 | 🔄 进行中 | 12776/14150 | — |
+| MoE 队列 | Q5 MoE 生成 2,750 | 🔄 进行中 | 13000/14150 | — |
 | MoE 队列 | Q6 A0 内部集 cap=1024 | ✅ 已完成 | 1000/1000 | — |
 | MoE 队列 | 整队列标志 | 🔄 进行中 | — | 上一轮批次 MARKER_GATE_QUEUE_DONE；本轮见 gpu1_queue_moe_chain.log |
 | base 评测 | LexRubric 649 | ✅ 已完成 | 649/649 | cap=1536 |
-| base 评测 | LexEval 客观+生成 14,150 | 🔄 进行中 | 12840/14150 | — |
+| base 评测 | LexEval 客观+生成 14,150 | 🔄 进行中 | 13096/14150 | — |
 | 三专家内部集 | internal_criminal 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
 | 三专家内部集 | internal_civil 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
 | 三专家内部集 | internal_procedure 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
 | 判分(API) | MiniMax-M3 × A0_unified_qwen3_8b | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
 | 判分(API) | MiniMax-M3 × moe_L2 | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
-| 判分(API) | MiniMax-M3 × base | ❌ 失败 | 242/649 | 649 题 / 22 维度 |
-| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-21 22:05 |
+| 判分(API) | MiniMax-M3 × base | ❌ 失败 | 376/649 | 649 题 / 22 维度 |
+| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-21 23:37 |
 | 收尾 | 过夜链整链 | 🔄 进行中 | — | MARKER_OVERNIGHT_DONE |
 
 <sub>状态来源：答案文件行数 / 日志 `rc=` 与 `[n/N]` 进度 / 完成标志 / 报告文件。未到位一律如实标注，不做推测。</sub>

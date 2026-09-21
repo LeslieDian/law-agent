@@ -187,3 +187,20 @@
       64  outputs/infer/_perf_lexeval_bf16/answers.jsonl
       20  outputs/infer/_smoke_internal/answers.jsonl
       20  outputs/infer/_smoke_lexeval/answers.jsonl
+
+================ DEDUP REPORT 2026-09-22 05:35:23 ================
+  dedup outputs/infer/A0_internal_test/answers.jsonl               kept=1000   duplicates=0     bad_lines=0
+  dedup outputs/infer/A0_internal_test_c1024/answers.jsonl         kept=1000   duplicates=0     bad_lines=0
+  dedup outputs/infer/internal_criminal/answers.jsonl              kept=288    duplicates=0     bad_lines=0
+  dedup outputs/infer/internal_moe_L2/answers.jsonl                kept=1000   duplicates=0     bad_lines=0
+  dedup outputs/infer/lexeval_A0_unified_qwen3_8b/answers.jsonl    kept=14150  duplicates=0     bad_lines=0
+  dedup outputs/infer/lexeval_base/answers.jsonl                   kept=14150  duplicates=0     bad_lines=0
+  dedup outputs/infer/lexeval_moe_L2/answers.jsonl                 kept=14150  duplicates=0     bad_lines=0
+  dedup outputs/infer/lexrubric_A0_unified_qwen3_8b/answers.jsonl  kept=649    duplicates=0     bad_lines=0
+  dedup outputs/infer/lexrubric_base/answers.jsonl                 kept=649    duplicates=0     bad_lines=0
+  dedup outputs/infer/lexrubric_moe_L2/answers.jsonl               kept=649    duplicates=0     bad_lines=0
+  dedup outputs/infer/_moe_smoke/answers.jsonl                     kept=2      duplicates=0     bad_lines=0
+  dedup outputs/infer/_perf_lexeval_b32/answers.jsonl              kept=64     duplicates=0     bad_lines=0
+  dedup outputs/infer/_perf_lexeval_bf16/answers.jsonl             kept=64     duplicates=0     bad_lines=0
+  dedup outputs/infer/_smoke_internal/answers.jsonl                kept=20     duplicates=0     bad_lines=0
+  dedup outputs/infer/_smoke_lexeval/answers.jsonl                 kept=20     duplicates=0     bad_lines=0

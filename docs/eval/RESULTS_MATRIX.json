@@ -1,5 +1,5 @@
 {
-  "n_systems": 4,
+  "n_systems": 6,
   "systems": {
     "base": {
       "key": "base",
@@ -473,15 +473,46 @@
       "n_answers": {
         "lexrubric": 0,
         "lexeval": 0,
-        "internal": 384
+        "internal": 1000
       },
-      "internal_rouge": 0.5397,
-      "internal_statute": 0.7792,
+      "internal_rouge": 0.4872,
+      "internal_statute": 0.5051,
       "internal_acc": null,
-      "internal_n": 384,
+      "internal_n": 1000,
       "warnings": [
         "缺 outputs/score/lexeval_criminal.json",
         "缺 outputs/judge/lexrubric/criminal/SUMMARY.json"
+      ]
+    },
+    "civil": {
+      "key": "civil",
+      "display": "专家: civil",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 1000
+      },
+      "internal_rouge": 0.5028,
+      "internal_statute": 0.4928,
+      "internal_acc": null,
+      "internal_n": 1000,
+      "warnings": [
+        "缺 outputs/score/lexeval_civil.json",
+        "缺 outputs/judge/lexrubric/civil/SUMMARY.json"
+      ]
+    },
+    "procedure": {
+      "key": "procedure",
+      "display": "专家: procedure",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 256
+      },
+      "warnings": [
+        "缺 outputs/score/lexeval_procedure.json",
+        "缺 outputs/score/internal_procedure.json",
+        "缺 outputs/judge/lexrubric/procedure/SUMMARY.json"
       ]
     }
   },
@@ -958,15 +989,46 @@
       "n_answers": {
         "lexrubric": 0,
         "lexeval": 0,
-        "internal": 384
+        "internal": 1000
       },
-      "internal_rouge": 0.5397,
-      "internal_statute": 0.7792,
+      "internal_rouge": 0.4872,
+      "internal_statute": 0.5051,
       "internal_acc": null,
-      "internal_n": 384,
+      "internal_n": 1000,
       "warnings": [
         "缺 outputs/score/lexeval_criminal.json",
         "缺 outputs/judge/lexrubric/criminal/SUMMARY.json"
+      ]
+    },
+    {
+      "key": "civil",
+      "display": "专家: civil",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 1000
+      },
+      "internal_rouge": 0.5028,
+      "internal_statute": 0.4928,
+      "internal_acc": null,
+      "internal_n": 1000,
+      "warnings": [
+        "缺 outputs/score/lexeval_civil.json",
+        "缺 outputs/judge/lexrubric/civil/SUMMARY.json"
+      ]
+    },
+    {
+      "key": "procedure",
+      "display": "专家: procedure",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 256
+      },
+      "warnings": [
+        "缺 outputs/score/lexeval_procedure.json",
+        "缺 outputs/score/internal_procedure.json",
+        "缺 outputs/judge/lexrubric/procedure/SUMMARY.json"
       ]
     }
   ]

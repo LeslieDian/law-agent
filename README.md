@@ -1033,7 +1033,7 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
 
 > **本段由自动化回填**（`scripts/eval/stage_status.py` 扫描产物/日志/标志后生成，经 `patch_readme.py --tag AUTO_STAGE` 贴入）。每完成一个阶段刷新一次，并自动提交推送。机读版：`docs/eval/STAGE_STATUS.json`。
 >
-> 生成时间 **2026-09-22 05:06:03** ｜ 已完成 **17/21** 项
+> 生成时间 **2026-09-22 07:36:35** ｜ 已完成 **19/21** 项
 
 | 阶段 | 项 | 状态 | 进度 | 备注 |
 |---|---|---|---|---|
@@ -1050,13 +1050,13 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
 | MoE 队列 | 整队列标志 | ✅ 已完成 | — | MARKER_GPU1_QUEUE_DONE（本轮 MoE 队列） |
 | base 评测 | LexRubric 649 | ✅ 已完成 | 649/649 | cap=1536 |
 | base 评测 | LexEval 客观+生成 14,150 | ✅ 已完成 | 14150/14150 | — |
-| 三专家内部集 | internal_criminal 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
-| 三专家内部集 | internal_civil 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
-| 三专家内部集 | internal_procedure 1k | ⬜ 待跑 | 0/1000 | cap=1024；域专业化分析 |
+| 三专家内部集 | internal_criminal 1k | ✅ 已完成 | 1000/1000 | cap=1024；域专业化分析 |
+| 三专家内部集 | internal_civil 1k | ✅ 已完成 | 1000/1000 | cap=1024；域专业化分析 |
+| 三专家内部集 | internal_procedure 1k | 🔄 进行中 | 256/1000 | cap=1024；域专业化分析 |
 | 判分(API) | MiniMax-M3 × A0_unified_qwen3_8b | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
 | 判分(API) | MiniMax-M3 × moe_L2 | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
 | 判分(API) | MiniMax-M3 × base | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
-| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-22 04:27 |
+| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-22 05:38 |
 | 收尾 | 过夜链整链 | 🔄 进行中 | — | MARKER_OVERNIGHT_DONE |
 
 <sub>状态来源：答案文件行数 / 日志 `rc=` 与 `[n/N]` 进度 / 完成标志 / 报告文件。未到位一律如实标注，不做推测。</sub>
@@ -1111,6 +1111,9 @@ LoRA 增量同样必须保持 fp32 加进底座输出（bf16+fp32 提升，与 p
 | base (Qwen3-8B, 无微调) | 31.91 | 0.5389 | 0.5626 | — | — | 649 / 14150 / 0 |
 | A0 (统一适配器) | 12.90 | 0.5412 | 0.0934 | 0.5400 | 0.5330 | 0 / 0 / 1000 |
 | MoE-L2 (L2 门控混合) | 13.10 | 0.5340 | 0.2050 | 0.4923 | 0.5210 | 649 / 14150 / 1000 |
+| 专家: criminal | — | — | — | 0.4872 | 0.5051 | 0 / 0 / 1000 |
+| 专家: civil | — | — | — | 0.5028 | 0.4928 | 0 / 0 / 1000 |
+| 专家: procedure | — | — | — | — | — | 0 / 0 / 256 |
 
 > 生成口径（全系统统一）：LexEval 客观题 cap=256 / LexEval 生成题 cap=1536 / LexRubric cap=1536 / 内部验证集 cap=1024；
 > 判分 MiniMax-M3（`configs/judge.yaml`）；完整机读数据见 `docs/eval/RESULTS_MATRIX.json`，图见 `docs/figures/`。

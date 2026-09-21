@@ -41,9 +41,9 @@
       "key": "moe_L2",
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
-        "lexrubric": 0,
+        "lexrubric": 32,
         "lexeval": 0,
-        "internal": 448
+        "internal": 1000
       },
       "warnings": [
         "缺 outputs/score/lexeval_moe_L2.json",
@@ -93,9 +93,9 @@
       "key": "moe_L2",
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
-        "lexrubric": 0,
+        "lexrubric": 32,
         "lexeval": 0,
-        "internal": 448
+        "internal": 1000
       },
       "warnings": [
         "缺 outputs/score/lexeval_moe_L2.json",

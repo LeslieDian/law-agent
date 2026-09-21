@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-21T09:57:53",
-  "done": 5,
+  "generated_at": "2026-09-21T11:07:40",
+  "done": 6,
   "total": 20,
   "rows": [
     {
@@ -14,7 +14,7 @@
       "stage": "A0 评测链",
       "system": "LexEval 客观 11,400 + 生成 2,750",
       "status": "进行中",
-      "progress": "13032/14150",
+      "progress": "13224/14150",
       "note": "客观 cap=256 / 生成 cap=1536"
     },
     {
@@ -34,15 +34,15 @@
     {
       "stage": "MoE 队列",
       "system": "Q2 MoE 内部集 1k",
-      "status": "进行中",
-      "progress": "448/1000",
+      "status": "已完成",
+      "progress": "1000/1000",
       "note": ""
     },
     {
       "stage": "MoE 队列",
       "system": "Q3 MoE LexRubric 649",
-      "status": "待跑",
-      "progress": "0/649",
+      "status": "进行中",
+      "progress": "32/649",
       "note": ""
     },
     {
@@ -134,7 +134,7 @@
       "system": "汇总 + 出图",
       "status": "已完成",
       "progress": "",
-      "note": "collect_results.py + make_figures.py；最近一次 09-21 09:21"
+      "note": "collect_results.py + make_figures.py；最近一次 09-21 09:57"
     },
     {
       "stage": "收尾",

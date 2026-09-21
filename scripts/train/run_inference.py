@@ -628,8 +628,18 @@ def main():
         # 必须每批清空 _all_probs：否则 1008 个门控 × 上千批次会无界增长。
         _ctx = globals().get("_MOE_CTX")
         if _ctx is not None and _ctx._all_probs:
-            s = torch.stack(_ctx._all_probs).sum(dim=0)
-            usage_sum = s if usage_sum is None else usage_sum + s
+            # ★ ctx 是全部门控共享的：每批 _all_probs 有 n_gates 条 [K] 记录
+            #   （record() 内部已对 batch 维做 mean）。stack 起来 = [n_gates, K]。
+            #   2026-09-21 修复：旧版在这里多做了 .sum(dim=0)，把矩阵压成 [K]，
+            #   报告段再 mean(dim=0) 就成了标量 → TypeError: 'float' object is not iterable。
+            s = torch.stack(_ctx._all_probs)               # [n_gates, K]
+            if usage_sum is None:
+                usage_sum = s
+            elif usage_sum.shape == s.shape:
+                usage_sum = usage_sum + s                  # 逐门控累加
+            else:                                          # 记录数异常：降级为全体求和 [K]
+                usage_sum = usage_sum.reshape(-1, usage_sum.shape[-1]).sum(dim=0) \
+                    + s.reshape(-1, s.shape[-1]).sum(dim=0)
             usage_n += 1
             _ctx._all_probs.clear()
             _ctx._probs.clear()
@@ -706,16 +716,26 @@ def main():
     }
 
     # MoE 专属产物：门控在**评测集**上的平均专家权重（论文"专家使用率"图用）
+    # 2026-09-21 修复：usage_sum 现为 [n_gates, K]（逐门控累加）；
+    #   mean_weight_overall = 全体门控平均的专家权重 [K]，
+    #   mean_weight_per_gate = 每个门控的专家均值权重 [n_gates]。
+    #   降级路径（记录数异常）只有 [K] 全体均值，per_gate 置空。
     if usage_sum is not None and usage_n:
-        _u = usage_sum / usage_n                       # [n_gates, K]
+        _u = usage_sum / usage_n
+        if _u.dim() == 2:
+            _overall = _u.mean(dim=0).tolist()
+            _per_gate = _u.mean(dim=1).tolist()
+            _n_records = int(_u.shape[0])
+        else:
+            _overall = _u.tolist()
+            _per_gate = []
+            _n_records = 0
         report["expert_usage"] = {
-            "n_gates": int(_u.shape[0]),
             "n_batches": usage_n,
+            "n_gate_records": _n_records,
             "experts": [t.strip() for t in ARGS.moe_experts.split(",") if t.strip()],
-            "mean_weight_overall": [round(float(x), 4)
-                                    for x in _u.mean(dim=0).tolist()],
-            "mean_weight_per_gate": [round(float(x), 4)
-                                     for x in _u.mean(dim=1).tolist()],
+            "mean_weight_overall": [round(float(x), 4) for x in _overall],
+            "mean_weight_per_gate": [round(float(x), 4) for x in _per_gate],
         }
 
     if ARGS.report_json:

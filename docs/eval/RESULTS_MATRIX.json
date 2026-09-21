@@ -5,7 +5,7 @@
       "key": "base",
       "display": "base (Qwen3-8B, 无微调)",
       "n_answers": {
-        "lexrubric": 128,
+        "lexrubric": 384,
         "lexeval": 0,
         "internal": 0
       },
@@ -56,7 +56,7 @@
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 608,
+        "lexeval": 4928,
         "internal": 1000
       },
       "warnings": [
@@ -71,7 +71,7 @@
       "key": "base",
       "display": "base (Qwen3-8B, 无微调)",
       "n_answers": {
-        "lexrubric": 128,
+        "lexrubric": 384,
         "lexeval": 0,
         "internal": 0
       },
@@ -122,7 +122,7 @@
       "display": "MoE-L2 (L2 门控混合)",
       "n_answers": {
         "lexrubric": 649,
-        "lexeval": 608,
+        "lexeval": 4928,
         "internal": 1000
       },
       "warnings": [

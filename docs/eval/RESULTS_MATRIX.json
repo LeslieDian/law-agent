@@ -1,5 +1,5 @@
 {
-  "n_systems": 3,
+  "n_systems": 4,
   "systems": {
     "base": {
       "key": "base",
@@ -8,6 +8,128 @@
         "lexrubric": 649,
         "lexeval": 14150,
         "internal": 0
+      },
+      "lexeval_acc": 0.5389,
+      "lexeval_acc_subset": 0.5389,
+      "lexeval_n_choice": 11304,
+      "lexeval_unparsed": 90,
+      "lexeval_rouge": 0.5626,
+      "lexeval_rouge_n": 14150,
+      "lexeval_by_task": {
+        "1_1": {
+          "n": 500,
+          "exact": 0.29,
+          "subset": 0.29,
+          "unparsed": 0
+        },
+        "1_2": {
+          "n": 1000,
+          "exact": 0.753,
+          "subset": 0.753,
+          "unparsed": 0
+        },
+        "1_3": {
+          "n": 300,
+          "exact": 0.11,
+          "subset": 0.11,
+          "unparsed": 0
+        },
+        "2_1": {
+          "n": 500,
+          "exact": 0.928,
+          "subset": 0.928,
+          "unparsed": 0
+        },
+        "2_2": {
+          "n": 300,
+          "exact": 0.5033,
+          "subset": 0.5033,
+          "unparsed": 0
+        },
+        "2_3": {
+          "n": 100,
+          "exact": 0.93,
+          "subset": 0.93,
+          "unparsed": 0
+        },
+        "2_4": {
+          "n": 500,
+          "exact": 0.798,
+          "subset": 0.798,
+          "unparsed": 0
+        },
+        "2_5": {
+          "n": 500,
+          "exact": 0.912,
+          "subset": 0.912,
+          "unparsed": 0
+        },
+        "3_1": {
+          "n": 1000,
+          "exact": 0.782,
+          "subset": 0.782,
+          "unparsed": 29
+        },
+        "3_2": {
+          "n": 1000,
+          "exact": 0.91,
+          "subset": 0.91,
+          "unparsed": 17
+        },
+        "3_3": {
+          "n": 1000,
+          "exact": 0.28,
+          "subset": 0.28,
+          "unparsed": 2
+        },
+        "3_4": {
+          "n": 500,
+          "exact": 0.286,
+          "subset": 0.286,
+          "unparsed": 0
+        },
+        "3_5": {
+          "n": 397,
+          "exact": 0.4811,
+          "subset": 0.4811,
+          "unparsed": 0
+        },
+        "3_6": {
+          "n": 500,
+          "exact": 0.498,
+          "subset": 0.498,
+          "unparsed": 0
+        },
+        "4_1": {
+          "n": 500,
+          "exact": 0.248,
+          "subset": 0.248,
+          "unparsed": 42
+        },
+        "4_2": {
+          "n": 299,
+          "exact": 0.3344,
+          "subset": 0.3344,
+          "unparsed": 0
+        },
+        "6_1": {
+          "n": 961,
+          "exact": 0.2268,
+          "subset": 0.2268,
+          "unparsed": 0
+        },
+        "6_2": {
+          "n": 980,
+          "exact": 0.3541,
+          "subset": 0.3541,
+          "unparsed": 0
+        },
+        "6_3": {
+          "n": 467,
+          "exact": 0.5439,
+          "subset": 0.5439,
+          "unparsed": 0
+        }
       },
       "lexrubric_mean": 36.0131,
       "lexrubric_pct": 31.9122,
@@ -30,7 +152,6 @@
       },
       "lexrubric_dimensions": null,
       "warnings": [
-        "缺 outputs/score/lexeval_base.json",
         "缺 outputs/score/internal_base.json"
       ]
     },
@@ -164,8 +285,8 @@
           "unparsed": 0
         }
       },
-      "internal_rouge": 0.5378,
-      "internal_statute": 0.5386,
+      "internal_rouge": 0.54,
+      "internal_statute": 0.533,
       "internal_acc": null,
       "internal_n": 1000,
       "lexrubric_mean": 15.2758,
@@ -320,6 +441,10 @@
           "unparsed": 0
         }
       },
+      "internal_rouge": 0.4923,
+      "internal_statute": 0.521,
+      "internal_acc": null,
+      "internal_n": 1000,
       "lexrubric_mean": 15.6294,
       "lexrubric_pct": 13.0962,
       "lexrubric_ci95": [
@@ -340,8 +465,23 @@
         }
       },
       "lexrubric_dimensions": null,
+      "warnings": []
+    },
+    "criminal": {
+      "key": "criminal",
+      "display": "专家: criminal",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 384
+      },
+      "internal_rouge": 0.5397,
+      "internal_statute": 0.7792,
+      "internal_acc": null,
+      "internal_n": 384,
       "warnings": [
-        "缺 outputs/score/internal_moe_L2.json"
+        "缺 outputs/score/lexeval_criminal.json",
+        "缺 outputs/judge/lexrubric/criminal/SUMMARY.json"
       ]
     }
   },
@@ -353,6 +493,128 @@
         "lexrubric": 649,
         "lexeval": 14150,
         "internal": 0
+      },
+      "lexeval_acc": 0.5389,
+      "lexeval_acc_subset": 0.5389,
+      "lexeval_n_choice": 11304,
+      "lexeval_unparsed": 90,
+      "lexeval_rouge": 0.5626,
+      "lexeval_rouge_n": 14150,
+      "lexeval_by_task": {
+        "1_1": {
+          "n": 500,
+          "exact": 0.29,
+          "subset": 0.29,
+          "unparsed": 0
+        },
+        "1_2": {
+          "n": 1000,
+          "exact": 0.753,
+          "subset": 0.753,
+          "unparsed": 0
+        },
+        "1_3": {
+          "n": 300,
+          "exact": 0.11,
+          "subset": 0.11,
+          "unparsed": 0
+        },
+        "2_1": {
+          "n": 500,
+          "exact": 0.928,
+          "subset": 0.928,
+          "unparsed": 0
+        },
+        "2_2": {
+          "n": 300,
+          "exact": 0.5033,
+          "subset": 0.5033,
+          "unparsed": 0
+        },
+        "2_3": {
+          "n": 100,
+          "exact": 0.93,
+          "subset": 0.93,
+          "unparsed": 0
+        },
+        "2_4": {
+          "n": 500,
+          "exact": 0.798,
+          "subset": 0.798,
+          "unparsed": 0
+        },
+        "2_5": {
+          "n": 500,
+          "exact": 0.912,
+          "subset": 0.912,
+          "unparsed": 0
+        },
+        "3_1": {
+          "n": 1000,
+          "exact": 0.782,
+          "subset": 0.782,
+          "unparsed": 29
+        },
+        "3_2": {
+          "n": 1000,
+          "exact": 0.91,
+          "subset": 0.91,
+          "unparsed": 17
+        },
+        "3_3": {
+          "n": 1000,
+          "exact": 0.28,
+          "subset": 0.28,
+          "unparsed": 2
+        },
+        "3_4": {
+          "n": 500,
+          "exact": 0.286,
+          "subset": 0.286,
+          "unparsed": 0
+        },
+        "3_5": {
+          "n": 397,
+          "exact": 0.4811,
+          "subset": 0.4811,
+          "unparsed": 0
+        },
+        "3_6": {
+          "n": 500,
+          "exact": 0.498,
+          "subset": 0.498,
+          "unparsed": 0
+        },
+        "4_1": {
+          "n": 500,
+          "exact": 0.248,
+          "subset": 0.248,
+          "unparsed": 42
+        },
+        "4_2": {
+          "n": 299,
+          "exact": 0.3344,
+          "subset": 0.3344,
+          "unparsed": 0
+        },
+        "6_1": {
+          "n": 961,
+          "exact": 0.2268,
+          "subset": 0.2268,
+          "unparsed": 0
+        },
+        "6_2": {
+          "n": 980,
+          "exact": 0.3541,
+          "subset": 0.3541,
+          "unparsed": 0
+        },
+        "6_3": {
+          "n": 467,
+          "exact": 0.5439,
+          "subset": 0.5439,
+          "unparsed": 0
+        }
       },
       "lexrubric_mean": 36.0131,
       "lexrubric_pct": 31.9122,
@@ -375,7 +637,6 @@
       },
       "lexrubric_dimensions": null,
       "warnings": [
-        "缺 outputs/score/lexeval_base.json",
         "缺 outputs/score/internal_base.json"
       ]
     },
@@ -509,8 +770,8 @@
           "unparsed": 0
         }
       },
-      "internal_rouge": 0.5378,
-      "internal_statute": 0.5386,
+      "internal_rouge": 0.54,
+      "internal_statute": 0.533,
       "internal_acc": null,
       "internal_n": 1000,
       "lexrubric_mean": 15.2758,
@@ -665,6 +926,10 @@
           "unparsed": 0
         }
       },
+      "internal_rouge": 0.4923,
+      "internal_statute": 0.521,
+      "internal_acc": null,
+      "internal_n": 1000,
       "lexrubric_mean": 15.6294,
       "lexrubric_pct": 13.0962,
       "lexrubric_ci95": [
@@ -685,8 +950,23 @@
         }
       },
       "lexrubric_dimensions": null,
+      "warnings": []
+    },
+    {
+      "key": "criminal",
+      "display": "专家: criminal",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 384
+      },
+      "internal_rouge": 0.5397,
+      "internal_statute": 0.7792,
+      "internal_acc": null,
+      "internal_n": 384,
       "warnings": [
-        "缺 outputs/score/internal_moe_L2.json"
+        "缺 outputs/score/lexeval_criminal.json",
+        "缺 outputs/judge/lexrubric/criminal/SUMMARY.json"
       ]
     }
   ]

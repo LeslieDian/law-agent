@@ -1,6 +1,20 @@
 {
-  "n_systems": 1,
+  "n_systems": 4,
   "systems": {
+    "base": {
+      "key": "base",
+      "display": "base (Qwen3-8B, 无微调)",
+      "n_answers": {
+        "lexrubric": 649,
+        "lexeval": 14150,
+        "internal": 0
+      },
+      "warnings": [
+        "缺 outputs/score/lexeval_base.json",
+        "缺 outputs/score/internal_base.json",
+        "缺 outputs/judge/lexrubric/base/SUMMARY.json"
+      ]
+    },
     "A0": {
       "key": "A0",
       "display": "A0 (统一适配器)",
@@ -36,9 +50,51 @@
       "warnings": [
         "缺 outputs/score/lexeval_A0.json"
       ]
+    },
+    "moe_L2": {
+      "key": "moe_L2",
+      "display": "MoE-L2 (L2 门控混合)",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 32
+      },
+      "warnings": [
+        "缺 outputs/score/lexeval_moe_L2.json",
+        "缺 outputs/score/internal_moe_L2.json",
+        "缺 outputs/judge/lexrubric/moe_L2/SUMMARY.json"
+      ]
+    },
+    "criminal": {
+      "key": "criminal",
+      "display": "专家: criminal",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 992
+      },
+      "warnings": [
+        "缺 outputs/score/lexeval_criminal.json",
+        "缺 outputs/score/internal_criminal.json",
+        "缺 outputs/judge/lexrubric/criminal/SUMMARY.json"
+      ]
     }
   },
   "rows": [
+    {
+      "key": "base",
+      "display": "base (Qwen3-8B, 无微调)",
+      "n_answers": {
+        "lexrubric": 649,
+        "lexeval": 14150,
+        "internal": 0
+      },
+      "warnings": [
+        "缺 outputs/score/lexeval_base.json",
+        "缺 outputs/score/internal_base.json",
+        "缺 outputs/judge/lexrubric/base/SUMMARY.json"
+      ]
+    },
     {
       "key": "A0",
       "display": "A0 (统一适配器)",
@@ -73,6 +129,34 @@
       "lexrubric_dimensions": null,
       "warnings": [
         "缺 outputs/score/lexeval_A0.json"
+      ]
+    },
+    {
+      "key": "moe_L2",
+      "display": "MoE-L2 (L2 门控混合)",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 32
+      },
+      "warnings": [
+        "缺 outputs/score/lexeval_moe_L2.json",
+        "缺 outputs/score/internal_moe_L2.json",
+        "缺 outputs/judge/lexrubric/moe_L2/SUMMARY.json"
+      ]
+    },
+    {
+      "key": "criminal",
+      "display": "专家: criminal",
+      "n_answers": {
+        "lexrubric": 0,
+        "lexeval": 0,
+        "internal": 992
+      },
+      "warnings": [
+        "缺 outputs/score/lexeval_criminal.json",
+        "缺 outputs/score/internal_criminal.json",
+        "缺 outputs/judge/lexrubric/criminal/SUMMARY.json"
       ]
     }
   ]

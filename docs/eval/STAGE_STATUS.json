@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-21T22:05:47",
-  "done": 12,
+  "generated_at": "2026-09-21T23:37:02",
+  "done": 13,
   "total": 21,
   "rows": [
     {
@@ -34,8 +34,8 @@
     {
       "stage": "MoE 队列",
       "system": "Q1 MoE 冒烟",
-      "status": "进行中",
-      "progress": "0/2",
+      "status": "已完成",
+      "progress": "2/2",
       "note": ""
     },
     {
@@ -56,14 +56,14 @@
       "stage": "MoE 队列",
       "system": "Q4 MoE 客观 11,400",
       "status": "已完成",
-      "progress": "12552/11400",
+      "progress": "11400/11400",
       "note": ""
     },
     {
       "stage": "MoE 队列",
       "system": "Q5 MoE 生成 2,750",
       "status": "进行中",
-      "progress": "12552/14150",
+      "progress": "12776/14150",
       "note": ""
     },
     {
@@ -76,9 +76,9 @@
     {
       "stage": "MoE 队列",
       "system": "整队列标志",
-      "status": "已完成",
+      "status": "进行中",
       "progress": "",
-      "note": "MARKER_GATE_QUEUE_DONE"
+      "note": "上一轮批次 MARKER_GATE_QUEUE_DONE；本轮见 gpu1_queue_moe_chain.log"
     },
     {
       "stage": "base 评测",
@@ -91,7 +91,7 @@
       "stage": "base 评测",
       "system": "LexEval 客观+生成 14,150",
       "status": "进行中",
-      "progress": "12584/14150",
+      "progress": "12840/14150",
       "note": ""
     },
     {
@@ -118,30 +118,30 @@
     {
       "stage": "判分(API)",
       "system": "MiniMax-M3 × A0_unified_qwen3_8b",
-      "status": "进行中",
-      "progress": "",
-      "note": "649 题 / 22 维度；冒烟 8 条中"
+      "status": "已完成",
+      "progress": "649/649",
+      "note": "649 题 / 22 维度"
     },
     {
       "stage": "判分(API)",
       "system": "MiniMax-M3 × moe_L2",
       "status": "已完成",
-      "progress": "",
+      "progress": "649/649",
       "note": "649 题 / 22 维度"
     },
     {
       "stage": "判分(API)",
       "system": "MiniMax-M3 × base",
-      "status": "进行中",
-      "progress": "",
-      "note": "649 题 / 22 维度；冒烟 8 条中"
+      "status": "失败",
+      "progress": "242/649",
+      "note": "649 题 / 22 维度"
     },
     {
       "stage": "收尾",
       "system": "汇总 + 出图",
       "status": "已完成",
       "progress": "",
-      "note": "collect_results.py + make_figures.py；最近一次 09-21 20:32"
+      "note": "collect_results.py + make_figures.py；最近一次 09-21 22:05"
     },
     {
       "stage": "收尾",

@@ -1,7 +1,7 @@
 {
-  "generated_at": "2026-09-21T12:12:19",
-  "done": 6,
-  "total": 20,
+  "generated_at": "2026-09-21T13:36:16",
+  "done": 9,
+  "total": 21,
   "rows": [
     {
       "stage": "A0 评测链",
@@ -13,9 +13,16 @@
     {
       "stage": "A0 评测链",
       "system": "LexEval 客观 11,400 + 生成 2,750",
-      "status": "进行中",
-      "progress": "13640/14150",
+      "status": "已完成",
+      "progress": "14150/14150",
       "note": "客观 cap=256 / 生成 cap=1536"
+    },
+    {
+      "stage": "A0 评测链",
+      "system": "整链标志",
+      "status": "已完成",
+      "progress": "",
+      "note": "MARKER_FULL_INFER_A0_DONE"
     },
     {
       "stage": "阶段 6 门控",
@@ -41,22 +48,22 @@
     {
       "stage": "MoE 队列",
       "system": "Q3 MoE LexRubric 649",
-      "status": "进行中",
-      "progress": "256/649",
+      "status": "已完成",
+      "progress": "649/649",
       "note": ""
     },
     {
       "stage": "MoE 队列",
       "system": "Q4 MoE 客观 11,400",
-      "status": "待跑",
-      "progress": "0/11400",
+      "status": "进行中",
+      "progress": "608/11400",
       "note": ""
     },
     {
       "stage": "MoE 队列",
       "system": "Q5 MoE 生成 2,750",
-      "status": "待跑",
-      "progress": "0/14150",
+      "status": "进行中",
+      "progress": "608/14150",
       "note": ""
     },
     {
@@ -76,8 +83,8 @@
     {
       "stage": "base 评测",
       "system": "LexRubric 649",
-      "status": "待跑",
-      "progress": "0/649",
+      "status": "进行中",
+      "progress": "128/649",
       "note": "cap=1536"
     },
     {
@@ -118,9 +125,9 @@
     {
       "stage": "判分(API)",
       "system": "MiniMax-M3 × moe_L2",
-      "status": "待跑",
+      "status": "进行中",
       "progress": "",
-      "note": "649 题 / 22 维度"
+      "note": "649 题 / 22 维度；冒烟 8 条中"
     },
     {
       "stage": "判分(API)",
@@ -134,7 +141,7 @@
       "system": "汇总 + 出图",
       "status": "已完成",
       "progress": "",
-      "note": "collect_results.py + make_figures.py；最近一次 09-21 11:07"
+      "note": "collect_results.py + make_figures.py；最近一次 09-21 12:12"
     },
     {
       "stage": "收尾",

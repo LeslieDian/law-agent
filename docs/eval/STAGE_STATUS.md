@@ -4,7 +4,7 @@
 
 > **本段由自动化回填**（`scripts/eval/stage_status.py` 扫描产物/日志/标志后生成，经 `patch_readme.py --tag AUTO_STAGE` 贴入）。每完成一个阶段刷新一次，并自动提交推送。机读版：`docs/eval/STAGE_STATUS.json`。
 >
-> 生成时间 **2026-09-22 09:44:31** ｜ 已完成 **20/21** 项
+> 生成时间 **2026-09-22 09:54:25** ｜ 已完成 **21/21** 项
 
 | 阶段 | 项 | 状态 | 进度 | 备注 |
 |---|---|---|---|---|
@@ -27,8 +27,8 @@
 | 判分(API) | MiniMax-M3 × A0_unified_qwen3_8b | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
 | 判分(API) | MiniMax-M3 × moe_L2 | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
 | 判分(API) | MiniMax-M3 × base | ✅ 已完成 | 649/649 | 649 题 / 22 维度 |
-| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-22 09:37 |
-| 收尾 | 过夜链整链 | 🔄 进行中 | — | MARKER_OVERNIGHT_DONE |
+| 收尾 | 汇总 + 出图 | ✅ 已完成 | — | collect_results.py + make_figures.py；最近一次 09-22 09:44 |
+| 收尾 | 过夜链整链 | ✅ 已完成 | — | MARKER_OVERNIGHT_DONE |
 
 <sub>状态来源：答案文件行数 / 日志 `rc=` 与 `[n/N]` 进度 / 完成标志 / 报告文件。未到位一律如实标注，不做推测。</sub>
 

@@ -209,7 +209,7 @@ def build_rows():
         mx_note += "；最近一次 %s" % datetime.fromtimestamp(
             os.path.getmtime(mx)).strftime("%m-%d %H:%M")
     add("收尾", "汇总 + 出图", "已完成" if have_mx else "待跑", "", mx_note)
-    add("收尾", "过夜链整链", "已完成" if _marker_in("logs/overnight_chain.log", "MARKER_OVERNIGHT_DONE")
+    add("收尾", "过夜链整链", "已完成" if _marker_in("logs/gpu0_redo_chain.log", "MARKER_OVERNIGHT_DONE")
         else "进行中", "", "MARKER_OVERNIGHT_DONE")
 
     return rows

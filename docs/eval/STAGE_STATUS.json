@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-09-22T07:36:35",
-  "done": 19,
+  "generated_at": "2026-09-22T09:44:31",
+  "done": 20,
   "total": 21,
   "rows": [
     {
@@ -111,8 +111,8 @@
     {
       "stage": "三专家内部集",
       "system": "internal_procedure 1k",
-      "status": "进行中",
-      "progress": "256/1000",
+      "status": "已完成",
+      "progress": "1000/1000",
       "note": "cap=1024；域专业化分析"
     },
     {
@@ -141,7 +141,7 @@
       "system": "汇总 + 出图",
       "status": "已完成",
       "progress": "",
-      "note": "collect_results.py + make_figures.py；最近一次 09-22 05:38"
+      "note": "collect_results.py + make_figures.py；最近一次 09-22 09:37"
     },
     {
       "stage": "收尾",

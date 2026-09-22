@@ -131,11 +131,11 @@
           "unparsed": 0
         }
       },
-      "lexrubric_mean": 36.0131,
-      "lexrubric_pct": 31.9122,
+      "lexrubric_mean": 36.0177,
+      "lexrubric_pct": 31.9226,
       "lexrubric_ci95": [
-        30.1769,
-        33.639
+        30.1849,
+        33.6557
       ],
       "lexrubric_n": 649,
       "lexrubric_by_split": {
@@ -146,8 +146,8 @@
         },
         "legal_consultation": {
           "n": 473,
-          "mean": 41.4292,
-          "pct": 31.0003
+          "mean": 41.4355,
+          "pct": 31.0146
         }
       },
       "lexrubric_dimensions": null,
@@ -292,8 +292,8 @@
       "lexrubric_mean": 15.2758,
       "lexrubric_pct": 12.8988,
       "lexrubric_ci95": [
-        11.6616,
-        14.17
+        11.6579,
+        14.1687
       ],
       "lexrubric_n": 649,
       "lexrubric_by_split": {
@@ -448,8 +448,8 @@
       "lexrubric_mean": 15.6294,
       "lexrubric_pct": 13.0962,
       "lexrubric_ci95": [
-        11.8533,
-        14.3798
+        11.8572,
+        14.3807
       ],
       "lexrubric_n": 649,
       "lexrubric_by_split": {
@@ -507,11 +507,14 @@
       "n_answers": {
         "lexrubric": 0,
         "lexeval": 0,
-        "internal": 256
+        "internal": 1000
       },
+      "internal_rouge": 0.4442,
+      "internal_statute": 0.2975,
+      "internal_acc": null,
+      "internal_n": 1000,
       "warnings": [
         "缺 outputs/score/lexeval_procedure.json",
-        "缺 outputs/score/internal_procedure.json",
         "缺 outputs/judge/lexrubric/procedure/SUMMARY.json"
       ]
     }
@@ -647,11 +650,11 @@
           "unparsed": 0
         }
       },
-      "lexrubric_mean": 36.0131,
-      "lexrubric_pct": 31.9122,
+      "lexrubric_mean": 36.0177,
+      "lexrubric_pct": 31.9226,
       "lexrubric_ci95": [
-        30.1769,
-        33.639
+        30.1849,
+        33.6557
       ],
       "lexrubric_n": 649,
       "lexrubric_by_split": {
@@ -662,8 +665,8 @@
         },
         "legal_consultation": {
           "n": 473,
-          "mean": 41.4292,
-          "pct": 31.0003
+          "mean": 41.4355,
+          "pct": 31.0146
         }
       },
       "lexrubric_dimensions": null,
@@ -808,8 +811,8 @@
       "lexrubric_mean": 15.2758,
       "lexrubric_pct": 12.8988,
       "lexrubric_ci95": [
-        11.6616,
-        14.17
+        11.6579,
+        14.1687
       ],
       "lexrubric_n": 649,
       "lexrubric_by_split": {
@@ -964,8 +967,8 @@
       "lexrubric_mean": 15.6294,
       "lexrubric_pct": 13.0962,
       "lexrubric_ci95": [
-        11.8533,
-        14.3798
+        11.8572,
+        14.3807
       ],
       "lexrubric_n": 649,
       "lexrubric_by_split": {
@@ -1023,11 +1026,14 @@
       "n_answers": {
         "lexrubric": 0,
         "lexeval": 0,
-        "internal": 256
+        "internal": 1000
       },
+      "internal_rouge": 0.4442,
+      "internal_statute": 0.2975,
+      "internal_acc": null,
+      "internal_n": 1000,
       "warnings": [
         "缺 outputs/score/lexeval_procedure.json",
-        "缺 outputs/score/internal_procedure.json",
         "缺 outputs/judge/lexrubric/procedure/SUMMARY.json"
       ]
     }

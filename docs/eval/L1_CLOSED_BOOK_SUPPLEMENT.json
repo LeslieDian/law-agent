@@ -1,0 +1,18 @@
+{
+  "record_type": "supplementary_aggregate_result",
+  "registered_on": "2026-10-25",
+  "source": {
+    "type": "user_provided_summary",
+    "description": "用户补充实验后提供的论文表格截图"
+  },
+  "configuration": {
+    "id": "L1",
+    "evaluation_mode": "closed_book",
+    "expert_selection": "request_level_single_expert",
+    "low_confidence_fallback": "unified"
+  },
+  "metrics": {
+    "lexrubric_normalized_score_percent": 65.23,
+    "lexeval_average_percent": 54.68
+  }
+}
